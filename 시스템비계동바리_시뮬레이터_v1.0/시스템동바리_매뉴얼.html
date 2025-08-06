@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 동바리(써포트) 설치 매뉴얼</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 헤더 */
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+        }
+        
+        /* 저작권 표시 */
+        .copyright-notice {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .copyright-notice h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        /* 네비게이션 */
+        .nav {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin: 30px 0;
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+        
+        .nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .nav a {
+            text-decoration: none;
+            color: #3498db;
+            font-weight: 500;
+            padding: 12px 25px;
+            border-radius: 30px;
+            transition: all 0.3s;
+            border: 2px solid #3498db;
+            display: block;
+        }
+        
+        .nav a:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* 섹션 스타일 */
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 50px;
+            margin: 30px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section h2::before {
+            content: attr(data-number);
+            background: #3498db;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+        
+        .section h3 {
+            color: #34495e;
+            font-size: 1.6em;
+            margin: 35px 0 20px;
+            padding-left: 20px;
+            border-left: 5px solid #3498db;
+        }
+        
+        /* 표 스타일 개선 */
+        .table-container {
+            overflow-x: auto;
+            margin: 25px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 0.95em;
+        }
+        
+        th {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+            padding: 15px;
+            text-align: left;
+            font-size: 0.95em;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* 체크리스트 스타일 */
+        .checklist {
+            background: #ecf0f1;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 25px 0;
+        }
+        
+        .checklist h4 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .checklist-item {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .checklist-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .checklist-item strong {
+            color: #3498db;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        /* 경고 박스 개선 */
+        .alert-box {
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .alert-box::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+        }
+        
+        .alert-warning::before {
+            background: #ffc107;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-danger::before {
+            background: #dc3545;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+        }
+        
+        .alert-info::before {
+            background: #17a2b8;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-success::before {
+            background: #28a745;
+        }
+        
+        .alert-box h5 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-box .icon {
+            font-size: 1.5em;
+        }
+        
+        /* 계산 박스 */
+        .calc-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .calc-box h4 {
+            color: #dc3545;
+            margin-bottom: 20px;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        .calc-box .formula {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+        
+        /* 단계별 설치 가이드 */
+        .step-guide {
+            counter-reset: step-counter;
+            margin: 30px 0;
+        }
+        
+        .step {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-left: 80px;
+            transition: all 0.3s;
+        }
+        
+        .step:hover {
+            border-color: #3498db;
+            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.1);
+        }
+        
+        .step::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .step h5 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .step ul {
+            list-style: none;
+            margin-top: 10px;
+        }
+        
+        .step ul li {
+            padding-left: 20px;
+            position: relative;
+            margin-bottom: 5px;
+        }
+        
+        .step ul li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+        }
+        
+        /* 규격 카드 */
+        .spec-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .spec-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 25px;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .spec-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-color: #3498db;
+        }
+        
+        .spec-card h4 {
+            color: #3498db;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        .spec-card .spec-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        
+        .spec-card .spec-unit {
+            font-size: 0.8em;
+            color: #7f8c8d;
+        }
+        
+        .spec-card .spec-desc {
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+        
+        /* 중요 정보 하이라이트 */
+        .highlight {
+            background: #fffbea;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+            color: #8b6914;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin: 0 5px;
+        }
+        
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .section {
+                padding: 30px 20px;
+            }
+            
+            .nav ul {
+                flex-direction: column;
+            }
+            
+            table {
+                font-size: 0.85em;
+            }
+            
+            th, td {
+                padding: 10px;
+            }
+        }
+        
+        /* 프린트 */
+        @media print {
+            .nav {
+                display: none;
+            }
+            
+            .section {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>시스템 동바리(써포트) 설치 매뉴얼</h1>
+            <p>안전하고 효율적인 시스템 동바리 설치를 위한 표준 가이드</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="copyright-notice">
+            <h3>📋 저작권 및 사용 안내</h3>
+            <p><strong>본 자료는 가설파트너의 소유입니다.</strong></p>
+            <p>무단 복제 및 배포를 금지하며, 교육 목적으로만 사용 가능합니다.</p>
+        </div>
+        
+        <nav class="nav">
+            <ul>
+                <li><a href="#overview">개요</a></li>
+                <li><a href="#parts">부재 규격</a></li>
+                <li><a href="#installation">설치 순서</a></li>
+                <li><a href="#standards">설치 기준</a></li>
+                <li><a href="#design">설계 가이드</a></li>
+                <li><a href="#safety">안전 기준</a></li>
+                <li><a href="#calculation">구조 검토</a></li>
+                <li><a href="#examples">시공 사례</a></li>
+            </ul>
+        </nav>
+        
+        <section id="overview" class="section">
+            <h2 data-number="1">시스템 동바리 개요</h2>
+            
+            <div class="spec-cards">
+                <div class="spec-card">
+                    <h4>📐 정의</h4>
+                    <p>천장 구조물을 지지하여 타설 후 일정 강도를 얻을 때까지 콘크리트 하중을 지탱하는 가설 구조물</p>
+                </div>
+                
+                <div class="spec-card">
+                    <h4>🔧 특징</h4>
+                    <p>부품화·조립화되어 운반과 설치가 간편하며, 높은 하중을 안전하게 지지</p>
+                </div>
+                
+                <div class="spec-card">
+                    <h4>📍 적용 범위</h4>
+                    <p>층고 4m 이상, 두꺼운 슬래브, 일반 동바리 설치 곤란 구간</p>
+                </div>
+            </div>
+            
+            <div class="alert-box alert-info">
+                <h5><span class="icon">💡</span> 시스템 동바리 도입 배경</h5>
+                <p>국내 파이프 서포트는 4m 이하로 제한되며, 4m 초과 시 재해 발생률이 97.9%에 달함. 
+                시스템 동바리는 이러한 구조적 취약점을 해결하고 안전성을 확보하기 위해 도입되었습니다.</p>
+            </div>
+        </section>
+        
+        <section id="parts" class="section">
+            <h2 data-number="2">시스템 동바리 부재 규격</h2>
+            
+            <h3>2.1 수직재 (Post) 규격</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>길이 (mm)</th>
+                            <th>중량 (kg)</th>
+                            <th>허용하중 (kN)</th>
+                            <th>주요 용도</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>P-17</strong></td>
+                            <td>1,725</td>
+                            <td>8.10</td>
+                            <td class="highlight">36.00</td>
+                            <td>표준 층고</td>
+                        </tr>
+                        <tr>
+                            <td><strong>P-12</strong></td>
+                            <td>1,291</td>
+                            <td>6.41</td>
+                            <td>-</td>
+                            <td>중간 높이</td>
+                        </tr>
+                        <tr>
+                            <td><strong>P-08</strong></td>
+                            <td>863</td>
+                            <td>4.25</td>
+                            <td>-</td>
+                            <td>저층부</td>
+                        </tr>
+                        <tr>
+                            <td><strong>P-04</strong></td>
+                            <td>432</td>
+                            <td>2.60</td>
+                            <td>-</td>
+                            <td>미세 조정</td>
+                        </tr>
+                        <tr>
+                            <td><strong>P-03</strong></td>
+                            <td>324</td>
+                            <td>2.20</td>
+                            <td>-</td>
+                            <td>최소 조정</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="alert-box alert-danger">
+                <h5><span class="icon">⚠️</span> 안전인증 기준</h5>
+                <p><strong>P17:</strong> 90.00kN ÷ 2.5 (안전률) = <strong>36.00kN (허용하중)</strong></p>
+            </div>
+            
+            <h3>2.2 수평재 (Handle) 규격</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>길이 (mm)</th>
+                            <th>간격 (mm)</th>
+                            <th>중량 (kg)</th>
+                            <th>적용</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>H-18</strong></td>
+                            <td>1,768</td>
+                            <td>1,829</td>
+                            <td>4.80</td>
+                            <td>장스팬</td>
+                        </tr>
+                        <tr>
+                            <td><strong>H-15</strong></td>
+                            <td>1,468</td>
+                            <td>1,524</td>
+                            <td>4.10</td>
+                            <td>표준</td>
+                        </tr>
+                        <tr>
+                            <td><strong>H-12</strong></td>
+                            <td>1,158</td>
+                            <td>1,219</td>
+                            <td>3.40</td>
+                            <td>중간</td>
+                        </tr>
+                        <tr>
+                            <td><strong>H-09</strong></td>
+                            <td>853</td>
+                            <td>914</td>
+                            <td>2.70</td>
+                            <td>단스팬</td>
+                        </tr>
+                        <tr>
+                            <td><strong>H-06</strong></td>
+                            <td>549</td>
+                            <td>610</td>
+                            <td>2.00</td>
+                            <td>최소</td>
+                        </tr>
+                        <tr>
+                            <td><strong>H-03</strong></td>
+                            <td>244</td>
+                            <td>305</td>
+                            <td>1.30</td>
+                            <td>연결용</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3>2.3 대각재 (Brace) 규격</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>길이 (mm)</th>
+                            <th>설치각도</th>
+                            <th>중량 (kg)</th>
+                            <th>적용 수직재</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>B-1715</strong></td>
+                            <td>2,139</td>
+                            <td rowspan="5">45°~60°</td>
+                            <td>5.3</td>
+                            <td>P17 + H15</td>
+                        </tr>
+                        <tr>
+                            <td><strong>B-1712</strong></td>
+                            <td>1,974</td>
+                            <td>5.0</td>
+                            <td>P17 + H12</td>
+                        </tr>
+                        <tr>
+                            <td><strong>B-1709</strong></td>
+                            <td>1,845</td>
+                            <td>4.7</td>
+                            <td>P17 + H09</td>
+                        </tr>
+                        <tr>
+                            <td><strong>B-0812</strong></td>
+                            <td>1,290</td>
+                            <td>3.6</td>
+                            <td>P08 + H12</td>
+                        </tr>
+                        <tr>
+                            <td><strong>B-0809</strong></td>
+                            <td>1,082.5</td>
+                            <td>3.4</td>
+                            <td>P08 + H09</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section id="installation" class="section">
+            <h2 data-number="3">시스템 동바리 설치 순서</h2>
+            
+            <div class="step-guide">
+                <div class="step">
+                    <h5>자키베이스 설치</h5>
+                    <p>자키베이스에 수직재 P2(P4)를 끼워놓고 설계도를 근거로 설치 위치에 배치</p>
+                    <ul>
+                        <li>지반 상태 확인 필수</li>
+                        <li>수평 레벨 확인</li>
+                    </ul>
+                </div>
+                
+                <div class="step">
+                    <h5>수직재에 수평재 연결</h5>
+                    <p>수직재에 수평재를 연결 (핀을 살짝 끼워 임시 고정)</p>
+                    <div class="alert-box alert-danger">
+                        <p><strong>법적기준:</strong> 첫번째 핀에 설치 (불가능시 보강)</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h5>수직재 설치</h5>
+                    <p>수직재를 끼워 넣고 대략적인 수평 조정</p>
+                </div>
+                
+                <div class="step">
+                    <h5>상부 수평재 설치</h5>
+                    <p>상부 수평재를 규정 간격에 맞춰 설치</p>
+                </div>
+                
+                <div class="step">
+                    <h5>대각가새 설치 및 수평 조정</h5>
+                    <p>대각가새를 설치하면서 완전한 수평을 맞추고 쐐기를 완전히 고정</p>
+                    <ul>
+                        <li>설치 각도: 45°~60°</li>
+                        <li>폐합형 배치 원칙</li>
+                    </ul>
+                </div>
+                
+                <div class="step">
+                    <h5>2단 수직재 설치</h5>
+                    <p>2단 수직재를 끼워 넣은 후 대각가새를 설치하고 같은 순서로 반복</p>
+                    <div class="alert-box alert-warning">
+                        <p>수평재 사이에 수직재 연결부위가 2개소 이상 되지 않도록 주의</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h5>소켓 설치</h5>
+                    <p>최상단에는 반드시 소켓 설치</p>
+                </div>
+                
+                <div class="step">
+                    <h5>U-헤드 설치 및 완성</h5>
+                    <p>소켓에 U-헤드를 끼워서 높낮이 조절 후 완성</p>
+                    <ul>
+                        <li>조절 범위: 150~400mm</li>
+                        <li>수직도 최종 확인</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <section id="standards" class="section">
+            <h2 data-number="4">시스템 동바리 설치 기준</h2>
+            
+            <h3>4.1 적용 조건</h3>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <strong>✓ 높이 4m 이상</strong>
+                    <p>동바리 설치 높이가 4.2m 이상인 경우 (현장 권한에 따라 조정)</p>
+                </div>
+                <div class="checklist-item">
+                    <strong>✓ 두꺼운 슬래브</strong>
+                    <p>슬래브 두께 0.5m 이상 또는 특수 하중 조건</p>
+                </div>
+                <div class="checklist-item">
+                    <strong>✓ 일반 동바리 설치 곤란</strong>
+                    <p>작업 공간 부족, 특수 구조물 등</p>
+                </div>
+                <div class="checklist-item">
+                    <strong>✓ 안전성 확보 필요</strong>
+                    <p>시공 기간 과다, 인력 과다 예상 구간</p>
+                </div>
+            </div>
+            
+            <h3>4.2 설치 간격 기준</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>간격 기준</th>
+                            <th>비고</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>멍에 뻗는 방향</td>
+                            <td class="highlight">300~550mm</td>
+                            <td>벽체까지의 간격</td>
+                        </tr>
+                        <tr>
+                            <td>멍에 뻗지 않는 방향</td>
+                            <td class="highlight">300~500mm</td>
+                            <td>수직재 간 간격</td>
+                        </tr>
+                        <tr>
+                            <td>보 받침 구간</td>
+                            <td class="highlight">300~500mm</td>
+                            <td>시스템서포트 간격</td>
+                        </tr>
+                        <tr>
+                            <td>특수/협소 구간</td>
+                            <td class="highlight">250~550mm</td>
+                            <td>구조계산서 확인</td>
+                        </tr>
+                        <tr>
+                            <td>합벽지지대 구간</td>
+                            <td class="highlight">300~400mm</td>
+                            <td>벽체 보강 필요</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3>4.3 높이별 설치 기준</h3>
+            <div class="alert-box alert-info">
+                <h5><span class="icon">📏</span> 잭베이스 조절 기준</h5>
+                <ul>
+                    <li>조절 길이: <strong>150mm ~ 400mm</strong></li>
+                    <li>전체 길이: 600mm 이내</li>
+                    <li>수직재와 물림부 겹침: 150mm 이상</li>
+                </ul>
+            </div>
+            
+            <div class="alert-box alert-warning">
+                <h5><span class="icon">⚠️</span> 타설 두께별 특별 조치</h5>
+                <p><strong>타설 두께 0.5m 이상:</strong> 수직재 최상단 및 최하단으로부터 400mm 이내에 첫번째 수평재 설치</p>
+                <p><strong>잭베이스 250mm 이하:</strong> 하부에 수직재 P2 추가 설치</p>
+            </div>
+        </section>
+        
+        <section id="design" class="section">
+            <h2 data-number="5">시스템 동바리 설계 가이드</h2>
+            
+            <h3>5.1 기본 설계 원칙</h3>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <strong>1. 수직재 연결부 제한</strong>
+                    <p>수평재와 수평재 사이에 수직재 연결부위가 2개소 이상 되지 않도록 설치</p>
+                </div>
+                <div class="checklist-item">
+                    <strong>2. 가새 설치 원칙</strong>
+                    <p>바닥에서 동바리 상단부까지 전체 높이에 설치 (폐합형 배치)</p>
+                </div>
+                <div class="checklist-item">
+                    <strong>3. 수평연결재 설치</strong>
+                    <p>독립된 시스템 동바리는 높이 4.0m마다 수평연결재 설치</p>
+                </div>
+                <div class="checklist-item">
+                    <strong>4. 단변비 제한</strong>
+                    <p>시스템 설치 높이는 단변비의 3배를 초과하지 않도록 설치</p>
+                </div>
+            </div>
+            
+            <h3>5.2 멍에재 설치 방법</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>설치 방향</th>
+                            <th>적용 조건</th>
+                            <th>장단점</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>단방향</strong></td>
+                            <td>보의 폭 방향</td>
+                            <td>TG보, 두꺼운 보</td>
+                            <td>구조적 안전성 우수</td>
+                        </tr>
+                        <tr>
+                            <td><strong>장방향</strong></td>
+                            <td>보의 길이 방향</td>
+                            <td>일반 보</td>
+                            <td>주주 간격 유리, 처짐 발생 가능</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3>5.3 적재하중 기준</h3>
+            <div class="calc-box">
+                <h4>비계기둥간 적재하중: 400kgf 이내</h4>
+                <div class="formula">
+                    장선길이 0.9~1.0m (발판 2장): <strong>220kgf/m²</strong> 이내
+                </div>
+                <div class="formula">
+                    장선길이 0.6m 이하 (발판 1장): <strong>350kgf/m²</strong> 이내
+                </div>
+                <p>* 띠장 길이 1.8m 기준 (상이한 경우 구조검토 필요)</p>
+            </div>
+            
+            <h3>5.4 트러스 설치 조건</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>항목</th>
+                            <th>기준</th>
+                            <th>비고</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>보 사이즈</td>
+                            <td>폭 450~800mm</td>
+                            <td>중심 간격 H6 동일</td>
+                        </tr>
+                        <tr>
+                            <td>보 깊이</td>
+                            <td>900mm 미만</td>
+                            <td>이상 시 권장하지 않음</td>
+                        </tr>
+                        <tr>
+                            <td>적용 구간</td>
+                            <td>반복 구조물</td>
+                            <td>주차장 등</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section id="safety" class="section">
+            <h2 data-number="6">안전 기준 및 주의사항</h2>
+            
+            <h3>6.1 설치 전 확인사항</h3>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <strong>지반 상태 확인</strong>
+                    <ul>
+                        <li>연약지반: 버림 콘크리트 타설 후 설치</li>
+                        <li>견고지반: 허용지지력 100kN/m² 이상, 베이스판 사용</li>
+                        <li>연약지반(버림 불가): 받침목(150×45T 이상) 설치</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3>6.2 설치 중 안전사항</h3>
+            <div class="alert-box alert-danger">
+                <h5><span class="icon">🚨</span> 필수 안전 수칙</h5>
+                <ul>
+                    <li>수직재 연결부 2개소 이상 금지</li>
+                    <li>가새는 반드시 전체 높이에 설치</li>
+                    <li>대각선 형태로 폐합형 배치</li>
+                    <li>수평연결재 4.0m마다 설치</li>
+                    <li>단변비 3배 초과 금지</li>
+                </ul>
+            </div>
+            
+            <h3>6.3 특수 조건 시공</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>조건</th>
+                            <th>조치사항</th>
+                            <th>주의점</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>경사면</td>
+                            <td>목재 쐬기 삽입, 고임재 보강</td>
+                            <td>경사면과 멍에 수직 유지</td>
+                        </tr>
+                        <tr>
+                            <td>눈썹보</td>
+                            <td>300mm 미만: 설치X<br>300~500mm: 외줄<br>500mm 이상: 두줄</td>
+                            <td>현장 여건 확인</td>
+                        </tr>
+                        <tr>
+                            <td>Deck 구간</td>
+                            <td>보만 설치, 수평연결재 보강</td>
+                            <td>클램프 체결 확인</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section id="calculation" class="section">
+            <h2 data-number="7">구조 검토</h2>
+            
+            <h3>7.1 설계하중 산정</h3>
+            <div class="calc-box">
+                <h4>1. 수직하중</h4>
+                <div class="formula">
+                    고정하중 = 콘크리트(24kN/m³) × 두께 + 거푸집(0.4kN/m²)
+                </div>
+                <div class="formula">
+                    작업하중 = 2.5kN/m² (0.5m 미만)<br>
+                    　　　　 = 3.5kN/m² (0.5~1.0m)<br>
+                    　　　　 = 5.0kN/m² (1.0m 이상)
+                </div>
+                <div class="formula">
+                    <strong>설계하중 = 고정하중 + 작업하중</strong>
+                </div>
+            </div>
+            
+            <h3>7.2 수직재 하중 검토</h3>
+            <div class="calc-box">
+                <h4>예시: 슬래브 700mm</h4>
+                <div class="formula">
+                    고정하중 = 24 × 0.7 + 0.4 = 17.2 kN/m²
+                </div>
+                <div class="formula">
+                    작업하중 = 3.5 kN/m² (0.5~1.0m 구간)
+                </div>
+                <div class="formula">
+                    설계하중 = 17.2 + 3.5 = <strong>20.7 kN/m²</strong>
+                </div>
+                <div class="formula">
+                    1본당 하중 = 20.7 × (1.5 × 1.2) = <strong>37.26 kN</strong>
+                </div>
+                <p class="alert-danger" style="margin-top: 15px; padding: 10px;">
+                    ⚠️ 37.26 kN > 36.00 kN (P17 허용) → <strong>간격 조정 필요!</strong>
+                </p>
+            </div>
+            
+            <h3>7.3 물량 산출 기준</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>구조형식</th>
+                            <th>산출방법</th>
+                            <th>계수</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>RC구간</td>
+                            <td>슬라브 포함 / 공체적 / 골조 내부선</td>
+                            <td>0.9</td>
+                        </tr>
+                        <tr>
+                            <td>DECK보</td>
+                            <td>실체적 (보폭 × 보하단 높이)</td>
+                            <td>1.0</td>
+                        </tr>
+                        <tr>
+                            <td>TG보+RC슬라브</td>
+                            <td>TG보 끝선 × 슬라브포함 높이</td>
+                            <td>0.9</td>
+                        </tr>
+                        <tr>
+                            <td>TP,TS슬라브</td>
+                            <td>실체적 (슬라브 미포함)</td>
+                            <td>1.0</td>
+                        </tr>
+                        <tr>
+                            <td>토목현장</td>
+                            <td>실체적 (슬라브 미포함)</td>
+                            <td>1.0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section id="examples" class="section">
+            <h2 data-number="8">유형별 시공 사례</h2>
+            
+            <div class="spec-cards">
+                <div class="spec-card">
+                    <h4>아파트 PIT</h4>
+                    <ul style="text-align: left; list-style: none;">
+                        <li>✓ 구조계산 최대 간격 확보</li>
+                        <li>✓ 벽체선에서 300mm 이상 이격</li>
+                        <li>⚠️ 상부 단열재 고려 필수</li>
+                    </ul>
+                </div>
+                
+                <div class="spec-card">
+                    <h4>헛보/오픈구간</h4>
+                    <ul style="text-align: left; list-style: none;">
+                        <li>✓ 트러스 사용 검토</li>
+                        <li>✓ 하부 지지 방법 결정</li>
+                        <li>⚠️ 외곽부 바닥 유무 확인</li>
+                    </ul>
+                </div>
+                
+                <div class="spec-card">
+                    <h4>토목 박스</h4>
+                    <ul style="text-align: left; list-style: none;">
+                        <li>✓ 헌치폭 확인</li>
+                        <li>✓ 멍에 방향 설정</li>
+                        <li>⚠️ P2 설치 (400mm 이내)</li>
+                    </ul>
+                </div>
+                
+                <div class="spec-card">
+                    <h4>이중시스템</h4>
+                    <ul style="text-align: left; list-style: none;">
+                        <li>✓ 경사지붕 구간 적용</li>
+                        <li>✓ 현장 협의 필수</li>
+                        <li>⚠️ 구조검토 <span class="badge">필수</span></li>
+                    </ul>
+                </div>
+                
+                <div class="spec-card">
+                    <h4>Deck 구간</h4>
+                    <ul style="text-align: left; list-style: none;">
+                        <li>✓ 보만 설치 원칙</li>
+                        <li>✓ 수평연결재 4m 이내</li>
+                        <li>⚠️ 클램프 체결 확인</li>
+                    </ul>
+                </div>
+                
+                <div class="spec-card">
+                    <h4>경사면</h4>
+                    <ul style="text-align: left; list-style: none;">
+                        <li>✓ 멍에와 경사면 수직</li>
+                        <li>✓ 목재 쐬기/고임재</li>
+                        <li>⚠️ 미끄러짐 방지 조치</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <div style="background: #2c3e50; color: white; text-align: center; padding: 40px 0; margin-top: 50px;">
+            <p>구조 검토 및 기술 문의</p>
+            <h3 style="margin: 10px 0;">가설파트너</h3>
+            <p>
+                <a href="https://gaseolpartner.com" target="_blank" style="color: #fff; text-decoration: none;">www.gaseolpartner.com</a>
+            </p>
+            <p style="margin-top: 15px; font-size: 0.9em;">© 2024 가설파트너. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
