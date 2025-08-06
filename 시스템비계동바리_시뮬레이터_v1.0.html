@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 비계/동바리 설치 시뮬레이터 - 가설파트너</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Malgun Gothic', Arial, sans-serif;
+            background: #f0f0f0;
+            overflow-x: hidden;
+        }
+        .header-banner {
+            background: #1976D2;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-banner a {
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .header-banner a:hover {
+            text-decoration: underline;
+        }
+        #container {
+            position: relative;
+            width: 100%;
+            min-height: calc(100vh - 40px);
+            padding-bottom: 20px;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 70vh;
+            position: relative;
+            background: linear-gradient(to bottom, #87CEEB, #f0f0f0);
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 380px;
+            z-index: 100;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 20px;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 10px;
+        }
+        .system-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .system-btn {
+            flex: 1;
+            padding: 10px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .system-btn.active {
+            background: #2196F3;
+            color: white;
+        }
+        .system-btn:hover {
+            background: #1976D2;
+            color: white;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #step-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+            border-left: 4px solid #2196F3;
+        }
+        #step-title {
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        #progress {
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        #progress-bar {
+            height: 100%;
+            background: #4CAF50;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 200px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+        }
+        .safety-info {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            font-size: 13px;
+            border: 3px solid #FFA500;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+        }
+        .safety-info h3 {
+            margin-top: 0;
+            color: #FF6600;
+            font-size: 18px;
+            text-align: center;
+        }
+        .safety-info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .safety-info li {
+            margin: 5px 0;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #FF6600;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .detail-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .detail-info h4 {
+            margin-top: 0;
+            color: #0288D1;
+        }
+        .specs-table {
+            width: 100%;
+            margin-top: 10px;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+        .specs-table td {
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
+        .specs-table td:first-child {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+        #view-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+        .tab-content {
+            margin-top: 15px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 8px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .tab-btn.active {
+            background: #FF6600;
+            color: white;
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        .export-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 600px;
+            font-size: 14px;
+            border: 3px solid #2196F3;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+        }
+        .export-dialog h3 {
+            margin-top: 0;
+            color: #1976D2;
+            font-size: 18px;
+            text-align: center;
+        }
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .export-btn {
+            padding: 15px;
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .export-btn:hover {
+            background: #e3f2fd;
+            border-color: #2196F3;
+        }
+        .export-btn i {
+            font-size: 24px;
+            color: #2196F3;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .capture-preview {
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        .capture-preview img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .report-preview {
+            display: none;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-banner">
+        🏗️ 가설파트너 시스템 비계/동바리 설치 시뮬레이터 | 
+        <a href="https://gaseolpartner.com" target="_blank">홈페이지 방문</a>
+    </div>
+    <div id="container">
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        <div id="controls">
+            <h2>시스템 비계/동바리 설치 시뮬레이터</h2>
+            <small style="color: #666; display: block; margin-bottom: 10px;">© 2025 가설파트너</small>
+            <div class="system-selector">
+                <button class="system-btn active" onclick="selectSystem('scaffold')">시스템 비계</button>
+                <button class="system-btn" onclick="selectSystem('support')">시스템 동바리</button>
+            </div>
+            <div id="progress">
+                <div id="progress-bar"></div>
+            </div>
+            <button onclick="previousStep()">◀ 이전 단계</button>
+            <button onclick="nextStep()">다음 단계 ▶</button>
+            <button onclick="autoPlay()">자동 재생 ▶</button>
+            <button onclick="reset()">처음으로</button>
+            <button onclick="toggleSafety()">안전 수칙 보기</button>
+            <button onclick="toggleExport()">보고서 추출</button>
+            <div id="step-info">
+                <div id="step-title">준비 단계</div>
+                <div id="step-description">시작하려면 '다음 단계' 버튼을 클릭하세요.</div>
+            </div>
+            <div class="detail-info" id="detail-info">
+                <h4>설치 규격</h4>
+                <table class="specs-table" id="specs-table">
+                    <!-- 동적으로 채워짐 -->
+                </table>
+            </div>
+        </div>
+        <div class="legend" id="legend">
+            <!-- 동적으로 채워짐 -->
+        </div>
+        <div class="overlay" id="overlay" onclick="toggleSafety()"></div>
+        <div class="safety-info" id="safety-info">
+            <button class="close-btn" onclick="toggleSafety()">×</button>
+            <h3>⚠️ 안전 수칙</h3>
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="selectTab('scaffold-safety')">시스템 비계</button>
+                <button class="tab-btn" onclick="selectTab('support-safety')">시스템 동바리</button>
+            </div>
+            <div class="tab-content">
+                <div class="tab-panel active" id="scaffold-safety">
+                    <h4>시스템 비계 안전 수칙</h4>
+                    <ul>
+                        <li><strong>설치 전 확인사항</strong>
+                            <ul>
+                                <li>평탄한 지반 확보 및 받침판 설치</li>
+                                <li>자재 손상 및 변형 여부 점검</li>
+                                <li>설계도면과 일치 여부 확인</li>
+                            </ul>
+                        </li>
+                        <li><strong>설치 중 안전사항</strong>
+                            <ul>
+                                <li>안전모, 안전벨트 착용 필수</li>
+                                <li>2인 이상 작업 시행</li>
+                                <li>폭 20cm 이상 발판 설치</li>
+                                <li>상하 동시 작업 금지</li>
+                                <li>기상 악화 시 작업 중지</li>
+                            </ul>
+                        </li>
+                        <li><strong>주요 규격</strong>
+                            <ul>
+                                <li>수직재 간격: 1.8m 이하</li>
+                                <li>수평재 간격: 1.9m</li>
+                                <li>작업발판: 너비 40cm 이상, 틈새 3cm 이하</li>
+                                <li>난간대: 0.95m (2단)</li>
+                                <li>최대 작업하중: 200kg</li>
+                            </ul>
+                        </li>
+                        <li><strong>해체 작업</strong>
+                            <ul>
+                                <li>설치의 역순으로 진행</li>
+                                <li>안전난간, 벽이음 선 해체 금지</li>
+                                <li>해체 자재 투하 금지</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="tab-panel" id="support-safety">
+                    <h4>시스템 동바리 안전 수칙</h4>
+                    <ul>
+                        <li><strong>설치 전 확인사항</strong>
+                            <ul>
+                                <li>지반 상태 및 침하 여부 확인</li>
+                                <li>부재 손상 및 변형 상태 점검</li>
+                                <li>설계도면과 일치 여부 확인</li>
+                            </ul>
+                        </li>
+                        <li><strong>설치 중 안전사항</strong>
+                            <ul>
+                                <li>안전모, 안전대 착용 필수</li>
+                                <li>2인 1조 작업 실시</li>
+                                <li>수직도 및 수평 확인</li>
+                                <li>상하 동시 작업 금지</li>
+                            </ul>
+                        </li>
+                        <li><strong>주요 규격</strong>
+                            <ul>
+                                <li>동바리 간격: 1.8m × 1.8m 이하</li>
+                                <li>수평 연결재: 1단/1.8m 간격</li>
+                                <li>최대 높이: 3.5m (표준)</li>
+                                <li>허용 하중: 40kN/본</li>
+                            </ul>
+                        </li>
+                        <li><strong>설치 후 점검사항</strong>
+                            <ul>
+                                <li>연결부 체결 상태 확인</li>
+                                <li>가새 설치 여부 점검</li>
+                                <li>허용하중 표시 부착</li>
+                                <li>주기적 안전점검 실시</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="view-controls">
+            <p>마우스 드래그: 회전 | 휠: 확대/축소</p>
+        </div>
+        <div class="export-dialog" id="export-dialog">
+            <button class="close-btn" onclick="toggleExport()">×</button>
+            <h3>📄 설치 순서 보고서 추출</h3>
+            <div class="export-options">
+                <div class="export-btn" onclick="captureCurrentStep()">
+                    <i>📸</i>
+                    <strong>현재 단계 캡처</strong>
+                    <small>현재 화면을 이미지로 저장</small>
+                </div>
+                <div class="export-btn" onclick="captureAllSteps()">
+                    <i>🎞️</i>
+                    <strong>전체 단계 캡처</strong>
+                    <small>모든 단계를 이미지로 저장</small>
+                </div>
+                <div class="export-btn" onclick="exportReport()">
+                    <i>📑</i>
+                    <strong>설치 매뉴얼 출력</strong>
+                    <small>텍스트 형식 설치 가이드</small>
+                </div>
+                <div class="export-btn" onclick="printReport()">
+                    <i>🖨️</i>
+                    <strong>인쇄용 보고서</strong>
+                    <small>프린터로 출력 가능한 형식</small>
+                </div>
+            </div>
+            <div class="capture-preview" id="capture-preview">
+                <h4>캡처 미리보기</h4>
+                <img id="preview-image" alt="캡처 이미지">
+                <br><br>
+                <button onclick="downloadCapture()">이미지 다운로드</button>
+            </div>
+            <div class="report-preview" id="report-preview">
+                <h4>보고서 미리보기</h4>
+                <div id="report-content"></div>
+                <br>
+                <button onclick="downloadReport()">텍스트 파일 다운로드</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer;
+        let parts = [];
+        let currentStep = 0;
+        let autoPlayInterval;
+        let groundMarkers = [];
+        let currentSystem = 'scaffold';
+
+        // 시스템 비계 단계
+        const scaffoldSteps = [
+            {
+                title: "1단계: 먹줄 매김 및 JACK BASE 배치",
+                description: "평탄한 지반에 먹줄을 매긴 후 JACK BASE를 배치합니다. 지반의 침하 방지를 위해 충분한 면적의 받침판을 사용합니다.",
+                safety: "작업장 주변 통제시설 설치, 낙하·비래 반경 내 접근 통제",
+                action: scaffoldStep1
+            },
+            {
+                title: "2단계: 하부 조절용 수직재 설치",
+                description: "JACK BASE 위에 하부 조절용 수직재를 설치합니다. 수직재 간격은 띠장 방향에서 1.8m 이하로 설치하며, 수직도를 유지합니다.",
+                safety: "작업자의 안전모, 안전벨트 착용상태 확인",
+                action: scaffoldStep2
+            },
+            {
+                title: "3단계: 수직재 및 수평재 설치",
+                description: "수직재를 연결하고 첫 번째 수평재를 설치합니다. 수평재는 수직재의 Flange에 ROCK-PIN으로 체결합니다.",
+                safety: "수직재 작업 시 안전 걸이대 설치여부 확인",
+                action: scaffoldStep3
+            },
+            {
+                title: "4단계: 하단 작업발판 설치",
+                description: "하단에 작업발판을 설치합니다. 발판 너비는 40cm 이상, 틈새는 3cm 이하로 합니다.",
+                safety: "발판 체결 불량으로 인한 근로자 추락 방지",
+                action: scaffoldStep4
+            },
+            {
+                title: "5단계: 안전대 착용 점검 및 2단 준비",
+                description: "2단으로 올라가기 전 작업자들의 안전대 착용상태를 점검합니다.",
+                safety: "고소작업 시 안전고리 체결 철저히 확인",
+                action: scaffoldStep5
+            },
+            {
+                title: "6단계: 2단 수평재 및 작업발판 설치",
+                description: "2단 조립을 위한 수평재를 설치하고 2단계 작업발판을 설치합니다.",
+                safety: "상하 동시 작업 금지, 신호수 배치",
+                action: scaffoldStep6
+            },
+            {
+                title: "7단계: 가새 및 안전난간 설치",
+                description: "구조물의 안정성을 위해 가새를 설치하고 안전난간을 설치합니다.",
+                safety: "난간의 각 부재는 견고하게 설치",
+                action: scaffoldStep7
+            },
+            {
+                title: "8단계: 완성 및 안전점검",
+                description: "전체 시스템을 점검하고 승강설비와 안전망을 설치합니다.",
+                safety: "연결부의 풀림상태 수시 확인",
+                action: scaffoldStep8
+            }
+        ];
+
+        // 시스템 동바리 단계
+        const supportSteps = [
+            {
+                title: "1단계: 먹줄 작업 및 지반 정리",
+                description: "슬래브 하부 바닥을 평탄하게 정리하고, 동바리 설치 위치에 먹줄을 칩니다.",
+                safety: "작업 구역 안전 통제, 바닥 정리 상태 확인",
+                action: supportStep1
+            },
+            {
+                title: "2단계: 받침판(Base Plate) 설치",
+                description: "먹줄에 맞춰 받침판을 설치합니다. 지반이 연약한 경우 깔판을 추가로 설치합니다.",
+                safety: "받침판 안정성 확인, 침하 방지 조치",
+                action: supportStep2
+            },
+            {
+                title: "3단계: 수직재(동바리) 1차 설치",
+                description: "받침판 위에 수직재를 설치합니다. 수직재는 반드시 수직을 유지하도록 설치합니다.",
+                safety: "수직도 확인, 안전대 착용, 2인 1조 작업",
+                action: supportStep3
+            },
+            {
+                title: "4단계: 수평 연결재 설치",
+                description: "수직재 사이에 수평 연결재를 설치합니다. 1.8m 이하 간격으로 설치합니다.",
+                safety: "연결부 체결 상태 확인, 수평 유지",
+                action: supportStep4
+            },
+            {
+                title: "5단계: 가새재 설치",
+                description: "구조물의 횡방향 안정성을 위해 가새재를 설치합니다.",
+                safety: "가새 각도 확인, 체결부 안전 점검",
+                action: supportStep5
+            },
+            {
+                title: "6단계: 추가 수직재 설치",
+                description: "나머지 위치에 수직재를 추가로 설치합니다.",
+                safety: "기설치 부재와의 연결 확인",
+                action: supportStep6
+            },
+            {
+                title: "7단계: U-헤드 및 멍에 설치",
+                description: "수직재 상부에 U-헤드를 설치하고 멍에를 올려놓습니다.",
+                safety: "높이 조절 시 안전 확인",
+                action: supportStep7
+            },
+            {
+                title: "8단계: 거푸집 설치 및 최종 점검",
+                description: "멍에 위에 거푸집을 설치하고 전체 시스템을 점검합니다.",
+                safety: "허용하중 확인, 안전점검표 작성",
+                action: supportStep8
+            }
+        ];
+
+        // 범례 정보
+        const scaffoldLegend = [
+            { color: '#8B4513', name: '받침판 (Jack Base)' },
+            { color: '#4169E1', name: '수직재' },
+            { color: '#FF6347', name: '수평재' },
+            { color: '#32CD32', name: '가새' },
+            { color: '#FFD700', name: '작업발판' },
+            { color: '#FF8C00', name: '안전난간' },
+            { color: '#808080', name: '사다리/승강설비' }
+        ];
+
+        const supportLegend = [
+            { color: '#8B4513', name: '받침판 (Base Plate)' },
+            { color: '#4169E1', name: '수직재 (동바리)' },
+            { color: '#FF6347', name: '수평 연결재' },
+            { color: '#32CD32', name: '가새재' },
+            { color: '#FFD700', name: 'U-헤드/멍에' },
+            { color: '#DEB887', name: '거푸집/슬래브' }
+        ];
+
+        // 규격 정보
+        const scaffoldSpecs = [
+            { label: '수직재 간격', value: '1.8m 이하' },
+            { label: '수평재 간격', value: '1.9m' },
+            { label: '작업발판 너비', value: '40cm 이상' },
+            { label: '난간대 높이', value: '0.95m (2단)' }
+        ];
+
+        const supportSpecs = [
+            { label: '동바리 간격', value: '1.8m × 1.8m 이하' },
+            { label: '수평 연결재', value: '1단/1.8m 간격' },
+            { label: '최대 높이', value: '3.5m (표준)' },
+            { label: '허용 하중', value: '40kN/본' }
+        ];
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+            scene.fog = new THREE.Fog(0xf0f0f0, 100, 200);
+
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            resetCamera();
+
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+            renderer.setSize(width, height);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // 조명 설정
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            directionalLight.position.set(15, 25, 15);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.left = -30;
+            directionalLight.shadow.camera.right = 30;
+            directionalLight.shadow.camera.top = 30;
+            directionalLight.shadow.camera.bottom = -30;
+            scene.add(directionalLight);
+
+            // 지면
+            const groundGeometry = new THREE.PlaneGeometry(40, 40);
+            const groundMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // 마우스 컨트롤
+            setupMouseControls();
+
+            updateUI();
+            animate();
+        }
+
+        function setupMouseControls() {
+            let isMouseDown = false;
+            let mouseX = 0;
+            let mouseY = 0;
+
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                if (!isMouseDown) return;
+                
+                const deltaX = e.clientX - mouseX;
+                const deltaY = e.clientY - mouseY;
+                
+                camera.position.x = camera.position.x * Math.cos(deltaX * 0.01) - camera.position.z * Math.sin(deltaX * 0.01);
+                camera.position.z = camera.position.x * Math.sin(deltaX * 0.01) + camera.position.z * Math.cos(deltaX * 0.01);
+                camera.position.y += deltaY * 0.05;
+                camera.position.y = Math.max(5, Math.min(30, camera.position.y));
+                
+                camera.lookAt(0, currentSystem === 'scaffold' ? 3 : 5, 0);
+                
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            renderer.domElement.addEventListener('mouseup', () => {
+                isMouseDown = false;
+            });
+
+            renderer.domElement.addEventListener('wheel', (e) => {
+                const scale = e.deltaY > 0 ? 1.1 : 0.9;
+                camera.position.multiplyScalar(scale);
+                camera.lookAt(0, currentSystem === 'scaffold' ? 3 : 5, 0);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            parts.forEach((part, index) => {
+                if (part.userData.isNew) {
+                    part.scale.y = Math.min(1, part.scale.y + 0.05);
+                    if (part.scale.y >= 1) {
+                        part.userData.isNew = false;
+                    }
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+
+        function clearParts() {
+            parts.forEach(part => scene.remove(part));
+            parts = [];
+            groundMarkers.forEach(marker => scene.remove(marker));
+            groundMarkers = [];
+        }
+
+        function resetCamera() {
+            if (currentSystem === 'scaffold') {
+                camera.position.set(15, 10, 20);
+                camera.lookAt(0, 3, 0);
+            } else {
+                camera.position.set(20, 15, 25);
+                camera.lookAt(0, 5, 0);
+            }
+        }
+
+        // 시스템 비계 단계별 액션
+        function scaffoldStep1() {
+            clearParts();
+            
+            // 먹줄 표시
+            const lineGeometry = new THREE.BufferGeometry();
+            const linePositions = new Float32Array([
+                -4, 0.01, -4, 4, 0.01, -4,
+                4, 0.01, -4, 4, 0.01, 4,
+                4, 0.01, 4, -4, 0.01, 4,
+                -4, 0.01, 4, -4, 0.01, -4,
+                -4, 0.01, 0, 4, 0.01, 0,
+                0, 0.01, -4, 0, 0.01, 4
+            ]);
+            lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+            scene.add(lines);
+            groundMarkers.push(lines);
+            
+            // JACK BASE 설치
+            const positions = [
+                [-4, 0, -4], [4, 0, -4], [-4, 0, 4], [4, 0, 4], [0, 0, -4], [0, 0, 4]
+            ];
+            
+            positions.forEach(pos => {
+                const geometry = new THREE.BoxGeometry(1.2, 0.15, 1.2);
+                const material = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+                const plate = new THREE.Mesh(geometry, material);
+                plate.position.set(...pos);
+                plate.castShadow = true;
+                plate.receiveShadow = true;
+                plate.scale.y = 0.1;
+                plate.userData.isNew = true;
+                scene.add(plate);
+                parts.push(plate);
+            });
+        }
+
+        function scaffoldStep2() {
+            const positions = [
+                [-4, 0, -4], [4, 0, -4], [-4, 0, 4], [4, 0, 4], [0, 0, -4], [0, 0, 4]
+            ];
+            
+            positions.forEach(pos => {
+                // 하부 조절용 부분
+                const adjustGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.5);
+                const adjustMaterial = new THREE.MeshPhongMaterial({ color: 0x606060 });
+                const adjustPost = new THREE.Mesh(adjustGeometry, adjustMaterial);
+                adjustPost.position.set(pos[0], 0.25, pos[2]);
+                adjustPost.castShadow = true;
+                adjustPost.scale.y = 0.1;
+                adjustPost.userData.isNew = true;
+                scene.add(adjustPost);
+                parts.push(adjustPost);
+                
+                // 메인 수직재
+                const geometry = new THREE.CylinderGeometry(0.06, 0.06, 3);
+                const material = new THREE.MeshPhongMaterial({ color: 0x4169E1 });
+                const post = new THREE.Mesh(geometry, material);
+                post.position.set(pos[0], 2, pos[2]);
+                post.castShadow = true;
+                post.scale.y = 0.1;
+                post.userData.isNew = true;
+                scene.add(post);
+                parts.push(post);
+            });
+        }
+
+        function scaffoldStep3() {
+            // 수평재 연결
+            const horizontals = [
+                [[-4, 1.5, -4], [0, 1.5, -4]],
+                [[0, 1.5, -4], [4, 1.5, -4]],
+                [[4, 1.5, -4], [4, 1.5, 4]],
+                [[4, 1.5, 4], [0, 1.5, 4]],
+                [[0, 1.5, 4], [-4, 1.5, 4]],
+                [[-4, 1.5, 4], [-4, 1.5, -4]],
+                [[-4, 1.5, 0], [4, 1.5, 0]]
+            ];
+            
+            horizontals.forEach(([start, end]) => {
+                const direction = new THREE.Vector3().subVectors(
+                    new THREE.Vector3(...end),
+                    new THREE.Vector3(...start)
+                );
+                const length = direction.length();
+                const geometry = new THREE.CylinderGeometry(0.05, 0.05, length);
+                const material = new THREE.MeshPhongMaterial({ color: 0xFF6347 });
+                const horizontal = new THREE.Mesh(geometry, material);
+                
+                horizontal.position.set(
+                    (start[0] + end[0]) / 2,
+                    start[1],
+                    (start[2] + end[2]) / 2
+                );
+                
+                if (start[0] !== end[0]) {
+                    horizontal.rotation.z = Math.PI / 2;
+                } else {
+                    horizontal.rotation.x = Math.PI / 2;
+                }
+                
+                horizontal.castShadow = true;
+                horizontal.scale.y = 0.1;
+                horizontal.userData.isNew = true;
+                scene.add(horizontal);
+                parts.push(horizontal);
+            });
+        }
+
+        function scaffoldStep4() {
+            // 작업발판 설치
+            const platformGeometry = new THREE.BoxGeometry(8.5, 0.1, 8.5);
+            const platformMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xFFD700,
+                transparent: true,
+                opacity: 0.9
+            });
+            const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+            platform.position.set(0, 1.6, 0);
+            platform.castShadow = true;
+            platform.receiveShadow = true;
+            platform.scale.y = 0.1;
+            platform.userData.isNew = true;
+            scene.add(platform);
+            parts.push(platform);
+            
+            // 발판 테두리
+            const edgeGeometry = new THREE.BoxGeometry(8.6, 0.05, 0.1);
+            const edgeMaterial = new THREE.MeshPhongMaterial({ color: 0xFFA500 });
+            
+            const edges = [
+                [0, 1.65, 4.3],
+                [0, 1.65, -4.3],
+                [4.3, 1.65, 0],
+                [-4.3, 1.65, 0]
+            ];
+            
+            edges.forEach((pos, index) => {
+                const edge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+                edge.position.set(...pos);
+                if (index >= 2) {
+                    edge.rotation.y = Math.PI / 2;
+                }
+                edge.castShadow = true;
+                scene.add(edge);
+                parts.push(edge);
+            });
+        }
+
+        function scaffoldStep5() {
+            // 2단 수직재 연장 표시
+            const positions = [
+                [-4, 3.5, -4], [4, 3.5, -4], [-4, 3.5, 4], [4, 3.5, 4], [0, 3.5, -4], [0, 3.5, 4]
+            ];
+            
+            positions.forEach(pos => {
+                const geometry = new THREE.CylinderGeometry(0.06, 0.06, 3);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: 0x4169E1,
+                    transparent: true,
+                    opacity: 0.5
+                });
+                const post = new THREE.Mesh(geometry, material);
+                post.position.set(...pos);
+                post.castShadow = true;
+                post.scale.y = 0.1;
+                post.userData.isNew = true;
+                scene.add(post);
+                parts.push(post);
+            });
+        }
+
+        function scaffoldStep6() {
+            // 2단 수직재 완성
+            const positions = [
+                [-4, 3.5, -4], [4, 3.5, -4], [-4, 3.5, 4], [4, 3.5, 4], [0, 3.5, -4], [0, 3.5, 4]
+            ];
+            
+            positions.forEach(pos => {
+                const geometry = new THREE.CylinderGeometry(0.06, 0.06, 3);
+                const material = new THREE.MeshPhongMaterial({ color: 0x4169E1 });
+                const post = new THREE.Mesh(geometry, material);
+                post.position.set(...pos);
+                post.castShadow = true;
+                scene.add(post);
+                parts.push(post);
+            });
+            
+            // 2단 수평재
+            const horizontals = [
+                [[-4, 3.5, -4], [0, 3.5, -4]],
+                [[0, 3.5, -4], [4, 3.5, -4]],
+                [[4, 3.5, -4], [4, 3.5, 4]],
+                [[4, 3.5, 4], [0, 3.5, 4]],
+                [[0, 3.5, 4], [-4, 3.5, 4]],
+                [[-4, 3.5, 4], [-4, 3.5, -4]],
+                [[-4, 3.5, 0], [4, 3.5, 0]]
+            ];
+            
+            horizontals.forEach(([start, end]) => {
+                const direction = new THREE.Vector3().subVectors(
+                    new THREE.Vector3(...end),
+                    new THREE.Vector3(...start)
+                );
+                const length = direction.length();
+                const geometry = new THREE.CylinderGeometry(0.05, 0.05, length);
+                const material = new THREE.MeshPhongMaterial({ color: 0xFF6347 });
+                const horizontal = new THREE.Mesh(geometry, material);
+                
+                horizontal.position.set(
+                    (start[0] + end[0]) / 2,
+                    start[1],
+                    (start[2] + end[2]) / 2
+                );
+                
+                if (start[0] !== end[0]) {
+                    horizontal.rotation.z = Math.PI / 2;
+                } else {
+                    horizontal.rotation.x = Math.PI / 2;
+                }
+                
+                horizontal.castShadow = true;
+                scene.add(horizontal);
+                parts.push(horizontal);
+            });
+            
+            // 2단 작업발판
+            const platformGeometry = new THREE.BoxGeometry(8.5, 0.1, 8.5);
+            const platformMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xFFD700,
+                transparent: true,
+                opacity: 0.9
+            });
+            const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+            platform.position.set(0, 3.6, 0);
+            platform.castShadow = true;
+            platform.receiveShadow = true;
+            scene.add(platform);
+            parts.push(platform);
+        }
+
+        function scaffoldStep7() {
+            // 가새 설치
+            const braces = [
+                [[-4, 0.5, -4], [0, 3, -4]],
+                [[0, 0.5, -4], [4, 3, -4]],
+                [[4, 0.5, -4], [4, 3, 0]],
+                [[4, 0.5, 0], [4, 3, 4]],
+                [[-4, 0.5, 4], [0, 3, 4]],
+                [[0, 0.5, 4], [4, 3, 4]]
+            ];
+            
+            braces.forEach(([start, end]) => {
+                const startVec = new THREE.Vector3(...start);
+                const endVec = new THREE.Vector3(...end);
+                const direction = new THREE.Vector3().subVectors(endVec, startVec);
+                const length = direction.length();
+                
+                const geometry = new THREE.CylinderGeometry(0.04, 0.04, length);
+                const material = new THREE.MeshPhongMaterial({ color: 0x32CD32 });
+                const brace = new THREE.Mesh(geometry, material);
+                
+                brace.position.copy(startVec.add(endVec).multiplyScalar(0.5));
+                brace.lookAt(endVec);
+                brace.rotateX(Math.PI / 2);
+                
+                brace.castShadow = true;
+                scene.add(brace);
+                parts.push(brace);
+            });
+            
+            // 안전난간 설치
+            const railHeight1 = 2.55;
+            const railHeight2 = 4.55;
+            
+            [railHeight1, railHeight2].forEach(height => {
+                const railPositions = [
+                    [[-4, height, -4], [0, height, -4]],
+                    [[0, height, -4], [4, height, -4]],
+                    [[4, height, -4], [4, height, 4]],
+                    [[4, height, 4], [0, height, 4]],
+                    [[0, height, 4], [-4, height, 4]],
+                    [[-4, height, 4], [-4, height, -4]]
+                ];
+                
+                railPositions.forEach(([start, end]) => {
+                    const direction = new THREE.Vector3().subVectors(
+                        new THREE.Vector3(...end),
+                        new THREE.Vector3(...start)
+                    );
+                    const length = direction.length();
+                    const geometry = new THREE.CylinderGeometry(0.04, 0.04, length);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xFF8C00 });
+                    const rail = new THREE.Mesh(geometry, material);
+                    
+                    rail.position.set(
+                        (start[0] + end[0]) / 2,
+                        start[1],
+                        (start[2] + end[2]) / 2
+                    );
+                    
+                    if (start[0] !== end[0]) {
+                        rail.rotation.z = Math.PI / 2;
+                    } else {
+                        rail.rotation.x = Math.PI / 2;
+                    }
+                    
+                    rail.castShadow = true;
+                    scene.add(rail);
+                    parts.push(rail);
+                });
+            });
+        }
+
+        function scaffoldStep8() {
+            // 사다리 설치
+            const ladderGeometry = new THREE.BoxGeometry(0.6, 7, 0.1);
+            const ladderMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
+            const ladder = new THREE.Mesh(ladderGeometry, ladderMaterial);
+            ladder.position.set(4.5, 3.5, 0);
+            ladder.castShadow = true;
+            scene.add(ladder);
+            parts.push(ladder);
+            
+            // 사다리 계단
+            for (let i = 0; i < 10; i++) {
+                const stepGeometry = new THREE.BoxGeometry(0.5, 0.05, 0.3);
+                const step = new THREE.Mesh(stepGeometry, ladderMaterial);
+                step.position.set(4.5, 0.5 + i * 0.7, 0.15);
+                scene.add(step);
+                parts.push(step);
+            }
+            
+            // 수직 안전망
+            const netGeometry = new THREE.PlaneGeometry(9, 7);
+            const netMaterial = new THREE.MeshPhongMaterial({
+                color: 0x00AA00,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            
+            const netPositions = [
+                [0, 3.5, -4.5],
+                [0, 3.5, 4.5],
+                [-4.5, 3.5, 0],
+                [4.5, 3.5, 0]
+            ];
+            
+            netPositions.forEach((pos, index) => {
+                const net = new THREE.Mesh(netGeometry, netMaterial);
+                net.position.set(...pos);
+                if (index >= 2) {
+                    net.rotation.y = Math.PI / 2;
+                }
+                scene.add(net);
+                parts.push(net);
+            });
+        }
+
+        // 시스템 동바리 단계별 액션
+        function supportStep1() {
+            clearParts();
+            
+            // 그리드 라인 (먹줄)
+            const gridSize = 18;
+            const divisions = 10;
+            const gridHelper = new THREE.GridHelper(gridSize, divisions, 0xff0000, 0xff6666);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+            groundMarkers.push(gridHelper);
+            
+            // 주요 설치 위치 표시
+            const positions = [];
+            for (let x = -7.2; x <= 7.2; x += 3.6) {
+                for (let z = -7.2; z <= 7.2; z += 3.6) {
+                    positions.push([x, 0.02, z]);
+                }
+            }
+            
+            positions.forEach(pos => {
+                const markerGeometry = new THREE.CircleGeometry(0.3, 32);
+                const markerMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xff0000,
+                    side: THREE.DoubleSide
+                });
+                const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+                marker.rotation.x = -Math.PI / 2;
+                marker.position.set(...pos);
+                scene.add(marker);
+                groundMarkers.push(marker);
+            });
+        }
+
+        function supportStep2() {
+            const positions = [];
+            for (let x = -7.2; x <= 7.2; x += 3.6) {
+                for (let z = -7.2; z <= 7.2; z += 3.6) {
+                    positions.push([x, 0, z]);
+                }
+            }
+            
+            positions.forEach(pos => {
+                // 받침판
+                const plateGeometry = new THREE.BoxGeometry(0.6, 0.1, 0.6);
+                const plateMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+                const plate = new THREE.Mesh(plateGeometry, plateMaterial);
+                plate.position.set(...pos);
+                plate.castShadow = true;
+                plate.receiveShadow = true;
+                plate.scale.y = 0.1;
+                plate.userData.isNew = true;
+                scene.add(plate);
+                parts.push(plate);
+                
+                // 조절 나사부
+                const screwGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.3);
+                const screwMaterial = new THREE.MeshPhongMaterial({ color: 0x606060 });
+                const screw = new THREE.Mesh(screwGeometry, screwMaterial);
+                screw.position.set(pos[0], 0.2, pos[2]);
+                screw.castShadow = true;
+                screw.scale.y = 0.1;
+                screw.userData.isNew = true;
+                scene.add(screw);
+                parts.push(screw);
+            });
+        }
+
+        function supportStep3() {
+            // 코너 위치의 동바리만 먼저 설치
+            const cornerPositions = [
+                [-7.2, 0, -7.2], [7.2, 0, -7.2], [-7.2, 0, 7.2], [7.2, 0, 7.2]
+            ];
+            
+            cornerPositions.forEach(pos => {
+                const supportGeometry = new THREE.CylinderGeometry(0.08, 0.08, 6);
+                const supportMaterial = new THREE.MeshPhongMaterial({ color: 0x4169E1 });
+                const support = new THREE.Mesh(supportGeometry, supportMaterial);
+                support.position.set(pos[0], 3.35, pos[2]);
+                support.castShadow = true;
+                support.scale.y = 0.1;
+                support.userData.isNew = true;
+                scene.add(support);
+                parts.push(support);
+            });
+        }
+
+        function supportStep4() {
+            // 수평 연결재 설치
+            const connections = [
+                [[-7.2, 2, -7.2], [7.2, 2, -7.2]],
+                [[-7.2, 2, 7.2], [7.2, 2, 7.2]],
+                [[-7.2, 2, -7.2], [-7.2, 2, 7.2]],
+                [[7.2, 2, -7.2], [7.2, 2, 7.2]],
+                [[-7.2, 4, -7.2], [7.2, 4, -7.2]],
+                [[-7.2, 4, 7.2], [7.2, 4, 7.2]],
+                [[-7.2, 4, -7.2], [-7.2, 4, 7.2]],
+                [[7.2, 4, -7.2], [7.2, 4, 7.2]]
+            ];
+            
+            connections.forEach(([start, end]) => {
+                const direction = new THREE.Vector3().subVectors(
+                    new THREE.Vector3(...end),
+                    new THREE.Vector3(...start)
+                );
+                const length = direction.length();
+                const geometry = new THREE.CylinderGeometry(0.05, 0.05, length);
+                const material = new THREE.MeshPhongMaterial({ color: 0xFF6347 });
+                const connection = new THREE.Mesh(geometry, material);
+                
+                connection.position.set(
+                    (start[0] + end[0]) / 2,
+                    start[1],
+                    (start[2] + end[2]) / 2
+                );
+                
+                if (start[0] !== end[0]) {
+                    connection.rotation.z = Math.PI / 2;
+                } else {
+                    connection.rotation.x = Math.PI / 2;
+                }
+                
+                connection.castShadow = true;
+                connection.scale.y = 0.1;
+                connection.userData.isNew = true;
+                scene.add(connection);
+                parts.push(connection);
+            });
+        }
+
+        function supportStep5() {
+            // X자 가새 설치
+            const braces = [
+                [[-7.2, 0.5, -7.2], [7.2, 5, 7.2]],
+                [[7.2, 0.5, -7.2], [-7.2, 5, 7.2]],
+                [[-7.2, 0.5, -7.2], [-7.2, 5, 7.2]],
+                [[7.2, 0.5, -7.2], [7.2, 5, 7.2]]
+            ];
+            
+            braces.forEach(([start, end]) => {
+                const startVec = new THREE.Vector3(...start);
+                const endVec = new THREE.Vector3(...end);
+                const direction = new THREE.Vector3().subVectors(endVec, startVec);
+                const length = direction.length();
+                
+                const geometry = new THREE.CylinderGeometry(0.04, 0.04, length);
+                const material = new THREE.MeshPhongMaterial({ color: 0x32CD32 });
+                const brace = new THREE.Mesh(geometry, material);
+                
+                brace.position.copy(startVec.add(endVec).multiplyScalar(0.5));
+                brace.lookAt(endVec);
+                brace.rotateX(Math.PI / 2);
+                
+                brace.castShadow = true;
+                brace.scale.y = 0.1;
+                brace.userData.isNew = true;
+                scene.add(brace);
+                parts.push(brace);
+            });
+        }
+
+        function supportStep6() {
+            // 나머지 동바리 설치
+            const positions = [];
+            for (let x = -7.2; x <= 7.2; x += 3.6) {
+                for (let z = -7.2; z <= 7.2; z += 3.6) {
+                    if (!((Math.abs(x) === 7.2 && Math.abs(z) === 7.2))) {
+                        positions.push([x, 0, z]);
+                    }
+                }
+            }
+            
+            positions.forEach(pos => {
+                const supportGeometry = new THREE.CylinderGeometry(0.08, 0.08, 6);
+                const supportMaterial = new THREE.MeshPhongMaterial({ color: 0x4169E1 });
+                const support = new THREE.Mesh(supportGeometry, supportMaterial);
+                support.position.set(pos[0], 3.35, pos[2]);
+                support.castShadow = true;
+                support.scale.y = 0.1;
+                support.userData.isNew = true;
+                scene.add(support);
+                parts.push(support);
+            });
+            
+            // 중간 수평 연결재 추가
+            const midConnections = [
+                [[-3.6, 3, -7.2], [-3.6, 3, 7.2]],
+                [[0, 3, -7.2], [0, 3, 7.2]],
+                [[3.6, 3, -7.2], [3.6, 3, 7.2]],
+                [[-7.2, 3, -3.6], [7.2, 3, -3.6]],
+                [[-7.2, 3, 0], [7.2, 3, 0]],
+                [[-7.2, 3, 3.6], [7.2, 3, 3.6]]
+            ];
+            
+            midConnections.forEach(([start, end]) => {
+                const direction = new THREE.Vector3().subVectors(
+                    new THREE.Vector3(...end),
+                    new THREE.Vector3(...start)
+                );
+                const length = direction.length();
+                const geometry = new THREE.CylinderGeometry(0.04, 0.04, length);
+                const material = new THREE.MeshPhongMaterial({ color: 0xFF6347 });
+                const connection = new THREE.Mesh(geometry, material);
+                
+                connection.position.set(
+                    (start[0] + end[0]) / 2,
+                    start[1],
+                    (start[2] + end[2]) / 2
+                );
+                
+                if (start[0] !== end[0]) {
+                    connection.rotation.z = Math.PI / 2;
+                } else {
+                    connection.rotation.x = Math.PI / 2;
+                }
+                
+                connection.castShadow = true;
+                scene.add(connection);
+                parts.push(connection);
+            });
+        }
+
+        function supportStep7() {
+            // U-헤드 설치
+            const positions = [];
+            for (let x = -7.2; x <= 7.2; x += 3.6) {
+                for (let z = -7.2; z <= 7.2; z += 3.6) {
+                    positions.push([x, 6.5, z]);
+                }
+            }
+            
+            positions.forEach(pos => {
+                // U-헤드
+                const uHeadGeometry = new THREE.BoxGeometry(0.3, 0.2, 0.3);
+                const uHeadMaterial = new THREE.MeshPhongMaterial({ color: 0xFFD700 });
+                const uHead = new THREE.Mesh(uHeadGeometry, uHeadMaterial);
+                uHead.position.set(...pos);
+                uHead.castShadow = true;
+                scene.add(uHead);
+                parts.push(uHead);
+                
+                // U자 형태 표현
+                const sideGeometry = new THREE.BoxGeometry(0.05, 0.3, 0.3);
+                const side1 = new THREE.Mesh(sideGeometry, uHeadMaterial);
+                side1.position.set(pos[0] - 0.175, pos[1] + 0.15, pos[2]);
+                scene.add(side1);
+                parts.push(side1);
+                
+                const side2 = new THREE.Mesh(sideGeometry, uHeadMaterial);
+                side2.position.set(pos[0] + 0.175, pos[1] + 0.15, pos[2]);
+                scene.add(side2);
+                parts.push(side2);
+            });
+            
+            // 멍에(장선) 설치
+            const beamPositions = [
+                [[-7.2, 6.8, 0], [7.2, 6.8, 0]],
+                [[0, 6.8, -7.2], [0, 6.8, 7.2]],
+                [[-7.2, 6.8, -3.6], [7.2, 6.8, -3.6]],
+                [[-7.2, 6.8, 3.6], [7.2, 6.8, 3.6]],
+                [[-3.6, 6.8, -7.2], [-3.6, 6.8, 7.2]],
+                [[3.6, 6.8, -7.2], [3.6, 6.8, 7.2]]
+            ];
+            
+            beamPositions.forEach(([start, end]) => {
+                const direction = new THREE.Vector3().subVectors(
+                    new THREE.Vector3(...end),
+                    new THREE.Vector3(...start)
+                );
+                const length = direction.length();
+                const beamGeometry = new THREE.BoxGeometry(0.15, 0.3, length);
+                const beamMaterial = new THREE.MeshPhongMaterial({ color: 0xFFD700 });
+                const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+                
+                beam.position.set(
+                    (start[0] + end[0]) / 2,
+                    start[1],
+                    (start[2] + end[2]) / 2
+                );
+                
+                if (start[0] === end[0]) {
+                    beam.rotation.y = Math.PI / 2;
+                }
+                
+                beam.castShadow = true;
+                scene.add(beam);
+                parts.push(beam);
+            });
+        }
+
+        function supportStep8() {
+            // 거푸집(슬래브) 표현
+            const slabGeometry = new THREE.BoxGeometry(16, 0.5, 16);
+            const slabMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xDEB887,
+                transparent: true,
+                opacity: 0.8
+            });
+            const slab = new THREE.Mesh(slabGeometry, slabMaterial);
+            slab.position.set(0, 7.2, 0);
+            slab.castShadow = true;
+            slab.receiveShadow = true;
+            scene.add(slab);
+            parts.push(slab);
+            
+            // 안전 표시
+            const signGeometry = new THREE.PlaneGeometry(1, 0.6);
+            const signMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xFFFF00,
+                side: THREE.DoubleSide
+            });
+            const sign = new THREE.Mesh(signGeometry, signMaterial);
+            sign.position.set(8, 4, 0);
+            sign.rotation.y = -Math.PI / 2;
+            scene.add(sign);
+            parts.push(sign);
+        }
+
+        // UI 업데이트 함수
+        function updateUI() {
+            const legend = document.getElementById('legend');
+            const specsTable = document.getElementById('specs-table');
+            
+            // 범례 업데이트
+            legend.innerHTML = '';
+            const currentLegend = currentSystem === 'scaffold' ? scaffoldLegend : supportLegend;
+            currentLegend.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'legend-item';
+                div.innerHTML = `
+                    <div class="legend-color" style="background: ${item.color};"></div>
+                    <span>${item.name}</span>
+                `;
+                legend.appendChild(div);
+            });
+            
+            // 규격 테이블 업데이트
+            specsTable.innerHTML = '';
+            const currentSpecs = currentSystem === 'scaffold' ? scaffoldSpecs : supportSpecs;
+            currentSpecs.forEach(spec => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${spec.label}</td>
+                    <td>${spec.value}</td>
+                `;
+                specsTable.appendChild(tr);
+            });
+        }
+
+        function updateStep() {
+            const steps = currentSystem === 'scaffold' ? scaffoldSteps : supportSteps;
+            
+            if (currentStep > 0 && currentStep <= steps.length) {
+                const step = steps[currentStep - 1];
+                step.action();
+                document.getElementById('step-title').textContent = step.title;
+                document.getElementById('step-description').innerHTML = step.description + '<br><br><strong>안전사항:</strong> ' + step.safety;
+            } else {
+                clearParts();
+                document.getElementById('step-title').textContent = "준비 단계";
+                document.getElementById('step-description').textContent = `${currentSystem === 'scaffold' ? '시스템 비계' : '시스템 동바리'} 설치 순서를 확인합니다. '다음 단계' 버튼을 클릭하여 시작하세요.`;
+            }
+            
+            const progress = (currentStep / steps.length) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+            
+            document.querySelector('button[onclick="previousStep()"]').disabled = currentStep === 0;
+            document.querySelector('button[onclick="nextStep()"]').disabled = currentStep === steps.length;
+        }
+
+        function selectSystem(system) {
+            if (system === currentSystem) return;
+            
+            currentSystem = system;
+            currentStep = 0;
+            clearInterval(autoPlayInterval);
+            clearParts();
+            resetCamera();
+            updateUI();
+            updateStep();
+            
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.system-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function nextStep() {
+            const steps = currentSystem === 'scaffold' ? scaffoldSteps : supportSteps;
+            if (currentStep < steps.length) {
+                currentStep++;
+                updateStep();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+
+        function reset() {
+            currentStep = 0;
+            clearInterval(autoPlayInterval);
+            updateStep();
+        }
+
+        function autoPlay() {
+            clearInterval(autoPlayInterval);
+            const steps = currentSystem === 'scaffold' ? scaffoldSteps : supportSteps;
+            
+            if (currentStep === steps.length) {
+                reset();
+            }
+            
+            autoPlayInterval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    nextStep();
+                } else {
+                    clearInterval(autoPlayInterval);
+                }
+            }, 4000);
+        }
+
+        function toggleSafety() {
+            const safetyInfo = document.getElementById('safety-info');
+            const overlay = document.getElementById('overlay');
+            if (safetyInfo.style.display === 'none' || safetyInfo.style.display === '') {
+                safetyInfo.style.display = 'block';
+                overlay.style.display = 'block';
+            } else {
+                safetyInfo.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+        }
+
+        function selectTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        window.addEventListener('resize', () => {
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        });
+
+        // 추출 기능 관련 함수들
+        function toggleExport() {
+            const exportDialog = document.getElementById('export-dialog');
+            const overlay = document.getElementById('overlay');
+            if (exportDialog.style.display === 'none' || exportDialog.style.display === '') {
+                exportDialog.style.display = 'block';
+                overlay.style.display = 'block';
+                document.getElementById('capture-preview').style.display = 'none';
+                document.getElementById('report-preview').style.display = 'none';
+            } else {
+                exportDialog.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+        }
+
+        function captureCurrentStep() {
+            renderer.render(scene, camera);
+            const dataURL = renderer.domElement.toDataURL('image/png');
+            
+            const preview = document.getElementById('capture-preview');
+            const previewImage = document.getElementById('preview-image');
+            preview.style.display = 'block';
+            previewImage.src = dataURL;
+            
+            // 현재 단계 정보 저장
+            window.currentCapture = {
+                image: dataURL,
+                step: currentStep,
+                system: currentSystem,
+                title: document.getElementById('step-title').textContent
+            };
+        }
+
+        function downloadCapture() {
+            if (!window.currentCapture) return;
+            
+            const link = document.createElement('a');
+            link.download = `${window.currentCapture.system}_step${window.currentCapture.step}_${Date.now()}.png`;
+            link.href = window.currentCapture.image;
+            link.click();
+        }
+
+        async function captureAllSteps() {
+            const originalStep = currentStep;
+            const steps = currentSystem === 'scaffold' ? scaffoldSteps : supportSteps;
+            const images = [];
+            
+            // 모든 단계를 순회하며 캡처
+            for (let i = 0; i <= steps.length; i++) {
+                currentStep = i;
+                updateStep();
+                
+                // 렌더링 대기
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                renderer.render(scene, camera);
+                const dataURL = renderer.domElement.toDataURL('image/png');
+                
+                images.push({
+                    step: i,
+                    title: i === 0 ? '준비 단계' : steps[i - 1].title,
+                    image: dataURL
+                });
+            }
+            
+            // 원래 단계로 복원
+            currentStep = originalStep;
+            updateStep();
+            
+            // ZIP 파일로 다운로드 (실제 구현 시 JSZip 라이브러리 필요)
+            alert(`${images.length}개의 이미지가 캡처되었습니다. 각 이미지를 개별적으로 다운로드하려면 각 단계에서 '현재 단계 캡처'를 사용하세요.`);
+            
+            // 첫 번째 이미지만 미리보기로 표시
+            const preview = document.getElementById('capture-preview');
+            const previewImage = document.getElementById('preview-image');
+            preview.style.display = 'block';
+            previewImage.src = images[0].image;
+            
+            window.allCaptures = images;
+        }
+
+        function exportReport() {
+            const steps = currentSystem === 'scaffold' ? scaffoldSteps : supportSteps;
+            const specs = currentSystem === 'scaffold' ? scaffoldSpecs : supportSpecs;
+            const systemName = currentSystem === 'scaffold' ? '시스템 비계' : '시스템 동바리';
+            
+            let report = `${systemName} 설치 순서 매뉴얼\n`;
+            report += `생성일: ${new Date().toLocaleDateString('ko-KR')}\n`;
+            report += `=${'='.repeat(50)}\n\n`;
+            
+            // 규격 정보
+            report += `[설치 규격]\n`;
+            specs.forEach(spec => {
+                report += `- ${spec.label}: ${spec.value}\n`;
+            });
+            report += `\n`;
+            
+            // 설치 단계
+            report += `[설치 단계]\n`;
+            steps.forEach((step, index) => {
+                report += `\n${index + 1}. ${step.title}\n`;
+                report += `-`.repeat(step.title.length + 4) + `\n`;
+                report += `설명: ${step.description}\n`;
+                report += `안전사항: ${step.safety}\n`;
+            });
+            
+            // 안전 수칙
+            report += `\n\n[안전 수칙]\n`;
+            report += currentSystem === 'scaffold' ? 
+                `1. 설치 전: 평탄한 지반 확보, 자재 점검, 설계도면 확인
+2. 설치 중: 안전모/안전벨트 착용, 2인 이상 작업, 상하 동시 작업 금지
+3. 설치 후: 연결부 체결 확인, 허용하중 표시, 주기적 점검` :
+                `1. 설치 전: 지반 상태 확인, 부재 점검, 설계도면 확인
+2. 설치 중: 안전모/안전대 착용, 2인 1조 작업, 수직도 확인
+3. 설치 후: 연결부 확인, 가새 점검, 허용하중 표시`;
+            
+            // 미리보기 표시
+            const preview = document.getElementById('report-preview');
+            const content = document.getElementById('report-content');
+            preview.style.display = 'block';
+            content.innerHTML = `<pre>${report}</pre>`;
+            
+            window.currentReport = report;
+        }
+
+        function downloadReport() {
+            if (!window.currentReport) return;
+            
+            const blob = new Blob([window.currentReport], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.download = `${currentSystem}_installation_guide_${Date.now()}.txt`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        }
+
+        function printReport() {
+            const steps = currentSystem === 'scaffold' ? scaffoldSteps : supportSteps;
+            const systemName = currentSystem === 'scaffold' ? '시스템 비계' : '시스템 동바리';
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${systemName} 설치 매뉴얼</title>
+                    <style>
+                        body { font-family: 'Malgun Gothic', Arial, sans-serif; padding: 20px; }
+                        h1 { color: #1976D2; border-bottom: 2px solid #1976D2; padding-bottom: 10px; }
+                        h2 { color: #333; margin-top: 30px; }
+                        .step { page-break-inside: avoid; margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+                        .step-title { font-weight: bold; color: #1976D2; }
+                        .safety { background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107; }
+                        .specs { background: #f0f0f0; padding: 15px; margin: 20px 0; }
+                        @media print { .step { page-break-inside: avoid; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>${systemName} 설치 매뉴얼</h1>
+                    <p>생성일: ${new Date().toLocaleDateString('ko-KR')}</p>
+                    
+                    <div class="specs">
+                        <h2>설치 규격</h2>
+                        ${currentSystem === 'scaffold' ? `
+                            <ul>
+                                <li>수직재 간격: 1.8m 이하</li>
+                                <li>수평재 간격: 1.9m</li>
+                                <li>작업발판 너비: 40cm 이상</li>
+                                <li>난간대 높이: 0.95m (2단)</li>
+                            </ul>
+                        ` : `
+                            <ul>
+                                <li>동바리 간격: 1.8m × 1.8m 이하</li>
+                                <li>수평 연결재: 1단/1.8m 간격</li>
+                                <li>최대 높이: 3.5m (표준)</li>
+                                <li>허용 하중: 40kN/본</li>
+                            </ul>
+                        `}
+                    </div>
+                    
+                    <h2>설치 단계</h2>
+                    ${steps.map((step, index) => `
+                        <div class="step">
+                            <div class="step-title">${index + 1}. ${step.title}</div>
+                            <p>${step.description}</p>
+                            <div class="safety">
+                                <strong>안전사항:</strong> ${step.safety}
+                            </div>
+                        </div>
+                    `).join('')}
+                    
+                    <h2>안전 수칙</h2>
+                    <div class="safety">
+                        ${currentSystem === 'scaffold' ? `
+                            <h3>시스템 비계 안전 수칙</h3>
+                            <ul>
+                                <li>설치 전: 평탄한 지반 확보, 자재 점검</li>
+                                <li>설치 중: 안전장비 착용, 2인 이상 작업</li>
+                                <li>설치 후: 연결부 확인, 주기적 점검</li>
+                            </ul>
+                        ` : `
+                            <h3>시스템 동바리 안전 수칙</h3>
+                            <ul>
+                                <li>설치 전: 지반 상태 확인, 부재 점검</li>
+                                <li>설치 중: 안전장비 착용, 2인 1조 작업</li>
+                                <li>설치 후: 연결부 확인, 허용하중 표시</li>
+                            </ul>
+                        `}
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.onload = function() {
+                printWindow.print();
+            };
+        }
+
+        init();
+    </script>
+</body>
+</html>
