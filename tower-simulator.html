@@ -223,104 +223,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/controls/OrbitControls.js"></script>
     <script>
-        // Three.js OrbitControls 직접 구현 (CDN 문제 해결)
-        THREE.OrbitControls = function(object, domElement) {
-            this.object = object;
-            this.domElement = domElement;
-            this.target = new THREE.Vector3();
-            
-            this.enableDamping = false;
-            this.dampingFactor = 0.05;
-            this.screenSpacePanning = false;
-            this.minDistance = 0;
-            this.maxDistance = Infinity;
-            this.maxPolarAngle = Math.PI;
-            this.autoRotate = false;
-            this.autoRotateSpeed = 2.0;
-            
-            var scope = this;
-            var rotateStart = new THREE.Vector2();
-            var rotateEnd = new THREE.Vector2();
-            var rotateDelta = new THREE.Vector2();
-            var spherical = new THREE.Spherical();
-            var sphericalDelta = new THREE.Spherical();
-            var scale = 1;
-            var zoomChanged = false;
-            
-            this.update = function() {
-                var offset = new THREE.Vector3();
-                var position = scope.object.position;
-                offset.copy(position).sub(scope.target);
-                spherical.setFromVector3(offset);
-                
-                if (scope.autoRotate) {
-                    sphericalDelta.theta = 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
-                    spherical.theta -= sphericalDelta.theta;
-                }
-                
-                spherical.theta += sphericalDelta.theta;
-                spherical.phi += sphericalDelta.phi;
-                spherical.radius *= scale;
-                spherical.phi = Math.max(0, Math.min(scope.maxPolarAngle, spherical.phi));
-                spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
-                
-                offset.setFromSpherical(spherical);
-                position.copy(scope.target).add(offset);
-                scope.object.lookAt(scope.target);
-                
-                if (scope.enableDamping === true) {
-                    sphericalDelta.theta *= (1 - scope.dampingFactor);
-                    sphericalDelta.phi *= (1 - scope.dampingFactor);
-                } else {
-                    sphericalDelta.set(0, 0, 0);
-                }
-                
-                scale = 1;
-                zoomChanged = false;
-            };
-            
-            function onMouseDown(event) {
-                event.preventDefault();
-                rotateStart.set(event.clientX, event.clientY);
-                document.addEventListener('mousemove', onMouseMove, false);
-                document.addEventListener('mouseup', onMouseUp, false);
-            }
-            
-            function onMouseMove(event) {
-                event.preventDefault();
-                rotateEnd.set(event.clientX, event.clientY);
-                rotateDelta.subVectors(rotateEnd, rotateStart);
-                
-                var element = scope.domElement;
-                sphericalDelta.theta -= 2 * Math.PI * rotateDelta.x / element.clientHeight;
-                sphericalDelta.phi -= 2 * Math.PI * rotateDelta.y / element.clientHeight;
-                
-                rotateStart.copy(rotateEnd);
-                scope.update();
-            }
-            
-            function onMouseUp(event) {
-                document.removeEventListener('mousemove', onMouseMove, false);
-                document.removeEventListener('mouseup', onMouseUp, false);
-            }
-            
-            function onMouseWheel(event) {
-                event.preventDefault();
-                if (event.deltaY < 0) {
-                    scale /= 1.1;
-                } else {
-                    scale *= 1.1;
-                }
-                scope.update();
-            }
-            
-            domElement.addEventListener('mousedown', onMouseDown, false);
-            domElement.addEventListener('wheel', onMouseWheel, false);
-            
-            this.update();
-        };
-
         // 전역 변수 선언
         let scene, camera, renderer, controls;
         let scaffoldGroup, stairsGroup, platformsGroup, railsGroup, braceGroup;
@@ -839,7 +743,7 @@
         }
         
         // 페이지 로드 시 초기화
-        window.addEventListener('load', init);
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
