@@ -172,7 +172,6 @@
         
         <div id="controls" style="display: none;">
             <h2>타워 시뮬레이터</h2>
-
             
             <div class="control-group">
                 <label>층수: <span class="value-display" id="floorsValue">4</span></label>
@@ -224,13 +223,108 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
+        // Three.js OrbitControls 직접 구현 (CDN 문제 해결)
+        THREE.OrbitControls = function(object, domElement) {
+            this.object = object;
+            this.domElement = domElement;
+            this.target = new THREE.Vector3();
+            
+            this.enableDamping = false;
+            this.dampingFactor = 0.05;
+            this.screenSpacePanning = false;
+            this.minDistance = 0;
+            this.maxDistance = Infinity;
+            this.maxPolarAngle = Math.PI;
+            this.autoRotate = false;
+            this.autoRotateSpeed = 2.0;
+            
+            var scope = this;
+            var rotateStart = new THREE.Vector2();
+            var rotateEnd = new THREE.Vector2();
+            var rotateDelta = new THREE.Vector2();
+            var spherical = new THREE.Spherical();
+            var sphericalDelta = new THREE.Spherical();
+            var scale = 1;
+            var zoomChanged = false;
+            
+            this.update = function() {
+                var offset = new THREE.Vector3();
+                var position = scope.object.position;
+                offset.copy(position).sub(scope.target);
+                spherical.setFromVector3(offset);
+                
+                if (scope.autoRotate) {
+                    sphericalDelta.theta = 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
+                    spherical.theta -= sphericalDelta.theta;
+                }
+                
+                spherical.theta += sphericalDelta.theta;
+                spherical.phi += sphericalDelta.phi;
+                spherical.radius *= scale;
+                spherical.phi = Math.max(0, Math.min(scope.maxPolarAngle, spherical.phi));
+                spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
+                
+                offset.setFromSpherical(spherical);
+                position.copy(scope.target).add(offset);
+                scope.object.lookAt(scope.target);
+                
+                if (scope.enableDamping === true) {
+                    sphericalDelta.theta *= (1 - scope.dampingFactor);
+                    sphericalDelta.phi *= (1 - scope.dampingFactor);
+                } else {
+                    sphericalDelta.set(0, 0, 0);
+                }
+                
+                scale = 1;
+                zoomChanged = false;
+            };
+            
+            function onMouseDown(event) {
+                event.preventDefault();
+                rotateStart.set(event.clientX, event.clientY);
+                document.addEventListener('mousemove', onMouseMove, false);
+                document.addEventListener('mouseup', onMouseUp, false);
+            }
+            
+            function onMouseMove(event) {
+                event.preventDefault();
+                rotateEnd.set(event.clientX, event.clientY);
+                rotateDelta.subVectors(rotateEnd, rotateStart);
+                
+                var element = scope.domElement;
+                sphericalDelta.theta -= 2 * Math.PI * rotateDelta.x / element.clientHeight;
+                sphericalDelta.phi -= 2 * Math.PI * rotateDelta.y / element.clientHeight;
+                
+                rotateStart.copy(rotateEnd);
+                scope.update();
+            }
+            
+            function onMouseUp(event) {
+                document.removeEventListener('mousemove', onMouseMove, false);
+                document.removeEventListener('mouseup', onMouseUp, false);
+            }
+            
+            function onMouseWheel(event) {
+                event.preventDefault();
+                if (event.deltaY < 0) {
+                    scale /= 1.1;
+                } else {
+                    scale *= 1.1;
+                }
+                scope.update();
+            }
+            
+            domElement.addEventListener('mousedown', onMouseDown, false);
+            domElement.addEventListener('wheel', onMouseWheel, false);
+            
+            this.update();
+        };
+
         // 전역 변수 선언
         let scene, camera, renderer, controls;
         let scaffoldGroup, stairsGroup, platformsGroup, railsGroup, braceGroup;
         let autoRotate = false;
-
         
         // 실제 비계 규격 (mm 단위를 m로 변환)
         const DIMENSIONS = {
@@ -552,7 +646,7 @@
             }
         }
         
-        // 작업 발판 생성 (3x2 고정)
+        // 작업 발판 생성
         function createPlatforms(width, depth, floors) {
             const { bayWidth, bayDepth, floorHeight } = DIMENSIONS;
             
@@ -568,14 +662,12 @@
                 DIMENSIONS.bracketWidth
             );
             
-            // 3x2 고정이므로 계단은 항상 중간 베이(1,0)에 위치
             const stairBayX = 1;
             const stairBayZ = 0;
             
             for (let y = 1; y <= floors; y++) {
                 for (let x = 0; x < width; x++) {
                     for (let z = 0; z < depth; z++) {
-                        // 계단이 표시되고 있고, 계단 베이인 경우 발판 생략
                         if (document.getElementById('showStairs').checked && 
                             x === stairBayX && z === stairBayZ) {
                             continue;
@@ -595,20 +687,18 @@
             }
         }
         
-        // 내부 통합형 계단 생성 (3x2 고정 구조)
+        // 계단 생성
         function createExternalStairTower(width, depth, floors) {
             const { bayWidth, bayDepth, floorHeight } = DIMENSIONS;
             
-            // 3x2 고정이므로 계단은 항상 중간 베이(인덱스 1)에 설치
-            const stairBayX = 1;  // 중간 베이
-            const stairBayZ = 0;  // 앞쪽 베이
+            const stairBayX = 1;
+            const stairBayZ = 0;
             
             const stairWidth = 0.61;
             const stepHeight = 0.19;
             const stepDepth = 0.26;
-            const stepsPerFloor = 10;  // 한 층당 총 10단
+            const stepsPerFloor = 10;
             
-            // 재질 정의
             const stepMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0x444444,
                 metalness: 0.3,
@@ -621,77 +711,11 @@
                 roughness: 0.2
             });
             
-            // 계단 베이의 중심 좌표
             const stairCenterX = stairBayX * bayWidth + bayWidth / 2 - (width * bayWidth) / 2;
             const stairCenterZ = stairBayZ * bayDepth + bayDepth / 2 - (depth * bayDepth) / 2;
             
-            // 각 층에 대한 계단 생성
             for (let floor = 0; floor < floors; floor++) {
-                // 마지막 층은 계단 대신 사다리나 간단한 접근로만 설치
-                if (floor === floors - 1) {
-                    // 마지막 층 접근용 짧은 계단 (5단만)
-                    const lastFloorSteps = 5;
-                    for (let step = 0; step < lastFloorSteps; step++) {
-                        const stepGeometry = new THREE.BoxGeometry(stepDepth, 0.03, stairWidth);
-                        const stepMesh = new THREE.Mesh(stepGeometry, stepMaterial);
-                        
-                        // 중앙에서 시작하는 짧은 계단
-                        stepMesh.position.set(
-                            stairCenterX - bayWidth/4 + (step + 1) * (bayWidth/2 / lastFloorSteps),
-                            floor * floorHeight + step * stepHeight + stepHeight / 2,
-                            stairCenterZ - bayDepth/3  // 항상 앞쪽
-                        );
-                        
-                        stepMesh.castShadow = true;
-                        stepMesh.receiveShadow = true;
-                        stairsGroup.add(stepMesh);
-                        
-                        // 미끄럼 방지 패턴
-                        const patternGeometry = new THREE.BoxGeometry(stepDepth * 0.8, 0.002, stairWidth * 0.9);
-                        const patternMaterial = new THREE.MeshStandardMaterial({ 
-                            color: 0x222222,
-                            metalness: 0.1,
-                            roughness: 0.9
-                        });
-                        const pattern = new THREE.Mesh(patternGeometry, patternMaterial);
-                        pattern.position.copy(stepMesh.position);
-                        pattern.position.y += 0.02;
-                        stairsGroup.add(pattern);
-                    }
-                    
-                    // 마지막 층 난간 (간단하게)
-                    const railHeight = 0.9;
-                    const railGeometry = new THREE.CylinderGeometry(0.02, 0.02, railHeight);
-                    
-                    for (let i = 0; i <= lastFloorSteps; i += 2) {
-                        const xPos = stairCenterX - bayWidth/4 + i * (bayWidth/2 / lastFloorSteps);
-                        const zPos = stairCenterZ - bayDepth/3;
-                        
-                        // 앞쪽 난간
-                        const frontRail = new THREE.Mesh(railGeometry, railMaterial);
-                        frontRail.position.set(
-                            xPos,
-                            floor * floorHeight + i * stepHeight + railHeight/2,
-                            zPos - stairWidth/2 - 0.1
-                        );
-                        stairsGroup.add(frontRail);
-                        
-                        // 뒤쪽 난간
-                        const backRail = new THREE.Mesh(railGeometry, railMaterial);
-                        backRail.position.set(
-                            xPos,
-                            floor * floorHeight + i * stepHeight + railHeight/2,
-                            zPos + stairWidth/2 + 0.1
-                        );
-                        stairsGroup.add(backRail);
-                    }
-                    
-                    continue;  // 마지막 층은 여기서 끝
-                }
-                
-                // 일반 층 계단 (1층부터 마지막-1층까지)
-                // 3x2 구조에서 앞뒤로 전환하며 좌우 이동
-                const direction = floor % 4;  // 0: 왼쪽(앞), 1: 오른쪽(앞), 2: 왼쪽(뒤), 3: 오른쪽(뒤)
+                const direction = floor % 4;
                 
                 for (let step = 0; step < stepsPerFloor; step++) {
                     const stepGeometry = new THREE.BoxGeometry(stepDepth, 0.03, stairWidth);
@@ -700,23 +724,11 @@
                     let xPos, zPos;
                     
                     if (direction === 0 || direction === 2) {
-                        // 왼쪽으로 이동
                         xPos = stairCenterX + bayWidth/2 - (step + 1) * (bayWidth / stepsPerFloor);
-                        
-                        if (direction === 0) {
-                            zPos = stairCenterZ - bayDepth/3;  // 앞쪽
-                        } else {
-                            zPos = stairCenterZ + bayDepth/3;  // 뒤쪽
-                        }
+                        zPos = direction === 0 ? stairCenterZ - bayDepth/3 : stairCenterZ + bayDepth/3;
                     } else {
-                        // 오른쪽으로 이동
                         xPos = stairCenterX - bayWidth/2 + (step + 1) * (bayWidth / stepsPerFloor);
-                        
-                        if (direction === 1) {
-                            zPos = stairCenterZ - bayDepth/3;  // 앞쪽
-                        } else {
-                            zPos = stairCenterZ + bayDepth/3;  // 뒤쪽
-                        }
+                        zPos = direction === 1 ? stairCenterZ - bayDepth/3 : stairCenterZ + bayDepth/3;
                     }
                     
                     stepMesh.position.set(
@@ -728,113 +740,6 @@
                     stepMesh.castShadow = true;
                     stepMesh.receiveShadow = true;
                     stairsGroup.add(stepMesh);
-                    
-                    // 계단 표면 미끄럼 방지 패턴
-                    const patternGeometry = new THREE.BoxGeometry(stepDepth * 0.8, 0.002, stairWidth * 0.9);
-                    const patternMaterial = new THREE.MeshStandardMaterial({ 
-                        color: 0x222222,
-                        metalness: 0.1,
-                        roughness: 0.9
-                    });
-                    const pattern = new THREE.Mesh(patternGeometry, patternMaterial);
-                    pattern.position.copy(stepMesh.position);
-                    pattern.position.y += 0.02;
-                    stairsGroup.add(pattern);
-                }
-                
-                // 계단 난간
-                const railHeight = 0.9;
-                const railGeometry = new THREE.CylinderGeometry(0.02, 0.02, railHeight);
-                
-                // 난간 기둥 설치 (3단마다)
-                for (let step = 0; step <= stepsPerFloor; step += 3) {
-                    let xPos, zPosRail;
-                    
-                    if (direction === 0 || direction === 2) {
-                        xPos = stairCenterX + bayWidth/2 - step * (bayWidth / stepsPerFloor);
-                        
-                        if (direction === 0) {
-                            zPosRail = stairCenterZ - bayDepth/3;
-                        } else {
-                            zPosRail = stairCenterZ + bayDepth/3;
-                        }
-                    } else {
-                        xPos = stairCenterX - bayWidth/2 + step * (bayWidth / stepsPerFloor);
-                        
-                        if (direction === 1) {
-                            zPosRail = stairCenterZ - bayDepth/3;
-                        } else {
-                            zPosRail = stairCenterZ + bayDepth/3;
-                        }
-                    }
-                    
-                    // 앞쪽 난간
-                    const frontRail = new THREE.Mesh(railGeometry, railMaterial);
-                    frontRail.position.set(
-                        xPos,
-                        floor * floorHeight + step * stepHeight + railHeight/2,
-                        zPosRail - stairWidth/2 - 0.1
-                    );
-                    stairsGroup.add(frontRail);
-                    
-                    // 뒤쪽 난간
-                    const backRail = new THREE.Mesh(railGeometry, railMaterial);
-                    backRail.position.set(
-                        xPos,
-                        floor * floorHeight + step * stepHeight + railHeight/2,
-                        zPosRail + stairWidth/2 + 0.1
-                    );
-                    stairsGroup.add(backRail);
-                }
-                
-                // 핸드레일 (경사진 손잡이)
-                const handrailRadius = 0.025;
-                const handrailLength = Math.sqrt(
-                    bayWidth * bayWidth + 
-                    (stepsPerFloor * stepHeight) * (stepsPerFloor * stepHeight)
-                );
-                const handrailGeometry = new THREE.CylinderGeometry(
-                    handrailRadius, 
-                    handrailRadius, 
-                    handrailLength
-                );
-                
-                const angle = Math.atan2(stepsPerFloor * stepHeight, bayWidth);
-                
-                // 양쪽 핸드레일
-                for (let side = 0; side < 2; side++) {
-                    const handrail = new THREE.Mesh(handrailGeometry, railMaterial);
-                    let zOffset;
-                    
-                    if (direction === 0 || direction === 2) {
-                        if (direction === 0) {
-                            zOffset = stairCenterZ - bayDepth/3 + (side === 0 ? -stairWidth/2 - 0.1 : stairWidth/2 + 0.1);
-                        } else {
-                            zOffset = stairCenterZ + bayDepth/3 + (side === 0 ? -stairWidth/2 - 0.1 : stairWidth/2 + 0.1);
-                        }
-                        
-                        handrail.position.set(
-                            stairCenterX,
-                            floor * floorHeight + (stepsPerFloor * stepHeight)/2 + railHeight,
-                            zOffset
-                        );
-                        handrail.rotation.z = angle;
-                    } else {
-                        if (direction === 1) {
-                            zOffset = stairCenterZ - bayDepth/3 + (side === 0 ? -stairWidth/2 - 0.1 : stairWidth/2 + 0.1);
-                        } else {
-                            zOffset = stairCenterZ + bayDepth/3 + (side === 0 ? -stairWidth/2 - 0.1 : stairWidth/2 + 0.1);
-                        }
-                        
-                        handrail.position.set(
-                            stairCenterX,
-                            floor * floorHeight + (stepsPerFloor * stepHeight)/2 + railHeight,
-                            zOffset
-                        );
-                        handrail.rotation.z = -angle;
-                    }
-                    
-                    stairsGroup.add(handrail);
                 }
             }
         }
@@ -853,9 +758,7 @@
             const topRailGeometry = new THREE.CylinderGeometry(0.025, 0.025, bayWidth);
             
             for (let y = 1; y <= floors; y++) {
-                // 외곽 난간 기둥 - 후면만 (계단 반대편)
                 for (let x = 0; x <= width; x++) {
-                    // 후면
                     const post = new THREE.Mesh(railGeometry, railMaterial);
                     post.position.set(
                         x * bayWidth - (width * bayWidth) / 2,
@@ -865,7 +768,6 @@
                     railsGroup.add(post);
                 }
                 
-                // 상부 난간 - 후면만
                 for (let x = 0; x < width; x++) {
                     const topRail = new THREE.Mesh(topRailGeometry, railMaterial);
                     topRail.rotation.z = Math.PI / 2;
@@ -875,34 +777,6 @@
                         (depth * bayDepth) / 2
                     );
                     railsGroup.add(topRail);
-                    
-                    // 중간 난간
-                    const midRail = new THREE.Mesh(topRailGeometry, railMaterial);
-                    midRail.rotation.z = Math.PI / 2;
-                    midRail.position.set(
-                        x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
-                        y * floorHeight - floorHeight / 2 + railHeight / 2,
-                        (depth * bayDepth) / 2
-                    );
-                    railsGroup.add(midRail);
-                }
-                
-                // 발끝막이판 - 후면만
-                const toeBoardGeometry = new THREE.BoxGeometry(bayWidth, 0.15, 0.02);
-                const toeBoardMaterial = new THREE.MeshStandardMaterial({ 
-                    color: 0xcc6600,
-                    metalness: 0.3,
-                    roughness: 0.7
-                });
-                
-                for (let x = 0; x < width; x++) {
-                    const toeBoard = new THREE.Mesh(toeBoardGeometry, toeBoardMaterial);
-                    toeBoard.position.set(
-                        x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
-                        y * floorHeight - floorHeight / 2 + 0.075,
-                        (depth * bayDepth) / 2
-                    );
-                    railsGroup.add(toeBoard);
                 }
             }
         }
@@ -944,12 +818,10 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            // Controls 업데이트
             if (controls) {
                 controls.update();
             }
             
-            // 체크박스에 따른 가시성 업데이트
             if (stairsGroup) {
                 stairsGroup.visible = document.getElementById('showStairs').checked;
             }
@@ -963,7 +835,6 @@
                 braceGroup.visible = document.getElementById('showBraces').checked;
             }
             
-            // 렌더링
             renderer.render(scene, camera);
         }
         
