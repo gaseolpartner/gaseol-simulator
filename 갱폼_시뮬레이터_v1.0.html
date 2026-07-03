@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>갱폼 시뮬레이터</title>
+    <style>
+        body { margin: 0; font-family: 'Malgun Gothic', sans-serif; background: #1a1a1a; color: #fff; overflow: hidden; }
+        .header-banner { background: #1976D2; color: white; padding: 10px 20px; text-align: center; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; z-index: 2000; }
+        .header-banner a { color: #FFD700; text-decoration: none; font-weight: bold; margin-left: 10px; }
+        .header-banner a:hover { text-decoration: underline; }
+        #canvas-container { position: relative; height: calc(100vh - 40px); }
+        #controls { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); max-width: 300px; z-index: 1000; max-height: calc(100vh - 90px); overflow-y: auto; }
+        h2 { margin: 0 0 16px 0; font-size: 20px; color: #00ff88; }
+        .control-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #aaa; }
+        input[type="range"] { width: 100%; height: 6px; border-radius: 3px; background: #333; outline: none; -webkit-appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #00ff88; cursor: pointer; }
+        .value-display { display: inline-block; color: #00ff88; font-weight: bold; }
+        button { width: 100%; padding: 10px; margin-top: 8px; background: #00ff88; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        button:hover { background: #00cc6a; transform: translateY(-2px); }
+        .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
+        input[type="checkbox"] { margin-right: 10px; }
+        #info { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; backdrop-filter: blur(10px); font-size: 14px; max-width: 320px; }
+        #dimensions { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; backdrop-filter: blur(10px); font-size: 14px; }
+        #canvas { width: 100%; height: 100%; }
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: #00ff88; }
+    </style>
+</head>
+<body>
+    <div class="header-banner">
+        🏗️ 가설파트너 갱폼(Gang Form) 시뮬레이터 |
+        <a href="https://gaseolpartner.com" target="_blank">홈페이지 방문</a> |
+        © 2025 가설파트너
+    </div>
+
+    <div id="canvas-container">
+        <div id="loading">로딩 중...</div>
+
+        <div id="controls" style="display: none;">
+            <h2>갱폼 거푸집</h2>
+
+            <div class="control-group">
+                <label>패널 폭(베이): <span class="value-display" id="baysValue">4</span></label>
+                <input type="range" id="bays" min="2" max="8" value="4" step="1">
+            </div>
+            <div class="control-group">
+                <label>패널 높이(단): <span class="value-display" id="liftsValue">3</span></label>
+                <input type="range" id="lifts" min="2" max="5" value="3" step="1">
+            </div>
+
+            <div class="checkbox-group"><input type="checkbox" id="showWall" checked><label for="showWall">콘크리트 벽체</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showWalers" checked><label for="showWalers">멍에·횡띠장(보강재)</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showUpper" checked><label for="showUpper">상부 작업발판</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showLower" checked><label for="showLower">하부 작업발판(케이지)</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showRails" checked><label for="showRails">안전난간</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showLifting" checked><label for="showLifting">인양고리</label></div>
+
+            <button onclick="generateForm()">갱폼 재생성</button>
+            <button onclick="rotateCamera()">자동 회전 토글</button>
+
+            <hr style="border-color:#333; margin:14px 0;">
+            <div class="checkbox-group"><input type="checkbox" id="stepMode"><label for="stepMode"><b>설치·해체 단계 시연</b></label></div>
+            <div id="stepUI" style="display:none;">
+                <div id="stepCaption" style="color:#00ff88; font-weight:bold; margin:6px 0; font-size:13px; min-height:36px; line-height:1.4;"></div>
+                <div style="display:flex; gap:6px;">
+                    <button id="prevBtn" onclick="stepPrev()" style="margin-top:0;">◀ 이전</button>
+                    <button id="nextBtn" onclick="stepNext()" style="margin-top:0;">다음 ▶</button>
+                </div>
+                <button id="playBtn" onclick="stepPlay()" style="margin-top:6px;">▶ 자동 재생</button>
+                <div style="color:#888; font-size:12px; margin-top:4px;"><span id="stepIdx">1</span> / <span id="stepTot">9</span> 단계</div>
+            </div>
+        </div>
+
+        <div id="dimensions" style="display: none;">
+            <strong>현재 치수:</strong><br>
+            패널 폭: <span id="panelW">4800</span>mm<br>
+            패널 높이: <span id="panelH">3600</span>mm<br>
+            작업대 폭: 900mm
+        </div>
+
+        <div id="info" style="display: none;">
+            <strong>조작법:</strong><br>
+            • 마우스 드래그: 회전 / 스크롤: 확대·축소<br>
+            • 우클릭 드래그: 이동<br><br>
+            <strong>구성:</strong><br>
+            • 거푸집 패널(합판+철프레임)<br>
+            • 상·하부 작업발판(케이지)<br>
+            • 안전난간 + 인양고리(인양 시 점검)
+        </div>
+
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, controls;
+        let wallGroup, panelGroup, walerGroup, upperGroup, lowerGroup, railGroup, liftGroup;
+        let autoRotate = false;
+        let stepMode = false, stepIndex = 0, playTimer = null;
+
+        // 설치(①~⑦) → 타설/양생 → 해체(⑧~⑨) 시퀀스. v: 해당 단계에 보이는 구성요소
+        const PHASES = [
+            { t: '① 콘크리트 벽체(선행 구간) 확인', v: ['wall'] },
+            { t: '② 갱폼 거푸집 패널 설치·조립', v: ['wall', 'panel'] },
+            { t: '③ 멍에·횡띠장·폼타이(타이볼트) 체결', v: ['wall', 'panel', 'waler'] },
+            { t: '④ 하부 작업발판(케이지) 설치', v: ['wall', 'panel', 'waler', 'lower'] },
+            { t: '⑤ 상부 작업발판 설치', v: ['wall', 'panel', 'waler', 'lower', 'upper'] },
+            { t: '⑥ 안전난간·발끝막이판 설치', v: ['wall', 'panel', 'waler', 'lower', 'upper', 'rail'] },
+            { t: '⑦ 인양고리 체결 → 콘크리트 타설·양생', v: ['wall', 'panel', 'waler', 'lower', 'upper', 'rail', 'lift'] },
+            { t: '⑧ [해체] 양생 완료 → 폼타이(타이볼트) 해제', v: ['wall', 'panel', 'lower', 'upper', 'rail', 'lift'] },
+            { t: '⑨ [해체] 크레인 인양고리 체결 → 갱폼 유닛 탈형·인양(상부층 상승)', v: ['wall'] }
+        ];
+
+        function groupByKey(k) {
+            return { wall: wallGroup, panel: panelGroup, waler: walerGroup, lower: lowerGroup, upper: upperGroup, rail: railGroup, lift: liftGroup }[k];
+        }
+
+        function toggleStepMode() {
+            stepMode = document.getElementById('stepMode').checked;
+            document.getElementById('stepUI').style.display = stepMode ? 'block' : 'none';
+            stopPlay();
+            stepIndex = 0;
+            generateForm();
+        }
+
+        function applyPhase() {
+            if (!stepMode) return;
+            const ph = PHASES[stepIndex];
+            ['wall', 'panel', 'waler', 'lower', 'upper', 'rail', 'lift'].forEach(k => {
+                const g = groupByKey(k);
+                if (g) g.visible = ph.v.indexOf(k) !== -1;
+            });
+            document.getElementById('stepCaption').textContent = ph.t;
+            document.getElementById('stepIdx').textContent = stepIndex + 1;
+            document.getElementById('stepTot').textContent = PHASES.length;
+        }
+
+        function stepNext() { if (stepIndex < PHASES.length - 1) { stepIndex++; applyPhase(); } }
+        function stepPrev() { if (stepIndex > 0) { stepIndex--; applyPhase(); } }
+        function stepPlay() {
+            if (playTimer) { stopPlay(); return; }
+            document.getElementById('playBtn').textContent = '⏸ 정지';
+            playTimer = setInterval(() => {
+                stepIndex = (stepIndex >= PHASES.length - 1) ? 0 : stepIndex + 1;
+                applyPhase();
+            }, 1500);
+        }
+        function stopPlay() {
+            if (playTimer) { clearInterval(playTimer); playTimer = null; }
+            const b = document.getElementById('playBtn');
+            if (b) b.textContent = '▶ 자동 재생';
+        }
+
+        const D = {
+            bayW: 1.2,       // 패널 폭 단위(X)
+            liftH: 1.2,      // 패널 높이 단위(Y)
+            frameThk: 0.12,  // 프레임 두께(Z)
+            plyThk: 0.018,
+            cageDepth: 0.9,  // 작업대 내민길이(+Z)
+            railH: 1.0,
+            plankThk: 0.04
+        };
+        const WALL_Z = -0.0; // 벽체 전면 z=0, 갱폼은 +z측
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 50, 200);
+
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(9, 6, 10);
+
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+            const container = document.getElementById('canvas-container');
+            renderer.setSize(window.innerWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 4;
+            controls.maxDistance = 50;
+            controls.maxPolarAngle = Math.PI / 2;
+            controls.target.set(0, 2.5, 0);
+
+            setupLights();
+            createGround();
+            generateForm();
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('bays').addEventListener('input', updateValues);
+            document.getElementById('lifts').addEventListener('input', updateValues);
+            document.getElementById('stepMode').addEventListener('change', toggleStepMode);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('controls').style.display = 'block';
+            document.getElementById('dimensions').style.display = 'block';
+            document.getElementById('info').style.display = 'block';
+            animate();
+        }
+
+        function setupLights() {
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+            const dir = new THREE.DirectionalLight(0xffffff, 0.85);
+            dir.position.set(25, 55, 40);
+            dir.castShadow = true;
+            dir.shadow.camera.left = -25; dir.shadow.camera.right = 25;
+            dir.shadow.camera.top = 25; dir.shadow.camera.bottom = -25;
+            dir.shadow.mapSize.width = 3072; dir.shadow.mapSize.height = 3072;
+            scene.add(dir);
+            const p = new THREE.PointLight(0xffffff, 0.3);
+            p.position.set(-18, 18, 18);
+            scene.add(p);
+        }
+
+        function createGround() {
+            const g = new THREE.Mesh(new THREE.PlaneGeometry(100, 100),
+                new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 }));
+            g.rotation.x = -Math.PI / 2;
+            g.receiveShadow = true;
+            scene.add(g);
+            scene.add(new THREE.GridHelper(100, 50, 0x444444, 0x333333));
+        }
+
+        const steelMat = new THREE.MeshStandardMaterial({ color: 0x3d6cb0, metalness: 0.8, roughness: 0.3 });
+        const walerMat = new THREE.MeshStandardMaterial({ color: 0xe0a020, metalness: 0.6, roughness: 0.35 });
+        const plyMat = new THREE.MeshStandardMaterial({ color: 0xd8b878, metalness: 0.05, roughness: 0.9 });
+        const railMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.8, roughness: 0.2 });
+        const plankMat = new THREE.MeshStandardMaterial({ color: 0xc8a96a, metalness: 0.1, roughness: 0.85 });
+        const concMat = new THREE.MeshStandardMaterial({ color: 0x8a8f96, roughness: 0.95 });
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0xcc2222, metalness: 0.7, roughness: 0.3 });
+
+        const panelW = () => parseInt(document.getElementById('bays').value) * D.bayW;
+        const panelH = () => parseInt(document.getElementById('lifts').value) * D.liftH;
+
+        function generateForm() {
+            [wallGroup, panelGroup, walerGroup, upperGroup, lowerGroup, railGroup, liftGroup]
+                .forEach(g => { if (g) scene.remove(g); });
+            wallGroup = new THREE.Group();
+            panelGroup = new THREE.Group();
+            walerGroup = new THREE.Group();
+            upperGroup = new THREE.Group();
+            lowerGroup = new THREE.Group();
+            railGroup = new THREE.Group();
+            liftGroup = new THREE.Group();
+
+            const bays = parseInt(document.getElementById('bays').value);
+            const lifts = parseInt(document.getElementById('lifts').value);
+            updateDimensions();
+
+            const on = k => stepMode || document.getElementById(k).checked;
+            if (on('showWall')) createWall(bays, lifts);
+            createPanel(bays, lifts);
+            if (on('showWalers')) createWalers(bays, lifts);
+            if (on('showUpper')) createUpperPlatform(bays, lifts);
+            if (on('showLower')) createLowerPlatform(bays, lifts);
+            if (on('showRails')) createRails(bays, lifts);
+            if (on('showLifting')) createLifting(bays, lifts);
+
+            scene.add(wallGroup, panelGroup, walerGroup, upperGroup, lowerGroup, railGroup, liftGroup);
+            applyPhase();
+        }
+
+        function createWall(bays, lifts) {
+            const W = panelW(), H = panelH();
+            const wall = new THREE.Mesh(new THREE.BoxGeometry(W + 1.2, H + 0.5, 0.4), concMat);
+            wall.position.set(0, H / 2, -0.2 - 0.02);
+            wall.castShadow = true; wall.receiveShadow = true;
+            wallGroup.add(wall);
+            // 이미 타설된 하부 벽(맥락)
+            const lower = new THREE.Mesh(new THREE.BoxGeometry(W + 1.2, 1.0, 0.4), concMat);
+            lower.position.set(0, -0.5, -0.2 - 0.02);
+            wallGroup.add(lower);
+        }
+
+        // 거푸집 패널: 합판면 + 수직 스티프너 프레임
+        function createPanel(bays, lifts) {
+            const W = panelW(), H = panelH();
+            const faceZ = 0.02; // 벽 전면 바로 앞
+            // 합판 면
+            const ply = new THREE.Mesh(new THREE.BoxGeometry(W, H, D.plyThk), plyMat);
+            ply.position.set(0, H / 2, faceZ + D.plyThk / 2);
+            ply.castShadow = true; ply.receiveShadow = true;
+            panelGroup.add(ply);
+            // 수직 프레임(스티프너) — 베이 경계마다
+            const stiffGeo = new THREE.BoxGeometry(0.06, H, D.frameThk);
+            for (let i = 0; i <= bays; i++) {
+                const x = i * D.bayW - W / 2;
+                const s = new THREE.Mesh(stiffGeo, steelMat);
+                s.position.set(x, H / 2, faceZ + D.plyThk + D.frameThk / 2);
+                s.castShadow = true;
+                panelGroup.add(s);
+            }
+            // 패널 외곽 프레임(상·하)
+            const hGeo = new THREE.BoxGeometry(W, 0.08, D.frameThk);
+            [0.04, H - 0.04].forEach(y => {
+                const m = new THREE.Mesh(hGeo, steelMat);
+                m.position.set(0, y, faceZ + D.plyThk + D.frameThk / 2);
+                panelGroup.add(m);
+            });
+        }
+
+        // 멍에/횡띠장(수평 보강재) + 타이볼트 표현
+        function createWalers(bays, lifts) {
+            const W = panelW(), H = panelH();
+            const z = 0.02 + D.plyThk + D.frameThk + 0.05;
+            const geo = new THREE.BoxGeometry(W + 0.1, 0.09, 0.09);
+            const n = lifts; // 단마다 1열
+            for (let k = 1; k <= n; k++) {
+                const y = (k - 0.5) * D.liftH;
+                // 2겹 횡띠장
+                [-0.06, 0.06].forEach(dz => {
+                    const m = new THREE.Mesh(geo, walerMat);
+                    m.position.set(0, y, z + dz);
+                    m.castShadow = true;
+                    walerGroup.add(m);
+                });
+                // 타이볼트(폼타이) 표현
+                const boltGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.35);
+                for (let i = 0; i < bays; i++) {
+                    const x = i * D.bayW + D.bayW / 2 - W / 2;
+                    const b = new THREE.Mesh(boltGeo, steelMat);
+                    b.rotation.x = Math.PI / 2;
+                    b.position.set(x, y, z - 0.1);
+                    walerGroup.add(b);
+                }
+            }
+        }
+
+        // 케이지형 작업대(발판 + 지지 브래킷), 높이 baseY, +z로 내민
+        function buildCage(baseY, group) {
+            const W = panelW();
+            const z0 = 0.02 + D.plyThk + D.frameThk;
+            const plank = new THREE.Mesh(
+                new THREE.BoxGeometry(W + 0.4, D.plankThk, D.cageDepth), plankMat);
+            plank.position.set(0, baseY, z0 + D.cageDepth / 2);
+            plank.castShadow = true; plank.receiveShadow = true;
+            group.add(plank);
+            // 삼각 지지 브래킷
+            const brMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.3 });
+            const len = Math.hypot(D.cageDepth, 0.7);
+            for (let x = -W / 2; x <= W / 2 + 0.01; x += D.bayW) {
+                const diag = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, len), brMat);
+                const from = new THREE.Vector3(x, baseY, z0 + D.cageDepth);
+                const to = new THREE.Vector3(x, baseY - 0.7, z0);
+                orient(diag, from, to);
+                group.add(diag);
+            }
+        }
+
+        function createUpperPlatform(bays, lifts) {
+            buildCage(panelH() + 0.05, upperGroup);
+        }
+        function createLowerPlatform(bays, lifts) {
+            buildCage(0.4, lowerGroup);
+        }
+
+        function orient(mesh, from, to) {
+            const dir = new THREE.Vector3().subVectors(to, from);
+            mesh.position.copy(new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5));
+            mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+        }
+
+        // 작업대 외측 안전난간(상·하부)
+        function railAt(baseY) {
+            const W = panelW();
+            const z0 = 0.02 + D.plyThk + D.frameThk;
+            const zf = z0 + D.cageDepth;
+            const postGeo = new THREE.CylinderGeometry(0.018, 0.018, D.railH);
+            // 외측 모서리 따라 기둥
+            const xs = [];
+            for (let x = -W / 2 - 0.2; x <= W / 2 + 0.2 + 0.01; x += D.bayW) xs.push(x);
+            xs.forEach(x => {
+                const p = new THREE.Mesh(postGeo, railMat);
+                p.position.set(x, baseY + D.railH / 2, zf);
+                railGroup.add(p);
+            });
+            // 상·중 난간(외측 길이방향)
+            [D.railH, D.railH * 0.5].forEach(hh => {
+                const r = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, W + 0.4), railMat);
+                r.rotation.z = Math.PI / 2;
+                r.position.set(0, baseY + hh, zf);
+                railGroup.add(r);
+            });
+            // 양 측면 난간
+            [-W / 2 - 0.2, W / 2 + 0.2].forEach(x => {
+                [D.railH, D.railH * 0.5].forEach(hh => {
+                    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, D.cageDepth), railMat);
+                    r.rotation.x = Math.PI / 2;
+                    r.position.set(x, baseY + hh, z0 + D.cageDepth / 2);
+                    railGroup.add(r);
+                });
+            });
+            // 발끝막이판(외측)
+            const toe = new THREE.Mesh(new THREE.BoxGeometry(W + 0.4, 0.15, 0.02),
+                new THREE.MeshStandardMaterial({ color: 0xcc6600, roughness: 0.7 }));
+            toe.position.set(0, baseY + 0.075 + D.plankThk, zf);
+            railGroup.add(toe);
+        }
+
+        function createRails(bays, lifts) {
+            if (stepMode || document.getElementById('showUpper').checked) railAt(panelH() + 0.05);
+            if (stepMode || document.getElementById('showLower').checked) railAt(0.4);
+        }
+
+        // 인양고리(상부 양측)
+        function createLifting(bays, lifts) {
+            const W = panelW(), H = panelH();
+            const z = 0.02 + D.plyThk + D.frameThk / 2;
+            [-W / 2 + 0.3, W / 2 - 0.3].forEach(x => {
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.025, 12, 24), ringMat);
+                ring.position.set(x, H + 0.2, z);
+                ring.rotation.y = Math.PI / 2;
+                liftGroup.add(ring);
+                const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2), steelMat);
+                stem.position.set(x, H + 0.02, z);
+                liftGroup.add(stem);
+            });
+        }
+
+        function updateDimensions() {
+            document.getElementById('panelW').textContent = Math.round(panelW() * 1000);
+            document.getElementById('panelH').textContent = Math.round(panelH() * 1000);
+        }
+
+        function updateValues() {
+            document.getElementById('baysValue').textContent = document.getElementById('bays').value;
+            document.getElementById('liftsValue').textContent = document.getElementById('lifts').value;
+        }
+
+        function rotateCamera() {
+            autoRotate = !autoRotate;
+            if (controls) { controls.autoRotate = autoRotate; controls.autoRotateSpeed = 2.0; }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = window.innerWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            if (!stepMode) {
+                if (wallGroup) wallGroup.visible = document.getElementById('showWall').checked;
+                if (walerGroup) walerGroup.visible = document.getElementById('showWalers').checked;
+                if (upperGroup) upperGroup.visible = document.getElementById('showUpper').checked;
+                if (lowerGroup) lowerGroup.visible = document.getElementById('showLower').checked;
+                if (railGroup) railGroup.visible = document.getElementById('showRails').checked;
+                if (liftGroup) liftGroup.visible = document.getElementById('showLifting').checked;
+            }
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

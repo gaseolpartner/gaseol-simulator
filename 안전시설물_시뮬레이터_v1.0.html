@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>안전시설물 시뮬레이터</title>
+    <style>
+        body { margin: 0; font-family: 'Malgun Gothic', sans-serif; background: #1a1a1a; color: #fff; overflow: hidden; }
+        .header-banner { background: #1976D2; color: white; padding: 10px 20px; text-align: center; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; z-index: 2000; }
+        .header-banner a { color: #FFD700; text-decoration: none; font-weight: bold; margin-left: 10px; }
+        .header-banner a:hover { text-decoration: underline; }
+        #canvas-container { position: relative; height: calc(100vh - 40px); }
+        #controls { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); max-width: 300px; z-index: 1000; max-height: calc(100vh - 90px); overflow-y: auto; }
+        h2 { margin: 0 0 16px 0; font-size: 20px; color: #00ff88; }
+        .control-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #aaa; }
+        input[type="range"] { width: 100%; height: 6px; border-radius: 3px; background: #333; outline: none; -webkit-appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #00ff88; cursor: pointer; }
+        .value-display { display: inline-block; color: #00ff88; font-weight: bold; }
+        button { width: 100%; padding: 10px; margin-top: 8px; background: #00ff88; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        button:hover { background: #00cc6a; transform: translateY(-2px); }
+        .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
+        input[type="checkbox"] { margin-right: 10px; }
+        #info { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; backdrop-filter: blur(10px); font-size: 14px; max-width: 320px; }
+        #dimensions { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; backdrop-filter: blur(10px); font-size: 14px; }
+        #canvas { width: 100%; height: 100%; }
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: #00ff88; }
+    </style>
+</head>
+<body>
+    <div class="header-banner">
+        🏗️ 가설파트너 안전시설물 시뮬레이터 (추락방지) |
+        <a href="https://gaseolpartner.com" target="_blank">홈페이지 방문</a> |
+        © 2025 가설파트너
+    </div>
+
+    <div id="canvas-container">
+        <div id="loading">로딩 중...</div>
+
+        <div id="controls" style="display: none;">
+            <h2>안전시설물</h2>
+
+            <div class="control-group">
+                <label>슬래브 길이(베이): <span class="value-display" id="baysValue">5</span></label>
+                <input type="range" id="bays" min="2" max="10" value="5" step="1">
+            </div>
+
+            <div class="checkbox-group"><input type="checkbox" id="showRails" checked><label for="showRails">안전난간(단부)</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showNet" checked><label for="showNet">추락방지망(외부)</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showVNet" checked><label for="showVNet">수직보호망</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showCover" checked><label for="showCover">개구부 덮개</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showOpenHole">개구부 덮개 제거(위험)</label></div>
+
+            <button onclick="generateScene()">재생성</button>
+            <button onclick="rotateCamera()">자동 회전 토글</button>
+        </div>
+
+        <div id="dimensions" style="display: none;">
+            <strong>현재 치수:</strong><br>
+            슬래브 길이: <span id="slabLen">9145</span>mm<br>
+            슬래브 폭: <span id="slabDep">4000</span>mm<br>
+            난간 높이: 1000mm<br>
+            방지망 돌출: 2000mm
+        </div>
+
+        <div id="info" style="display: none;">
+            <strong>조작법:</strong><br>
+            • 마우스 드래그: 회전 / 스크롤: 확대·축소<br>
+            • 우클릭 드래그: 이동<br><br>
+            <strong>설치 기준:</strong><br>
+            • 안전난간: 상부 90~120cm, 중간대<br>
+            • 추락방지망: 내민길이 수평 ≥ 2m<br>
+            • 개구부: 덮개 또는 난간·표지
+        </div>
+
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, controls;
+        let slabGroup, railGroup, netGroup, vnetGroup, coverGroup, openingGroup;
+        let holeInfo = null;
+        let autoRotate = false;
+
+        const D = {
+            bay: 1.829,
+            depth: 4.0,
+            slabH: 3.2,      // 슬래브 상면 높이
+            slabThk: 0.25,
+            railH: 1.0,
+            netReach: 2.0    // 방지망 수평 내민길이
+        };
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 50, 200);
+
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(11, 8, 12);
+
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+            const container = document.getElementById('canvas-container');
+            renderer.setSize(window.innerWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 4;
+            controls.maxDistance = 50;
+            controls.maxPolarAngle = Math.PI / 2;
+            controls.target.set(0, 2.5, 0);
+
+            setupLights();
+            createGround();
+            generateScene();
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('bays').addEventListener('input', updateValues);
+            // 상호배제: 덮개 제거 체크 시 덮개 해제
+            document.getElementById('showOpenHole').addEventListener('change', function () {
+                if (this.checked) document.getElementById('showCover').checked = false;
+                else document.getElementById('showCover').checked = true;
+                generateScene();
+            });
+            document.getElementById('showCover').addEventListener('change', function () {
+                if (this.checked) document.getElementById('showOpenHole').checked = false;
+            });
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('controls').style.display = 'block';
+            document.getElementById('dimensions').style.display = 'block';
+            document.getElementById('info').style.display = 'block';
+            animate();
+        }
+
+        function setupLights() {
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+            const dir = new THREE.DirectionalLight(0xffffff, 0.85);
+            dir.position.set(30, 60, 40);
+            dir.castShadow = true;
+            dir.shadow.camera.left = -30; dir.shadow.camera.right = 30;
+            dir.shadow.camera.top = 30; dir.shadow.camera.bottom = -30;
+            dir.shadow.mapSize.width = 3072; dir.shadow.mapSize.height = 3072;
+            scene.add(dir);
+            const p = new THREE.PointLight(0xffffff, 0.3);
+            p.position.set(-20, 20, -20);
+            scene.add(p);
+        }
+
+        function createGround() {
+            const g = new THREE.Mesh(new THREE.PlaneGeometry(100, 100),
+                new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 }));
+            g.rotation.x = -Math.PI / 2;
+            g.receiveShadow = true;
+            scene.add(g);
+            scene.add(new THREE.GridHelper(100, 50, 0x444444, 0x333333));
+        }
+
+        const concMat = new THREE.MeshStandardMaterial({ color: 0x8a8f96, roughness: 0.95 });
+        const railMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.8, roughness: 0.2 });
+        const coverMat = new THREE.MeshStandardMaterial({ color: 0xffdd33, metalness: 0.2, roughness: 0.7 });
+        const colMat = new THREE.MeshStandardMaterial({ color: 0x6b7078, roughness: 0.9 });
+
+        const slabLen = (bays) => bays * D.bay;
+
+        // 격자 방지망(반투명 면 + 그물선) 그룹 반환, 로컬 XY평면
+        function makeNet(w, h, color) {
+            const g = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: color, transparent: true, opacity: 0.18, side: THREE.DoubleSide, roughness: 1 });
+            const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+            g.add(plane);
+            const lineMat = new THREE.LineBasicMaterial({ color: color });
+            const pts = [];
+            const step = 0.2;
+            for (let x = -w / 2; x <= w / 2 + 0.001; x += step) { pts.push(new THREE.Vector3(x, -h / 2, 0), new THREE.Vector3(x, h / 2, 0)); }
+            for (let y = -h / 2; y <= h / 2 + 0.001; y += step) { pts.push(new THREE.Vector3(-w / 2, y, 0), new THREE.Vector3(w / 2, y, 0)); }
+            const geo = new THREE.BufferGeometry().setFromPoints(pts);
+            g.add(new THREE.LineSegments(geo, lineMat));
+            return g;
+        }
+
+        function generateScene() {
+            [slabGroup, railGroup, netGroup, vnetGroup, coverGroup, openingGroup]
+                .forEach(g => { if (g) scene.remove(g); });
+            slabGroup = new THREE.Group();
+            railGroup = new THREE.Group();
+            netGroup = new THREE.Group();
+            vnetGroup = new THREE.Group();
+            coverGroup = new THREE.Group();
+            openingGroup = new THREE.Group();
+
+            const bays = parseInt(document.getElementById('bays').value);
+            updateDimensions(bays);
+
+            createSlab(bays);
+            createColumns(bays);
+            createOpening(bays);
+            if (document.getElementById('showCover').checked) createCover(bays);
+            if (document.getElementById('showRails').checked) createRails(bays);
+            if (document.getElementById('showNet').checked) createNet(bays);
+            if (document.getElementById('showVNet').checked) createVNet(bays);
+
+            scene.add(slabGroup, railGroup, netGroup, vnetGroup, coverGroup, openingGroup);
+        }
+
+        function createSlab(bays) {
+            const L = slabLen(bays);
+            const top = D.slabH;
+            // 개구부를 위해 슬래브를 4조각으로(중앙 홀 남김)
+            const holeL = 1.2, holeW = 1.2;
+            const hx = -L / 4, hz = -D.depth / 6; // 개구부 중심
+            const y = top - D.slabThk / 2;
+            // 전체 슬래브 + 개구부는 테두리/덮개로 표현
+            const slab = new THREE.Mesh(new THREE.BoxGeometry(L, D.slabThk, D.depth), concMat);
+            slab.position.set(0, y, 0);
+            slab.receiveShadow = true; slab.castShadow = true;
+            slabGroup.add(slab);
+
+            // 개구부 위치 표시용 어두운 사각(덮개 없을 때 구멍처럼 보이게)
+            holeInfo = { x: hx, z: hz, L: holeL, W: holeW, topY: top };
+        }
+
+        function createColumns(bays) {
+            const L = slabLen(bays);
+            const positions = [
+                [-L / 2 + 0.4, -D.depth / 2 + 0.4], [L / 2 - 0.4, -D.depth / 2 + 0.4],
+                [-L / 2 + 0.4, D.depth / 2 - 0.4], [L / 2 - 0.4, D.depth / 2 - 0.4],
+                [0, -D.depth / 2 + 0.4], [0, D.depth / 2 - 0.4]
+            ];
+            const geo = new THREE.BoxGeometry(0.4, D.slabH - D.slabThk, 0.4);
+            positions.forEach(([x, z]) => {
+                const c = new THREE.Mesh(geo, colMat);
+                c.position.set(x, (D.slabH - D.slabThk) / 2, z);
+                c.castShadow = true;
+                slabGroup.add(c);
+            });
+        }
+
+        function createOpening(bays) {
+            const h = holeInfo;
+            const top = h.topY;
+            // 개구부 가장자리 표시(빨강 테두리)
+            const edgeMat = new THREE.MeshStandardMaterial({ color: 0xff3333, metalness: 0.3, roughness: 0.6 });
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(h.L + 0.1, 0.05, h.W + 0.1), edgeMat);
+            frame.position.set(h.x, top + 0.025, h.z);
+            openingGroup.add(frame);
+            // 덮개 제거(위험) 시 구멍(어두운 패치)
+            if (document.getElementById('showOpenHole').checked) {
+                const hole = new THREE.Mesh(new THREE.BoxGeometry(h.L, 0.02, h.W),
+                    new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 1 }));
+                hole.position.set(h.x, top - 0.02, h.z);
+                openingGroup.add(hole);
+            }
+        }
+
+        function createCover(bays) {
+            const h = holeInfo;
+            const top = h.topY;
+            const cover = new THREE.Mesh(new THREE.BoxGeometry(h.L, 0.04, h.W), coverMat);
+            cover.position.set(h.x, top + 0.02, h.z);
+            cover.castShadow = true;
+            coverGroup.add(cover);
+            // 경고 스트라이프
+            const stripeMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
+            for (let i = -1; i <= 1; i++) {
+                const s = new THREE.Mesh(new THREE.BoxGeometry(h.L * 0.9, 0.045, 0.08), stripeMat);
+                s.position.set(h.x + i * 0.35, top + 0.022, h.z);
+                coverGroup.add(s);
+            }
+        }
+
+        function railSegment(x1, z1, x2, z2, baseY) {
+            const len = Math.hypot(x2 - x1, z2 - z1);
+            const postGeo = new THREE.CylinderGeometry(0.02, 0.02, D.railH);
+            const n = Math.max(2, Math.round(len / 1.8));
+            for (let i = 0; i <= n; i++) {
+                const t = i / n;
+                const x = x1 + (x2 - x1) * t, z = z1 + (z2 - z1) * t;
+                const p = new THREE.Mesh(postGeo, railMat);
+                p.position.set(x, baseY + D.railH / 2, z);
+                railGroup.add(p);
+            }
+            const railGeo = new THREE.CylinderGeometry(0.022, 0.022, len);
+            [D.railH, D.railH * 0.5].forEach(hh => {
+                const r = new THREE.Mesh(railGeo, railMat);
+                r.position.set((x1 + x2) / 2, baseY + hh, (z1 + z2) / 2);
+                orient2(r, x1, z1, x2, z2);
+                railGroup.add(r);
+            });
+            // 발끝막이판
+            const toe = new THREE.Mesh(new THREE.BoxGeometry(len, 0.15, 0.02),
+                new THREE.MeshStandardMaterial({ color: 0xcc6600, roughness: 0.7 }));
+            toe.position.set((x1 + x2) / 2, baseY + 0.075, (z1 + z2) / 2);
+            orientBox(toe, x1, z1, x2, z2);
+            railGroup.add(toe);
+        }
+
+        // 수평 실린더(기본 X축 길이) 방향 정렬
+        function orient2(mesh, x1, z1, x2, z2) {
+            const ang = Math.atan2(z2 - z1, x2 - x1);
+            mesh.rotation.z = Math.PI / 2;          // 길이축을 X로
+            mesh.rotation.y = -ang;
+        }
+        function orientBox(mesh, x1, z1, x2, z2) {
+            const ang = Math.atan2(z2 - z1, x2 - x1);
+            mesh.rotation.y = -ang;
+        }
+
+        function createRails(bays) {
+            const L = slabLen(bays), top = D.slabH;
+            const x0 = -L / 2, x1 = L / 2, z0 = -D.depth / 2, z1 = D.depth / 2;
+            // 후면·좌·우 단부 난간 (전면 z1은 추락방지망/수직망 면이라 난간만 별도)
+            railSegment(x0, z0, x1, z0, top);
+            railSegment(x0, z0, x0, z1, top);
+            railSegment(x1, z0, x1, z1, top);
+            railSegment(x0, z1, x1, z1, top);
+        }
+
+        // 낙하물 방지망: 단부에서 외측·상향(약 25°)으로 들리게 설치
+        function createNet(bays) {
+            const L = slabLen(bays), top = D.slabH;
+            const rise = D.netReach * Math.tan(25 * Math.PI / 180); // 외측 상승량(≈0.93m)
+            const slope = Math.hypot(D.netReach, rise);
+            // 내측(슬래브 단부 아래) → 외측(위로 들림)
+            const innerZ = D.depth / 2, innerY = top - 0.3;
+            const outerZ = D.depth / 2 + D.netReach, outerY = innerY + rise;
+            const net = makeNet(L, slope, 0x33dd66);
+            net.position.set(0, (innerY + outerY) / 2, (innerZ + outerZ) / 2);
+            // 수직면 망을 X축 기준으로 눕혀 25° 램프로: local +Y → (0, rise, netReach)
+            net.rotation.x = Math.atan2(D.netReach, rise);
+            netGroup.add(net);
+            // 지지 버팀대(하부 앵커 → 외측 상단, 압축재)
+            const brMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.3 });
+            for (let x = -L / 2 + 0.5; x <= L / 2; x += 1.8) {
+                const from = new THREE.Vector3(x, innerY - 0.7, innerZ);
+                const to = new THREE.Vector3(x, outerY, outerZ);
+                const len = from.distanceTo(to);
+                const br = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, len), brMat);
+                orient3(br, from, to);
+                netGroup.add(br);
+            }
+        }
+
+        // 수직보호망: 전면 난간 면에 부착되는 수직 그물
+        function createVNet(bays) {
+            const L = slabLen(bays), top = D.slabH;
+            const net = makeNet(L, D.railH, 0x33aadd);
+            net.position.set(0, top + D.railH / 2, D.depth / 2 + 0.02);
+            vnetGroup.add(net);
+            // 전면 난간(수직망 지지)
+            const x0 = -L / 2, x1 = L / 2, z1 = D.depth / 2;
+            railSegment(x0, z1, x1, z1, top);
+        }
+
+        function orient3(mesh, from, to) {
+            const dir = new THREE.Vector3().subVectors(to, from);
+            mesh.position.copy(new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5));
+            mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+        }
+
+        function updateDimensions(bays) {
+            document.getElementById('slabLen').textContent = Math.round(slabLen(bays) * 1000);
+            document.getElementById('slabDep').textContent = Math.round(D.depth * 1000);
+        }
+
+        function updateValues() {
+            document.getElementById('baysValue').textContent = document.getElementById('bays').value;
+        }
+
+        function rotateCamera() {
+            autoRotate = !autoRotate;
+            if (controls) { controls.autoRotate = autoRotate; controls.autoRotateSpeed = 2.0; }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = window.innerWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

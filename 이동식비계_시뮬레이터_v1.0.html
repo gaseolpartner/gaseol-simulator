@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이동식 비계(롤링타워) 시뮬레이터</title>
+    <style>
+        body { margin: 0; font-family: 'Malgun Gothic', sans-serif; background: #1a1a1a; color: #fff; overflow: hidden; }
+        .header-banner { background: #1976D2; color: white; padding: 10px 20px; text-align: center; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; z-index: 2000; }
+        .header-banner a { color: #FFD700; text-decoration: none; font-weight: bold; margin-left: 10px; }
+        .header-banner a:hover { text-decoration: underline; }
+        #canvas-container { position: relative; height: calc(100vh - 40px); }
+        #controls { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); max-width: 300px; z-index: 1000; max-height: calc(100vh - 90px); overflow-y: auto; }
+        h2 { margin: 0 0 16px 0; font-size: 20px; color: #00ff88; }
+        .control-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #aaa; }
+        input[type="range"] { width: 100%; height: 6px; border-radius: 3px; background: #333; outline: none; -webkit-appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #00ff88; cursor: pointer; }
+        .value-display { display: inline-block; color: #00ff88; font-weight: bold; }
+        button { width: 100%; padding: 10px; margin-top: 8px; background: #00ff88; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        button:hover { background: #00cc6a; transform: translateY(-2px); }
+        .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
+        input[type="checkbox"] { margin-right: 10px; }
+        #info { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; backdrop-filter: blur(10px); font-size: 14px; max-width: 320px; }
+        #dimensions { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; backdrop-filter: blur(10px); font-size: 14px; }
+        #warn { color: #ff6b6b; font-weight: bold; }
+        #canvas { width: 100%; height: 100%; }
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: #00ff88; }
+    </style>
+</head>
+<body>
+    <div class="header-banner">
+        🏗️ 가설파트너 이동식 비계(롤링타워) 시뮬레이터 |
+        <a href="https://gaseolpartner.com" target="_blank">홈페이지 방문</a> |
+        © 2025 가설파트너
+    </div>
+
+    <div id="canvas-container">
+        <div id="loading">로딩 중...</div>
+
+        <div id="controls" style="display: none;">
+            <h2>이동식 비계</h2>
+
+            <div class="control-group">
+                <label>단(프레임) 수: <span class="value-display" id="floorsValue">4</span></label>
+                <input type="range" id="floors" min="1" max="8" value="4" step="1">
+            </div>
+
+            <div class="checkbox-group"><input type="checkbox" id="showCasters" checked><label for="showCasters">바퀴(캐스터) 표시</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showOutriggers" checked><label for="showOutriggers">아웃트리거(전도방지)</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showLadder" checked><label for="showLadder">승강 사다리</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showRails" checked><label for="showRails">안전난간·발끝막이판</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showBraces" checked><label for="showBraces">가새 표시</label></div>
+            <div class="checkbox-group"><input type="checkbox" id="showPlatform" checked><label for="showPlatform">작업발판 표시</label></div>
+
+            <button onclick="generateTower()">타워 재생성</button>
+            <button onclick="rotateCamera()">자동 회전 토글</button>
+
+            <hr style="border-color:#333; margin:14px 0;">
+            <div class="checkbox-group"><input type="checkbox" id="stepMode"><label for="stepMode"><b>설치·해체 단계 시연</b></label></div>
+            <div id="stepUI" style="display:none;">
+                <div id="stepCaption" style="color:#00ff88; font-weight:bold; margin:6px 0; font-size:13px; min-height:36px; line-height:1.4;"></div>
+                <div style="display:flex; gap:6px;">
+                    <button id="prevBtn" onclick="stepPrev()" style="margin-top:0;">◀ 이전</button>
+                    <button id="nextBtn" onclick="stepNext()" style="margin-top:0;">다음 ▶</button>
+                </div>
+                <button id="playBtn" onclick="stepPlay()" style="margin-top:6px;">▶ 자동 재생</button>
+                <div style="color:#888; font-size:12px; margin-top:4px;"><span id="stepIdx">1</span> / <span id="stepTot">10</span> 단계</div>
+            </div>
+        </div>
+
+        <div id="dimensions" style="display: none;">
+            <strong>현재 치수:</strong><br>
+            작업발판 높이: <span id="workH">4000</span>mm<br>
+            전체 높이: <span id="totalH">5000</span>mm<br>
+            밑변: <span id="footPrint">1829 × 1200</span>mm<br>
+            <span id="warn"></span>
+        </div>
+
+        <div id="info" style="display: none;">
+            <strong>조작법:</strong><br>
+            • 마우스 드래그: 회전 / 스크롤: 확대·축소<br>
+            • 우클릭 드래그: 이동<br><br>
+            <strong>안전 기준:</strong><br>
+            • 작업발판 높이 ≤ 밑변 최소폭의 4배<br>
+            • 사용 중 바퀴 고정(브레이크)<br>
+            • 아웃트리거(전도방지대) 설치
+        </div>
+
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, controls;
+        let frameGroup, casterGroup, outriggerGroup, ladderGroup, railGroup, braceGroup, platformGroup;
+        let autoRotate = false;
+        let stepMode = false, stepIndex = 0, playTimer = null;
+
+        const PHASES = [
+            { t: '① 바퀴(캐스터) 설치·브레이크 고정', v: ['caster'] },
+            { t: '② 프레임 수직·수평재 조립', v: ['caster', 'frame'] },
+            { t: '③ 가새(대각재) 체결', v: ['caster', 'frame', 'brace'] },
+            { t: '④ 아웃트리거(전도방지대) 설치', v: ['caster', 'frame', 'brace', 'outrigger'] },
+            { t: '⑤ 승강 사다리 설치', v: ['caster', 'frame', 'brace', 'outrigger', 'ladder'] },
+            { t: '⑥ 작업발판 설치', v: ['caster', 'frame', 'brace', 'outrigger', 'ladder', 'platform'] },
+            { t: '⑦ 안전난간·발끝막이판 설치(완성)', v: ['caster', 'frame', 'brace', 'outrigger', 'ladder', 'platform', 'rail'] },
+            { t: '⑧ [해체] 안전난간·작업발판 해체', v: ['caster', 'frame', 'brace', 'outrigger', 'ladder'] },
+            { t: '⑨ [해체] 사다리·가새 해체', v: ['caster', 'frame', 'outrigger'] },
+            { t: '⑩ [해체] 아웃트리거·프레임 해체 후 이동', v: ['caster'] }
+        ];
+
+        function groupByKey(k) {
+            return { caster: casterGroup, frame: frameGroup, brace: braceGroup, outrigger: outriggerGroup, ladder: ladderGroup, platform: platformGroup, rail: railGroup }[k];
+        }
+        function toggleStepMode() {
+            stepMode = document.getElementById('stepMode').checked;
+            document.getElementById('stepUI').style.display = stepMode ? 'block' : 'none';
+            stopPlay();
+            stepIndex = 0;
+            generateTower();
+        }
+        function applyPhase() {
+            if (!stepMode) return;
+            const ph = PHASES[stepIndex];
+            ['caster', 'frame', 'brace', 'outrigger', 'ladder', 'platform', 'rail'].forEach(k => {
+                const g = groupByKey(k);
+                if (g) g.visible = ph.v.indexOf(k) !== -1;
+            });
+            document.getElementById('stepCaption').textContent = ph.t;
+            document.getElementById('stepIdx').textContent = stepIndex + 1;
+            document.getElementById('stepTot').textContent = PHASES.length;
+        }
+        function stepNext() { if (stepIndex < PHASES.length - 1) { stepIndex++; applyPhase(); } }
+        function stepPrev() { if (stepIndex > 0) { stepIndex--; applyPhase(); } }
+        function stepPlay() {
+            if (playTimer) { stopPlay(); return; }
+            document.getElementById('playBtn').textContent = '⏸ 정지';
+            playTimer = setInterval(() => { stepIndex = (stepIndex >= PHASES.length - 1) ? 0 : stepIndex + 1; applyPhase(); }, 1500);
+        }
+        function stopPlay() {
+            if (playTimer) { clearInterval(playTimer); playTimer = null; }
+            const b = document.getElementById('playBtn');
+            if (b) b.textContent = '▶ 자동 재생';
+        }
+
+        const D = {
+            width: 1.829,    // X (장변)
+            depth: 1.2,      // Z (단변, 최소폭)
+            modH: 1.0,       // 프레임 1단 높이
+            pipeR: 0.022,
+            plankThk: 0.04,
+            railHeight: 0.95,
+            casterH: 0.16
+        };
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 40, 160);
+
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(7, 6, 8);
+
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+            const container = document.getElementById('canvas-container');
+            renderer.setSize(window.innerWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 3;
+            controls.maxDistance = 40;
+            controls.maxPolarAngle = Math.PI / 2;
+            controls.target.set(0, 2.5, 0);
+
+            setupLights();
+            createGround();
+            generateTower();
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('floors').addEventListener('input', updateValues);
+            // 바퀴·아웃트리거는 밑변 높이/전도 경고에 영향 → 즉시 재생성
+            document.getElementById('showCasters').addEventListener('change', generateTower);
+            document.getElementById('showOutriggers').addEventListener('change', generateTower);
+            document.getElementById('stepMode').addEventListener('change', toggleStepMode);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('controls').style.display = 'block';
+            document.getElementById('dimensions').style.display = 'block';
+            document.getElementById('info').style.display = 'block';
+            animate();
+        }
+
+        function setupLights() {
+            scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+            const dir = new THREE.DirectionalLight(0xffffff, 0.85);
+            dir.position.set(20, 50, 30);
+            dir.castShadow = true;
+            dir.shadow.camera.left = -20; dir.shadow.camera.right = 20;
+            dir.shadow.camera.top = 20; dir.shadow.camera.bottom = -20;
+            dir.shadow.mapSize.width = 2048; dir.shadow.mapSize.height = 2048;
+            scene.add(dir);
+            const p = new THREE.PointLight(0xffffff, 0.3);
+            p.position.set(-15, 15, -15);
+            scene.add(p);
+        }
+
+        function createGround() {
+            const g = new THREE.Mesh(new THREE.PlaneGeometry(80, 80),
+                new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 }));
+            g.rotation.x = -Math.PI / 2;
+            g.receiveShadow = true;
+            scene.add(g);
+            scene.add(new THREE.GridHelper(80, 40, 0x444444, 0x333333));
+        }
+
+        const steelMat = new THREE.MeshStandardMaterial({ color: 0x4d7fc4, metalness: 0.8, roughness: 0.3 });
+        const rungMat = new THREE.MeshStandardMaterial({ color: 0xbcc3cc, metalness: 0.85, roughness: 0.25 });
+        const braceMat = new THREE.MeshStandardMaterial({ color: 0xff5544, metalness: 0.6, roughness: 0.35 });
+        const railMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.8, roughness: 0.2 });
+        const plankMat = new THREE.MeshStandardMaterial({ color: 0xc8a96a, metalness: 0.1, roughness: 0.85 });
+        const blackMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.2, roughness: 0.8 });
+
+        const corners = () => ([
+            [ D.width / 2,  D.depth / 2],
+            [ D.width / 2, -D.depth / 2],
+            [-D.width / 2,  D.depth / 2],
+            [-D.width / 2, -D.depth / 2]
+        ]);
+
+        function generateTower() {
+            [frameGroup, casterGroup, outriggerGroup, ladderGroup, railGroup, braceGroup, platformGroup]
+                .forEach(g => { if (g) scene.remove(g); });
+            frameGroup = new THREE.Group();
+            casterGroup = new THREE.Group();
+            outriggerGroup = new THREE.Group();
+            ladderGroup = new THREE.Group();
+            railGroup = new THREE.Group();
+            braceGroup = new THREE.Group();
+            platformGroup = new THREE.Group();
+
+            const floors = parseInt(document.getElementById('floors').value);
+            const on = k => stepMode || document.getElementById(k).checked;
+            const showC = on('showCasters');
+            const baseY = showC ? D.casterH : 0;
+
+            updateDimensions(floors, baseY);
+
+            if (showC) createCasters();
+            createFrames(floors, baseY);
+            if (on('showBraces')) createBraces(floors, baseY);
+            if (on('showOutriggers')) createOutriggers(floors, baseY);
+            if (on('showLadder')) createLadder(floors, baseY);
+            if (on('showPlatform')) createPlatform(floors, baseY);
+            if (on('showRails')) createRails(floors, baseY);
+
+            scene.add(frameGroup, casterGroup, outriggerGroup, ladderGroup, railGroup, braceGroup, platformGroup);
+            applyPhase();
+        }
+
+        function createCasters() {
+            corners().forEach(([x, z]) => {
+                const wheel = new THREE.Mesh(new THREE.CylinderGeometry(D.casterH / 2, D.casterH / 2, 0.06, 20), blackMat);
+                wheel.rotation.x = Math.PI / 2;
+                wheel.position.set(x, D.casterH / 2, z);
+                wheel.castShadow = true;
+                casterGroup.add(wheel);
+                const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.1, 0.07),
+                    new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.7, roughness: 0.4 }));
+                bracket.position.set(x, D.casterH + 0.04, z);
+                casterGroup.add(bracket);
+            });
+        }
+
+        // 양 측면 프레임(사다리형) + 수평 연결재
+        function createFrames(floors, baseY) {
+            const h = floors * D.modH;
+            const vGeo = new THREE.CylinderGeometry(D.pipeR, D.pipeR, h);
+            corners().forEach(([x, z]) => {
+                const m = new THREE.Mesh(vGeo, steelMat);
+                m.position.set(x, baseY + h / 2, z);
+                m.castShadow = true;
+                frameGroup.add(m);
+            });
+            // 각 단 수평재(둘레)
+            for (let f = 0; f <= floors; f++) {
+                const y = baseY + f * D.modH;
+                // X방향 2개
+                [D.depth / 2, -D.depth / 2].forEach(z => {
+                    const m = new THREE.Mesh(new THREE.CylinderGeometry(D.pipeR * 0.9, D.pipeR * 0.9, D.width), rungMat);
+                    m.rotation.z = Math.PI / 2;
+                    m.position.set(0, y, z);
+                    frameGroup.add(m);
+                });
+                // Z방향 2개
+                [D.width / 2, -D.width / 2].forEach(x => {
+                    const m = new THREE.Mesh(new THREE.CylinderGeometry(D.pipeR * 0.9, D.pipeR * 0.9, D.depth), rungMat);
+                    m.rotation.x = Math.PI / 2;
+                    m.position.set(x, y, 0);
+                    frameGroup.add(m);
+                });
+            }
+        }
+
+        // 측면(장변) 교차 가새
+        function createBraces(floors, baseY) {
+            const len = Math.hypot(D.width, D.modH);
+            const geo = new THREE.CylinderGeometry(D.pipeR * 0.7, D.pipeR * 0.7, len);
+            for (let f = 0; f < floors; f++) {
+                const y0 = baseY + f * D.modH;
+                const y1 = baseY + (f + 1) * D.modH;
+                [D.depth / 2, -D.depth / 2].forEach(z => {
+                    const b1 = new THREE.Mesh(geo, braceMat);
+                    orient(b1, new THREE.Vector3(-D.width / 2, y0, z), new THREE.Vector3(D.width / 2, y1, z));
+                    braceGroup.add(b1);
+                    const b2 = new THREE.Mesh(geo, braceMat);
+                    orient(b2, new THREE.Vector3(D.width / 2, y0, z), new THREE.Vector3(-D.width / 2, y1, z));
+                    braceGroup.add(b2);
+                });
+            }
+        }
+
+        // 아웃트리거(전도방지대) 4개 — 하부에서 외측 하향
+        function createOutriggers(floors, baseY) {
+            const reach = 0.9, drop = Math.min(1.4, floors * D.modH * 0.5);
+            const len = Math.sqrt(reach * reach + drop * drop) + 0.2;
+            const geo = new THREE.CylinderGeometry(D.pipeR * 0.9, D.pipeR * 0.9, len);
+            const footMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 0.5, roughness: 0.4 });
+            corners().forEach(([x, z]) => {
+                const dirx = Math.sign(x), dirz = Math.sign(z);
+                const topY = baseY + drop;
+                const m = new THREE.Mesh(geo, footMat);
+                m.position.set(x + dirx * reach / 2, baseY + drop / 2, z + dirz * reach / 2);
+                // 방향: 상단(기둥) → 하단(외측 바닥)
+                const from = new THREE.Vector3(x, topY, z);
+                const to = new THREE.Vector3(x + dirx * reach, baseY, z + dirz * reach);
+                orient(m, from, to);
+                outriggerGroup.add(m);
+                const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.05, 16), footMat);
+                foot.position.set(x + dirx * reach, baseY + 0.025, z + dirz * reach);
+                outriggerGroup.add(foot);
+            });
+        }
+
+        // 두 점 사이로 실린더 정렬
+        function orient(mesh, from, to) {
+            const dir = new THREE.Vector3().subVectors(to, from);
+            const mid = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
+            mesh.position.copy(mid);
+            const axis = new THREE.Vector3(0, 1, 0);
+            mesh.quaternion.setFromUnitVectors(axis, dir.clone().normalize());
+        }
+
+        // 승강 사다리(한쪽 단변 면)
+        function createLadder(floors, baseY) {
+            const h = floors * D.modH;
+            const x = -D.width / 2;
+            const sideGeo = new THREE.CylinderGeometry(D.pipeR * 0.7, D.pipeR * 0.7, h);
+            [0.18, -0.18].forEach(dz => {
+                const m = new THREE.Mesh(sideGeo, rungMat);
+                m.position.set(x - 0.12, baseY + h / 2, dz);
+                ladderGroup.add(m);
+            });
+            const rungGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.4);
+            const n = Math.round(h / 0.28);
+            for (let i = 1; i < n; i++) {
+                const r = new THREE.Mesh(rungGeo, rungMat);
+                r.rotation.x = Math.PI / 2;
+                r.position.set(x - 0.12, baseY + i * 0.28, 0);
+                ladderGroup.add(r);
+            }
+        }
+
+        function createPlatform(floors, baseY) {
+            const y = baseY + floors * D.modH + D.plankThk / 2;
+            const plank = new THREE.Mesh(new THREE.BoxGeometry(D.width - 0.05, D.plankThk, D.depth - 0.05), plankMat);
+            plank.position.set(0, y, 0);
+            plank.castShadow = true; plank.receiveShadow = true;
+            platformGroup.add(plank);
+            // 개구부 해치(사다리 출입)
+            const hatch = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.01, 0.45),
+                new THREE.MeshStandardMaterial({ color: 0x885522, roughness: 0.7 }));
+            hatch.position.set(-D.width / 2 + 0.35, y + 0.03, 0);
+            platformGroup.add(hatch);
+        }
+
+        function createRails(floors, baseY) {
+            const top = baseY + floors * D.modH;
+            const postGeo = new THREE.CylinderGeometry(0.016, 0.016, D.railHeight);
+            corners().forEach(([x, z]) => {
+                const p = new THREE.Mesh(postGeo, railMat);
+                p.position.set(x, top + D.railHeight / 2, z);
+                railGroup.add(p);
+            });
+            const heights = [D.railHeight, D.railHeight * 0.5];
+            // 둘레 난간(상·중)
+            heights.forEach(hh => {
+                [D.depth / 2, -D.depth / 2].forEach(z => {
+                    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, D.width), railMat);
+                    m.rotation.z = Math.PI / 2; m.position.set(0, top + hh, z); railGroup.add(m);
+                });
+                [D.width / 2, -D.width / 2].forEach(x => {
+                    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, D.depth), railMat);
+                    m.rotation.x = Math.PI / 2; m.position.set(x, top + hh, 0); railGroup.add(m);
+                });
+            });
+            // 발끝막이판
+            const toeMat = new THREE.MeshStandardMaterial({ color: 0xcc6600, roughness: 0.7 });
+            [D.depth / 2, -D.depth / 2].forEach(z => {
+                const t = new THREE.Mesh(new THREE.BoxGeometry(D.width, 0.15, 0.02), toeMat);
+                t.position.set(0, top + 0.075 + D.plankThk, z); railGroup.add(t);
+            });
+            [D.width / 2, -D.width / 2].forEach(x => {
+                const t = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.15, D.depth), toeMat);
+                t.position.set(x, top + 0.075 + D.plankThk, 0); railGroup.add(t);
+            });
+        }
+
+        function updateDimensions(floors, baseY) {
+            const workH = baseY + floors * D.modH;
+            const totalH = workH + D.railHeight;
+            document.getElementById('workH').textContent = Math.round(workH * 1000);
+            document.getElementById('totalH').textContent = Math.round(totalH * 1000);
+            document.getElementById('footPrint').textContent =
+                Math.round(D.width * 1000) + ' × ' + Math.round(D.depth * 1000);
+            // 안전 점검: 작업발판 높이 ≤ 최소밑변 × 4 (아웃트리거 없을 때)
+            const ratio = workH / D.depth;
+            const warn = document.getElementById('warn');
+            if (ratio > 4 && !document.getElementById('showOutriggers').checked) {
+                warn.textContent = '⚠ 높이/밑변비 ' + ratio.toFixed(1) + ' > 4 : 아웃트리거 필수!';
+            } else if (ratio > 4) {
+                warn.textContent = '※ 높이/밑변비 ' + ratio.toFixed(1) + ' — 아웃트리거로 보강됨';
+            } else {
+                warn.textContent = '';
+            }
+        }
+
+        function updateValues() {
+            document.getElementById('floorsValue').textContent = document.getElementById('floors').value;
+        }
+
+        function rotateCamera() {
+            autoRotate = !autoRotate;
+            if (controls) { controls.autoRotate = autoRotate; controls.autoRotateSpeed = 2.0; }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = window.innerWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            if (!stepMode) {
+                if (casterGroup) casterGroup.visible = document.getElementById('showCasters').checked;
+                if (outriggerGroup) outriggerGroup.visible = document.getElementById('showOutriggers').checked;
+                if (ladderGroup) ladderGroup.visible = document.getElementById('showLadder').checked;
+                if (railGroup) railGroup.visible = document.getElementById('showRails').checked;
+                if (braceGroup) braceGroup.visible = document.getElementById('showBraces').checked;
+                if (platformGroup) platformGroup.visible = document.getElementById('showPlatform').checked;
+            }
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>타워 시뮬레이터</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Malgun Gothic', sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .header-banner {
+            background: #1976D2;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2000;
+        }
+        
+        .header-banner a {
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .header-banner a:hover {
+            text-decoration: underline;
+        }
+        
+        #canvas-container {
+            position: relative;
+            height: calc(100vh - 40px);
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 300px;
+            z-index: 1000;
+        }
+        
+        h2 {
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            color: #00ff88;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            display: inline-block;
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: #00ff88;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 5px;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+            max-width: 300px;
+        }
+        
+        #dimensions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 5px;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-banner">
+        🏗️ 가설파트너 타워(계단탑) 시뮬레이터 | 
+        <a href="https://gaseolpartner.com" target="_blank">홈페이지 방문</a> | 
+        © 2025 가설파트너
+    </div>
+    
+    <div id="canvas-container">
+        <div id="loading">로딩 중...</div>
+        
+        <div id="controls" style="display: none;">
+            <h2>타워 시뮬레이터</h2>
+
+            
+            <div class="control-group">
+                <label>층수: <span class="value-display" id="floorsValue">4</span></label>
+                <input type="range" id="floors" min="1" max="10" value="4" step="1">
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="showStairs" checked>
+                <label for="showStairs">안전계단 표시</label>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="showPlatforms" checked>
+                <label for="showPlatforms">발판 표시</label>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="showRails" checked>
+                <label for="showRails">안전난간 표시</label>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="showBraces" checked>
+                <label for="showBraces">가새 표시</label>
+            </div>
+            
+            <button onclick="generateScaffold()">비계 재생성</button>
+            <button onclick="rotateCamera()">자동 회전 토글</button>
+
+            <hr style="border-color:#333; margin:14px 0;">
+            <div class="checkbox-group"><input type="checkbox" id="stepMode"><label for="stepMode"><b>설치·해체 단계 시연</b></label></div>
+            <div id="stepUI" style="display:none;">
+                <div id="stepCaption" style="color:#00ff88; font-weight:bold; margin:6px 0; font-size:13px; min-height:36px; line-height:1.4;"></div>
+                <div style="display:flex; gap:6px;">
+                    <button id="prevBtn" onclick="stepPrev()" style="margin-top:0;">◀ 이전</button>
+                    <button id="nextBtn" onclick="stepNext()" style="margin-top:0;">다음 ▶</button>
+                </div>
+                <button id="playBtn" onclick="stepPlay()" style="margin-top:6px;">▶ 자동 재생</button>
+                <div style="color:#888; font-size:12px; margin-top:4px;"><span id="stepIdx">1</span> / <span id="stepTot">8</span> 단계</div>
+            </div>
+        </div>
+
+        <div id="dimensions" style="display: none;">
+            <strong>현재 치수:</strong><br>
+            가로: <span id="totalWidth">5487</span>mm<br>
+            세로: <span id="totalDepth">3658</span>mm<br>
+            높이: <span id="totalHeight">7600</span>mm
+        </div>
+        
+        <div id="info" style="display: none;">
+            <strong>조작법:</strong><br>
+            • 마우스 드래그: 카메라 회전<br>
+            • 스크롤: 확대/축소<br>
+            • 우클릭 드래그: 카메라 이동<br><br>
+            <strong>규격:</strong><br>
+            • 베이: 1829mm × 1829mm<br>
+            • 층고: 1900mm
+        </div>
+        
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // 전역 변수 선언
+        let scene, camera, renderer, controls;
+        let scaffoldGroup, stairsGroup, platformsGroup, railsGroup, braceGroup;
+        let autoRotate = false;
+        let stepMode = false, stepIndex = 0, playTimer = null;
+
+        const PHASES = [
+            { t: '① 수직재(비계기둥)·수평재 조립', v: ['scaffold'] },
+            { t: '② 가새(대각재) 체결', v: ['scaffold', 'brace'] },
+            { t: '③ 작업발판 설치', v: ['scaffold', 'brace', 'platform'] },
+            { t: '④ 안전계단 설치', v: ['scaffold', 'brace', 'platform', 'stairs'] },
+            { t: '⑤ 안전난간 설치(완성)', v: ['scaffold', 'brace', 'platform', 'stairs', 'rail'] },
+            { t: '⑥ [해체] 안전난간·안전계단 해체', v: ['scaffold', 'brace', 'platform'] },
+            { t: '⑦ [해체] 작업발판 해체', v: ['scaffold', 'brace'] },
+            { t: '⑧ [해체] 가새·프레임 해체 완료', v: [] }
+        ];
+
+        function groupByKey(k) {
+            return { scaffold: scaffoldGroup, brace: braceGroup, platform: platformsGroup, stairs: stairsGroup, rail: railsGroup }[k];
+        }
+        function toggleStepMode() {
+            stepMode = document.getElementById('stepMode').checked;
+            document.getElementById('stepUI').style.display = stepMode ? 'block' : 'none';
+            stopPlay();
+            stepIndex = 0;
+            generateScaffold();
+        }
+        function applyPhase() {
+            if (!stepMode) return;
+            const ph = PHASES[stepIndex];
+            ['scaffold', 'brace', 'platform', 'stairs', 'rail'].forEach(k => {
+                const g = groupByKey(k);
+                if (g) g.visible = ph.v.indexOf(k) !== -1;
+            });
+            document.getElementById('stepCaption').textContent = ph.t;
+            document.getElementById('stepIdx').textContent = stepIndex + 1;
+            document.getElementById('stepTot').textContent = PHASES.length;
+        }
+        function stepNext() { if (stepIndex < PHASES.length - 1) { stepIndex++; applyPhase(); } }
+        function stepPrev() { if (stepIndex > 0) { stepIndex--; applyPhase(); } }
+        function stepPlay() {
+            if (playTimer) { stopPlay(); return; }
+            document.getElementById('playBtn').textContent = '⏸ 정지';
+            playTimer = setInterval(() => { stepIndex = (stepIndex >= PHASES.length - 1) ? 0 : stepIndex + 1; applyPhase(); }, 1500);
+        }
+        function stopPlay() {
+            if (playTimer) { clearInterval(playTimer); playTimer = null; }
+            const b = document.getElementById('playBtn');
+            if (b) b.textContent = '▶ 자동 재생';
+        }
+
+        
+        // 실제 비계 규격 (mm 단위를 m로 변환)
+        const DIMENSIONS = {
+            bayWidth: 1.829,      // 1829mm
+            bayDepth: 1.829,      // 1829mm
+            floorHeight: 1.9,     // 1900mm
+            pipeRadius: 0.025,    // 50mm 직경
+            platformThickness: 0.05,
+            stairWidth: 0.61,     // 610mm
+            railHeight: 1.0,      // 1000mm
+            bracketWidth: 0.914,  // 914mm (안전발판 규격)
+            bracketDepth: 0.61    // 610mm
+        };
+        
+        // 초기화 함수
+        function init() {
+            console.log('Initializing scene...');
+            
+            // Scene 생성
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 50, 200);
+            
+            // Camera 생성
+            camera = new THREE.PerspectiveCamera(
+                75, 
+                window.innerWidth / window.innerHeight, 
+                0.1, 
+                1000
+            );
+            camera.position.set(15, 12, 15);
+            
+            // Renderer 생성
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('canvas'),
+                antialias: true 
+            });
+            const container = document.getElementById('canvas-container');
+            renderer.setSize(window.innerWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // OrbitControls 설정
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 5;
+            controls.maxDistance = 50;
+            controls.maxPolarAngle = Math.PI / 2;
+            controls.target.set(0, 5, 0);
+            
+            // 조명 설정
+            setupLights();
+            
+            // 바닥 생성
+            createGround();
+            
+            // 초기 비계 생성
+            generateScaffold();
+            
+            // 이벤트 리스너 설정
+            setupEventListeners();
+            
+            // UI 표시
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('controls').style.display = 'block';
+            document.getElementById('dimensions').style.display = 'block';
+            document.getElementById('info').style.display = 'block';
+            
+            // 애니메이션 시작
+            animate();
+        }
+        
+        // 조명 설정
+        function setupLights() {
+            // 환경광
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+            
+            // 방향광
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(50, 100, 50);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.left = -30;
+            directionalLight.shadow.camera.right = 30;
+            directionalLight.shadow.camera.top = 30;
+            directionalLight.shadow.camera.bottom = -30;
+            directionalLight.shadow.mapSize.width = 4096;
+            directionalLight.shadow.mapSize.height = 4096;
+            scene.add(directionalLight);
+            
+            // 포인트 라이트
+            const pointLight = new THREE.PointLight(0xffffff, 0.3);
+            pointLight.position.set(-20, 20, -20);
+            scene.add(pointLight);
+        }
+        
+        // 바닥 생성
+        function createGround() {
+            // 바닥 메시
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x222222,
+                roughness: 0.9
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // 그리드
+            const gridHelper = new THREE.GridHelper(100, 50, 0x444444, 0x333333);
+            scene.add(gridHelper);
+        }
+        
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            window.addEventListener('resize', onWindowResize);
+
+            document.getElementById('floors').addEventListener('input', updateValues);
+            document.getElementById('stepMode').addEventListener('change', toggleStepMode);
+        }
+        
+        // 비계 생성 함수
+        function generateScaffold() {
+            console.log('Generating scaffold...');
+            
+            // 기존 그룹 제거
+            if (scaffoldGroup) scene.remove(scaffoldGroup);
+            if (stairsGroup) scene.remove(stairsGroup);
+            if (platformsGroup) scene.remove(platformsGroup);
+            if (railsGroup) scene.remove(railsGroup);
+            if (braceGroup) scene.remove(braceGroup);
+            
+            // 새 그룹 생성
+            scaffoldGroup = new THREE.Group();
+            stairsGroup = new THREE.Group();
+            platformsGroup = new THREE.Group();
+            railsGroup = new THREE.Group();
+            braceGroup = new THREE.Group();
+            
+            // 슬라이더 값 가져오기
+            const width = 3;  // 고정값
+            const depth = 2;  // 고정값
+            const floors = parseInt(document.getElementById('floors').value);
+            
+            // 치수 업데이트
+            updateDimensions(width, depth, floors);
+            
+            // 시스템 비계 생성
+            createVerticalPosts(width, depth, floors);
+            createHorizontalLedgers(width, depth, floors);
+            
+            const on = k => stepMode || document.getElementById(k).checked;
+
+            if (on('showBraces')) {
+                createBraces(width, depth, floors);
+            }
+
+            if (on('showPlatforms')) {
+                createPlatforms(width, depth, floors);
+            }
+
+            if (on('showStairs')) {
+                createExternalStairTower(width, depth, floors);
+            }
+
+            if (on('showRails')) {
+                createSafetyRails(width, depth, floors);
+            }
+
+            // Scene에 추가
+            scene.add(scaffoldGroup);
+            scene.add(stairsGroup);
+            scene.add(platformsGroup);
+            scene.add(railsGroup);
+            scene.add(braceGroup);
+
+            applyPhase();
+        }
+        
+        // 수직 기둥 생성
+        function createVerticalPosts(width, depth, floors) {
+            const { bayWidth, bayDepth, floorHeight, pipeRadius } = DIMENSIONS;
+            
+            const verticalPipeMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x999999,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            
+            const verticalGeometry = new THREE.CylinderGeometry(
+                pipeRadius, 
+                pipeRadius, 
+                floorHeight
+            );
+            
+            for (let x = 0; x <= width; x++) {
+                for (let z = 0; z <= depth; z++) {
+                    for (let y = 0; y < floors; y++) {
+                        const pipe = new THREE.Mesh(verticalGeometry, verticalPipeMaterial);
+                        pipe.position.set(
+                            x * bayWidth - (width * bayWidth) / 2,
+                            y * floorHeight + floorHeight / 2,
+                            z * bayDepth - (depth * bayDepth) / 2
+                        );
+                        pipe.castShadow = true;
+                        pipe.receiveShadow = true;
+                        scaffoldGroup.add(pipe);
+                    }
+                }
+            }
+        }
+        
+        // 수평 장선 생성
+        function createHorizontalLedgers(width, depth, floors) {
+            const { bayWidth, bayDepth, floorHeight, pipeRadius } = DIMENSIONS;
+            
+            const horizontalPipeMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xaaaaaa,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            
+            const ledgerXGeometry = new THREE.CylinderGeometry(
+                pipeRadius * 0.9, 
+                pipeRadius * 0.9, 
+                bayWidth
+            );
+            const ledgerZGeometry = new THREE.CylinderGeometry(
+                pipeRadius * 0.9, 
+                pipeRadius * 0.9, 
+                bayDepth
+            );
+            
+            for (let y = 0; y <= floors; y++) {
+                // X방향 장선
+                for (let x = 0; x < width; x++) {
+                    for (let z = 0; z <= depth; z++) {
+                        const pipe = new THREE.Mesh(ledgerXGeometry, horizontalPipeMaterial);
+                        pipe.rotation.z = Math.PI / 2;
+                        pipe.position.set(
+                            x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
+                            y * floorHeight,
+                            z * bayDepth - (depth * bayDepth) / 2
+                        );
+                        pipe.castShadow = true;
+                        scaffoldGroup.add(pipe);
+                        
+                        // 중간 장선
+                        if (y < floors) {
+                            const midPipe = new THREE.Mesh(ledgerXGeometry, horizontalPipeMaterial);
+                            midPipe.rotation.z = Math.PI / 2;
+                            midPipe.position.set(
+                                x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
+                                y * floorHeight + floorHeight * 0.5,
+                                z * bayDepth - (depth * bayDepth) / 2
+                            );
+                            scaffoldGroup.add(midPipe);
+                        }
+                    }
+                }
+                
+                // Z방향 장선
+                for (let x = 0; x <= width; x++) {
+                    for (let z = 0; z < depth; z++) {
+                        const pipe = new THREE.Mesh(ledgerZGeometry, horizontalPipeMaterial);
+                        pipe.rotation.x = Math.PI / 2;
+                        pipe.position.set(
+                            x * bayWidth - (width * bayWidth) / 2,
+                            y * floorHeight,
+                            z * bayDepth + bayDepth / 2 - (depth * bayDepth) / 2
+                        );
+                        pipe.castShadow = true;
+                        scaffoldGroup.add(pipe);
+                    }
+                }
+            }
+        }
+        
+        // 가새 생성
+        function createBraces(width, depth, floors) {
+            const { bayWidth, bayDepth, floorHeight, pipeRadius } = DIMENSIONS;
+            
+            const braceMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x666666,
+                metalness: 0.7,
+                roughness: 0.3
+            });
+            
+            const braceLength = Math.sqrt(bayWidth * bayWidth + floorHeight * floorHeight);
+            const braceGeometry = new THREE.CylinderGeometry(
+                pipeRadius * 0.8, 
+                pipeRadius * 0.8, 
+                braceLength
+            );
+            
+            // 전면 가새
+            for (let x = 0; x < width; x++) {
+                for (let y = 0; y < floors; y++) {
+                    if (x % 2 === 0 || width === 1) {
+                        const angle = Math.atan2(bayWidth, floorHeight);
+
+                        const brace1 = new THREE.Mesh(braceGeometry, braceMaterial);
+                        brace1.position.set(
+                            x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
+                            y * floorHeight + floorHeight / 2,
+                            -(depth * bayDepth) / 2
+                        );
+                        brace1.rotation.z = angle;
+                        braceGroup.add(brace1);
+                        
+                        const brace2 = new THREE.Mesh(braceGeometry, braceMaterial);
+                        brace2.position.set(
+                            x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
+                            y * floorHeight + floorHeight / 2,
+                            -(depth * bayDepth) / 2
+                        );
+                        brace2.rotation.z = -angle;
+                        braceGroup.add(brace2);
+                    }
+                }
+            }
+        }
+        
+        // 작업 발판 생성 (3x2 고정)
+        function createPlatforms(width, depth, floors) {
+            const { bayWidth, bayDepth, floorHeight } = DIMENSIONS;
+            
+            const platformMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x555555,
+                metalness: 0.5,
+                roughness: 0.5
+            });
+            
+            const platformGeometry = new THREE.BoxGeometry(
+                bayWidth - 0.05, 
+                DIMENSIONS.platformThickness, 
+                DIMENSIONS.bracketWidth
+            );
+            
+            // 3x2 고정이므로 계단은 항상 중간 베이(1,0)에 위치
+            const stairBayX = 1;
+            const stairBayZ = 0;
+            
+            for (let y = 1; y <= floors; y++) {
+                for (let x = 0; x < width; x++) {
+                    for (let z = 0; z < depth; z++) {
+                        // 계단이 표시되고 있고, 계단 베이인 경우 발판 생략
+                        if (document.getElementById('showStairs').checked && 
+                            x === stairBayX && z === stairBayZ) {
+                            continue;
+                        }
+                        
+                        const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+                        platform.position.set(
+                            x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
+                            y * floorHeight - floorHeight / 2,
+                            z * bayDepth + bayDepth / 2 - (depth * bayDepth) / 2
+                        );
+                        platform.castShadow = true;
+                        platform.receiveShadow = true;
+                        platformsGroup.add(platform);
+                    }
+                }
+            }
+        }
+        
+        // 내부 통합형 계단 생성 (3x2 고정 구조)
+        function createExternalStairTower(width, depth, floors) {
+            const { bayWidth, bayDepth, floorHeight } = DIMENSIONS;
+            
+            // 3x2 고정이므로 계단은 항상 중간 베이(인덱스 1)에 설치
+            const stairBayX = 1;  // 중간 베이
+            const stairBayZ = 0;  // 앞쪽 베이
+            
+            const stairWidth = 0.61;
+            const stepHeight = 0.19;
+            const stepDepth = 0.26;
+            const stepsPerFloor = 10;  // 한 층당 총 10단
+            
+            // 재질 정의
+            const stepMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x444444,
+                metalness: 0.3,
+                roughness: 0.7
+            });
+            
+            const railMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xffaa00,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            
+            // 계단 베이의 중심 좌표
+            const stairCenterX = stairBayX * bayWidth + bayWidth / 2 - (width * bayWidth) / 2;
+            const stairCenterZ = stairBayZ * bayDepth + bayDepth / 2 - (depth * bayDepth) / 2;
+            
+            // 각 층에 대한 계단 생성
+            for (let floor = 0; floor < floors; floor++) {
+                // 마지막 층은 계단 대신 사다리나 간단한 접근로만 설치
+                if (floor === floors - 1) {
+                    // 마지막 층 접근용 짧은 계단 (5단만)
+                    const lastFloorSteps = 5;
+                    for (let step = 0; step < lastFloorSteps; step++) {
+                        const stepGeometry = new THREE.BoxGeometry(stepDepth, 0.03, stairWidth);
+                        const stepMesh = new THREE.Mesh(stepGeometry, stepMaterial);
+                        
+                        // 중앙에서 시작하는 짧은 계단
+                        stepMesh.position.set(
+                            stairCenterX - bayWidth/4 + (step + 1) * (bayWidth/2 / lastFloorSteps),
+                            floor * floorHeight + step * stepHeight + stepHeight / 2,
+                            stairCenterZ - bayDepth/3  // 항상 앞쪽
+                        );
+                        
+                        stepMesh.castShadow = true;
+                        stepMesh.receiveShadow = true;
+                        stairsGroup.add(stepMesh);
+                        
+                        // 미끄럼 방지 패턴
+                        const patternGeometry = new THREE.BoxGeometry(stepDepth * 0.8, 0.002, stairWidth * 0.9);
+                        const patternMaterial = new THREE.MeshStandardMaterial({ 
+                            color: 0x222222,
+                            metalness: 0.1,
+                            roughness: 0.9
+                        });
+                        const pattern = new THREE.Mesh(patternGeometry, patternMaterial);
+                        pattern.position.copy(stepMesh.position);
+                        pattern.position.y += 0.02;
+                        stairsGroup.add(pattern);
+                    }
+                    
+                    // 마지막 층 난간 (간단하게)
+                    const railHeight = 0.9;
+                    const railGeometry = new THREE.CylinderGeometry(0.02, 0.02, railHeight);
+                    
+                    for (let i = 0; i <= lastFloorSteps; i += 2) {
+                        const xPos = stairCenterX - bayWidth/4 + i * (bayWidth/2 / lastFloorSteps);
+                        const zPos = stairCenterZ - bayDepth/3;
+                        
+                        // 앞쪽 난간
+                        const frontRail = new THREE.Mesh(railGeometry, railMaterial);
+                        frontRail.position.set(
+                            xPos,
+                            floor * floorHeight + i * stepHeight + railHeight/2,
+                            zPos - stairWidth/2 - 0.1
+                        );
+                        stairsGroup.add(frontRail);
+                        
+                        // 뒤쪽 난간
+                        const backRail = new THREE.Mesh(railGeometry, railMaterial);
+                        backRail.position.set(
+                            xPos,
+                            floor * floorHeight + i * stepHeight + railHeight/2,
+                            zPos + stairWidth/2 + 0.1
+                        );
+                        stairsGroup.add(backRail);
+                    }
+                    
+                    continue;  // 마지막 층은 여기서 끝
+                }
+                
+                // 일반 층 계단 (1층부터 마지막-1층까지)
+                // 3x2 구조에서 앞뒤로 전환하며 좌우 이동
+                const direction = floor % 4;  // 0: 왼쪽(앞), 1: 오른쪽(앞), 2: 왼쪽(뒤), 3: 오른쪽(뒤)
+                
+                for (let step = 0; step < stepsPerFloor; step++) {
+                    const stepGeometry = new THREE.BoxGeometry(stepDepth, 0.03, stairWidth);
+                    const stepMesh = new THREE.Mesh(stepGeometry, stepMaterial);
+                    
+                    let xPos, zPos;
+                    
+                    if (direction === 0 || direction === 2) {
+                        // 왼쪽으로 이동
+                        xPos = stairCenterX + bayWidth/2 - (step + 1) * (bayWidth / stepsPerFloor);
+                        
+                        if (direction === 0) {
+                            zPos = stairCenterZ - bayDepth/3;  // 앞쪽
+                        } else {
+                            zPos = stairCenterZ + bayDepth/3;  // 뒤쪽
+                        }
+                    } else {
+                        // 오른쪽으로 이동
+                        xPos = stairCenterX - bayWidth/2 + (step + 1) * (bayWidth / stepsPerFloor);
+                        
+                        if (direction === 1) {
+                            zPos = stairCenterZ - bayDepth/3;  // 앞쪽
+                        } else {
+                            zPos = stairCenterZ + bayDepth/3;  // 뒤쪽
+                        }
+                    }
+                    
+                    stepMesh.position.set(
+                        xPos,
+                        floor * floorHeight + step * stepHeight + stepHeight / 2,
+                        zPos
+                    );
+                    
+                    stepMesh.castShadow = true;
+                    stepMesh.receiveShadow = true;
+                    stairsGroup.add(stepMesh);
+                    
+                    // 계단 표면 미끄럼 방지 패턴
+                    const patternGeometry = new THREE.BoxGeometry(stepDepth * 0.8, 0.002, stairWidth * 0.9);
+                    const patternMaterial = new THREE.MeshStandardMaterial({ 
+                        color: 0x222222,
+                        metalness: 0.1,
+                        roughness: 0.9
+                    });
+                    const pattern = new THREE.Mesh(patternGeometry, patternMaterial);
+                    pattern.position.copy(stepMesh.position);
+                    pattern.position.y += 0.02;
+                    stairsGroup.add(pattern);
+                }
+                
+                // 계단 난간
+                const railHeight = 0.9;
+                const railGeometry = new THREE.CylinderGeometry(0.02, 0.02, railHeight);
+                
+                // 난간 기둥 설치 (3단마다)
+                for (let step = 0; step <= stepsPerFloor; step += 3) {
+                    let xPos, zPosRail;
+                    
+                    if (direction === 0 || direction === 2) {
+                        xPos = stairCenterX + bayWidth/2 - step * (bayWidth / stepsPerFloor);
+                        
+                        if (direction === 0) {
+                            zPosRail = stairCenterZ - bayDepth/3;
+                        } else {
+                            zPosRail = stairCenterZ + bayDepth/3;
+                        }
+                    } else {
+                        xPos = stairCenterX - bayWidth/2 + step * (bayWidth / stepsPerFloor);
+                        
+                        if (direction === 1) {
+                            zPosRail = stairCenterZ - bayDepth/3;
+                        } else {
+                            zPosRail = stairCenterZ + bayDepth/3;
+                        }
+                    }
+                    
+                    // 앞쪽 난간
+                    const frontRail = new THREE.Mesh(railGeometry, railMaterial);
+                    frontRail.position.set(
+                        xPos,
+                        floor * floorHeight + step * stepHeight + railHeight/2,
+                        zPosRail - stairWidth/2 - 0.1
+                    );
+                    stairsGroup.add(frontRail);
+                    
+                    // 뒤쪽 난간
+                    const backRail = new THREE.Mesh(railGeometry, railMaterial);
+                    backRail.position.set(
+                        xPos,
+                        floor * floorHeight + step * stepHeight + railHeight/2,
+                        zPosRail + stairWidth/2 + 0.1
+                    );
+                    stairsGroup.add(backRail);
+                }
+                
+                // 핸드레일 (경사진 손잡이)
+                const handrailRadius = 0.025;
+                const handrailLength = Math.sqrt(
+                    bayWidth * bayWidth + 
+                    (stepsPerFloor * stepHeight) * (stepsPerFloor * stepHeight)
+                );
+                const handrailGeometry = new THREE.CylinderGeometry(
+                    handrailRadius, 
+                    handrailRadius, 
+                    handrailLength
+                );
+                
+                const angle = Math.atan2(stepsPerFloor * stepHeight, bayWidth);
+                
+                // 양쪽 핸드레일
+                for (let side = 0; side < 2; side++) {
+                    const handrail = new THREE.Mesh(handrailGeometry, railMaterial);
+                    let zOffset;
+                    
+                    if (direction === 0 || direction === 2) {
+                        if (direction === 0) {
+                            zOffset = stairCenterZ - bayDepth/3 + (side === 0 ? -stairWidth/2 - 0.1 : stairWidth/2 + 0.1);
+                        } else {
+                            zOffset = stairCenterZ + bayDepth/3 + (side === 0 ? -stairWidth/2 - 0.1 : stairWidth/2 + 0.1);
+                        }
+                        
+                        handrail.position.set(
+                            stairCenterX,
+                            floor * floorHeight + (stepsPerFloor * stepHeight)/2 + railHeight,
+                            zOffset
+                        );
+                        handrail.rotation.z = angle;
+                    } else {
+                        if (direction === 1) {
+                            zOffset = stairCenterZ - bayDepth/3 + (side === 0 ? -stairWidth/2 - 0.1 : stairWidth/2 + 0.1);
+                        } else {
+                            zOffset = stairCenterZ + bayDepth/3 + (side === 0 ? -stairWidth/2 - 0.1 : stairWidth/2 + 0.1);
+                        }
+                        
+                        handrail.position.set(
+                            stairCenterX,
+                            floor * floorHeight + (stepsPerFloor * stepHeight)/2 + railHeight,
+                            zOffset
+                        );
+                        handrail.rotation.z = -angle;
+                    }
+                    
+                    stairsGroup.add(handrail);
+                }
+            }
+        }
+        
+        // 안전 난간 생성
+        function createSafetyRails(width, depth, floors) {
+            const { bayWidth, bayDepth, floorHeight, railHeight } = DIMENSIONS;
+            
+            const railMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xffaa00,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            
+            const railGeometry = new THREE.CylinderGeometry(0.02, 0.02, railHeight);
+            const topRailGeometry = new THREE.CylinderGeometry(0.025, 0.025, bayWidth);
+            
+            for (let y = 1; y <= floors; y++) {
+                // 외곽 난간 기둥 - 후면만 (계단 반대편)
+                for (let x = 0; x <= width; x++) {
+                    // 후면
+                    const post = new THREE.Mesh(railGeometry, railMaterial);
+                    post.position.set(
+                        x * bayWidth - (width * bayWidth) / 2,
+                        y * floorHeight - floorHeight / 2 + railHeight / 2,
+                        (depth * bayDepth) / 2
+                    );
+                    railsGroup.add(post);
+                }
+                
+                // 상부 난간 - 후면만
+                for (let x = 0; x < width; x++) {
+                    const topRail = new THREE.Mesh(topRailGeometry, railMaterial);
+                    topRail.rotation.z = Math.PI / 2;
+                    topRail.position.set(
+                        x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
+                        y * floorHeight - floorHeight / 2 + railHeight,
+                        (depth * bayDepth) / 2
+                    );
+                    railsGroup.add(topRail);
+                    
+                    // 중간 난간
+                    const midRail = new THREE.Mesh(topRailGeometry, railMaterial);
+                    midRail.rotation.z = Math.PI / 2;
+                    midRail.position.set(
+                        x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
+                        y * floorHeight - floorHeight / 2 + railHeight / 2,
+                        (depth * bayDepth) / 2
+                    );
+                    railsGroup.add(midRail);
+                }
+                
+                // 발끝막이판 - 후면만
+                const toeBoardGeometry = new THREE.BoxGeometry(bayWidth, 0.15, 0.02);
+                const toeBoardMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xcc6600,
+                    metalness: 0.3,
+                    roughness: 0.7
+                });
+                
+                for (let x = 0; x < width; x++) {
+                    const toeBoard = new THREE.Mesh(toeBoardGeometry, toeBoardMaterial);
+                    toeBoard.position.set(
+                        x * bayWidth + bayWidth / 2 - (width * bayWidth) / 2,
+                        y * floorHeight - floorHeight / 2 + 0.075,
+                        (depth * bayDepth) / 2
+                    );
+                    railsGroup.add(toeBoard);
+                }
+            }
+        }
+        
+        // 치수 업데이트
+        function updateDimensions(width, depth, floors) {
+            const totalWidth = Math.round(width * DIMENSIONS.bayWidth * 1000);
+            const totalDepth = Math.round(depth * DIMENSIONS.bayDepth * 1000);
+            const totalHeight = Math.round(floors * DIMENSIONS.floorHeight * 1000);
+            
+            document.getElementById('totalWidth').textContent = totalWidth;
+            document.getElementById('totalDepth').textContent = totalDepth;
+            document.getElementById('totalHeight').textContent = totalHeight;
+        }
+        
+        // 슬라이더 값 업데이트
+        function updateValues() {
+            document.getElementById('floorsValue').textContent = document.getElementById('floors').value;
+        }
+        
+        // 카메라 자동 회전 토글
+        function rotateCamera() {
+            autoRotate = !autoRotate;
+            if (controls) {
+                controls.autoRotate = autoRotate;
+                controls.autoRotateSpeed = 2.0;
+            }
+        }
+        
+        // 윈도우 리사이즈 핸들러
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = window.innerWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, container.clientHeight);
+        }
+        
+        // 애니메이션 루프
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Controls 업데이트
+            if (controls) {
+                controls.update();
+            }
+            
+            // 체크박스에 따른 가시성 업데이트 (단계 시연 중에는 단계가 제어)
+            if (!stepMode) {
+                if (stairsGroup) {
+                    stairsGroup.visible = document.getElementById('showStairs').checked;
+                }
+                if (platformsGroup) {
+                    platformsGroup.visible = document.getElementById('showPlatforms').checked;
+                }
+                if (railsGroup) {
+                    railsGroup.visible = document.getElementById('showRails').checked;
+                }
+                if (braceGroup) {
+                    braceGroup.visible = document.getElementById('showBraces').checked;
+                }
+            }
+            
+            // 렌더링
+            renderer.render(scene, camera);
+        }
+        
+        // 페이지 로드 시 초기화
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
