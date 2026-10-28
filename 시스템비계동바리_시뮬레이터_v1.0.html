@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시스템 비계/동바리 설치 시뮬레이터 - 가설파트너</title>
+    <title>시스템 비계·동바리 시뮬레이터 | 가설파트너</title>
     <style>
         body {
             margin: 0;
@@ -12,15 +12,15 @@
             overflow-x: hidden;
         }
         .header-banner {
-            background: #1976D2;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
             padding: 10px 20px;
             text-align: center;
             font-size: 14px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .header-banner a {
-            color: #FFD700;
+            color: #F2B705;
             text-decoration: none;
             font-weight: bold;
             margin-left: 10px;
@@ -38,7 +38,7 @@
             width: 100%;
             height: 70vh;
             position: relative;
-            background: linear-gradient(to bottom, #87CEEB, #f0f0f0);
+            background: linear-gradient(to bottom, #F2B705, #f0f0f0);
         }
         #controls {
             position: absolute;
@@ -55,7 +55,7 @@
             margin-top: 0;
             color: #333;
             font-size: 20px;
-            border-bottom: 2px solid #2196F3;
+            border-bottom: 2px solid #F2B705;
             padding-bottom: 10px;
         }
         .system-selector {
@@ -74,19 +74,19 @@
             transition: all 0.3s;
         }
         .system-btn.active {
-            background: #2196F3;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
         }
         .system-btn:hover {
-            background: #1976D2;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
         }
         button {
             width: 100%;
             padding: 10px;
             margin: 5px 0;
-            background: #2196F3;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
             border: none;
             border-radius: 4px;
             cursor: pointer;
@@ -94,7 +94,7 @@
             transition: background 0.3s;
         }
         button:hover {
-            background: #1976D2;
+            background: #F2B705;
         }
         button:disabled {
             background: #ccc;
@@ -107,11 +107,11 @@
             border-radius: 4px;
             font-size: 14px;
             line-height: 1.6;
-            border-left: 4px solid #2196F3;
+            border-left: 4px solid #F2B705;
         }
         #step-title {
             font-weight: bold;
-            color: #1976D2;
+            color: #F2B705;
             margin-bottom: 8px;
             font-size: 16px;
         }
@@ -164,14 +164,14 @@
             max-height: 80vh;
             overflow-y: auto;
             font-size: 13px;
-            border: 3px solid #FFA500;
+            border: 3px solid #F2B705;
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
             display: none;
             z-index: 1000;
         }
         .safety-info h3 {
             margin-top: 0;
-            color: #FF6600;
+            color: #F2B705;
             font-size: 18px;
             text-align: center;
         }
@@ -186,8 +186,8 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            background: #FF6600;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
             border: none;
             width: 30px;
             height: 30px;
@@ -204,7 +204,7 @@
         }
         .detail-info h4 {
             margin-top: 0;
-            color: #0288D1;
+            color: #F2B705;
         }
         .specs-table {
             width: 100%;
@@ -257,8 +257,8 @@
             font-size: 13px;
         }
         .tab-btn.active {
-            background: #FF6600;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
         }
         .tab-panel {
             display: none;
@@ -276,14 +276,14 @@
             border-radius: 10px;
             max-width: 600px;
             font-size: 14px;
-            border: 3px solid #2196F3;
+            border: 3px solid #F2B705;
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
             display: none;
             z-index: 1000;
         }
         .export-dialog h3 {
             margin-top: 0;
-            color: #1976D2;
+            color: #F2B705;
             font-size: 18px;
             text-align: center;
         }
@@ -303,12 +303,12 @@
             transition: all 0.3s;
         }
         .export-btn:hover {
-            background: #e3f2fd;
-            border-color: #2196F3;
+            background: #2A2A2A;
+            border-color: #F2B705;
         }
         .export-btn i {
             font-size: 24px;
-            color: #2196F3;
+            color: #F2B705;
             display: block;
             margin-bottom: 8px;
         }
@@ -333,19 +333,45 @@
             overflow-y: auto;
         }
     </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+<style id="gp-page">
+
+body{background:#1B1B1B !important;color:#fff}
+#canvas-container{background:#0a0a0a !important}
+#controls,.legend,#view-controls{background:rgba(0,0,0,.84) !important;color:#eee !important;border:1px solid rgba(255,255,255,.1)}
+#controls h2{color:#F2B705 !important;border-bottom-color:#F2B705 !important}
+.system-btn{background:#333 !important;color:#ddd !important}
+.system-btn.active,.system-btn:hover{background:#F2B705 !important;color:#1B1B1B !important}
+button{background:#F2B705;color:#1B1B1B;font-weight:700}
+button:hover{background:#D9A300}
+button:disabled{background:#444 !important;color:#888 !important}
+#step-info{background:#222 !important;border-left-color:#F2B705 !important;color:#ddd}
+#step-title{color:#F2B705 !important}
+.detail-info{background:#222 !important;color:#ddd}
+.detail-info h4{color:#F2B705 !important}
+.specs-table td{border-color:#3A3A3A !important}
+.specs-table td:first-child{background:#2A2A2A !important}
+.tab-btn{background:#333 !important;color:#ddd !important}
+.tab-btn.active{background:#F2B705 !important;color:#1B1B1B !important}
+.safety-info h3,.export-dialog h3{color:#1B1B1B !important}
+.export-btn:hover{border-color:#F2B705 !important;background:#FFF9E6 !important}
+.export-btn i{color:#1B1B1B !important}
+.close-btn{color:#1B1B1B !important}
+
+</style>
 </head>
 <body>
-    <div class="header-banner">
-        🏗️ 가설파트너 시스템 비계/동바리 설치 시뮬레이터 | 
-        <a href="https://gaseolpartner.com" target="_blank">홈페이지 방문</a>
-    </div>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">시스템 비계·동바리 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ <span class="gp-year">2026</span> 가설파트너</span></div></div></div>
+
+    
     <div id="container">
         <div id="canvas-container">
             <canvas id="canvas"></canvas>
         </div>
         <div id="controls">
             <h2>시스템 비계/동바리 설치 시뮬레이터</h2>
-            <small style="color: #666; display: block; margin-bottom: 10px;">© 2025 가설파트너</small>
+            <small style="color: #666; display: block; margin-bottom: 10px;">© <span class="gp-year">2026</span> 가설파트너</small>
             <div class="system-selector">
                 <button class="system-btn active" onclick="selectSystem('scaffold')">시스템 비계</button>
                 <button class="system-btn" onclick="selectSystem('support')">시스템 동바리</button>
@@ -650,8 +676,8 @@
 
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf0f0f0);
-            scene.fog = new THREE.Fog(0xf0f0f0, 100, 200);
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 100, 200);
 
             const container = document.getElementById('canvas-container');
             const width = container.clientWidth;
@@ -680,7 +706,7 @@
 
             // 지면
             const groundGeometry = new THREE.PlaneGeometry(40, 40);
-            const groundMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+            const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x222222 });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
             ground.receiveShadow = true;
@@ -1733,10 +1759,10 @@
                     <title>${systemName} 설치 매뉴얼</title>
                     <style>
                         body { font-family: 'Malgun Gothic', Arial, sans-serif; padding: 20px; }
-                        h1 { color: #1976D2; border-bottom: 2px solid #1976D2; padding-bottom: 10px; }
+                        h1 { color: #1B1B1B; border-bottom: 2px solid #F2B705; padding-bottom: 10px; }
                         h2 { color: #333; margin-top: 30px; }
                         .step { page-break-inside: avoid; margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
-                        .step-title { font-weight: bold; color: #1976D2; }
+                        .step-title { font-weight: bold; color: #1B1B1B; }
                         .safety { background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107; }
                         .specs { background: #f0f0f0; padding: 15px; margin: 20px 0; }
                         @media print { .step { page-break-inside: avoid; } }
@@ -1806,5 +1832,6 @@
 
         init();
     </script>
+<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
 </body>
 </html>

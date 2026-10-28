@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시스템 동바리(써포트) 설치 매뉴얼</title>
+    <title>시스템 동바리 설치 매뉴얼 | 가설파트너</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         
@@ -28,8 +28,8 @@
         
         /* 헤더 */
         .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
+            background: linear-gradient(135deg, #1B1B1B 0%, #F2B705 100%);
+            color: #1B1B1B;
             padding: 60px 0;
             text-align: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
@@ -86,18 +86,18 @@
         
         .nav a {
             text-decoration: none;
-            color: #3498db;
+            color: #1B1B1B;
             font-weight: 500;
             padding: 12px 25px;
             border-radius: 30px;
             transition: all 0.3s;
-            border: 2px solid #3498db;
+            border: 2px solid #F2B705;
             display: block;
         }
         
         .nav a:hover {
-            background: #3498db;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
             transform: translateY(-2px);
         }
         
@@ -111,11 +111,11 @@
         }
         
         .section h2 {
-            color: #2c3e50;
+            color: #1B1B1B;
             font-size: 2.2em;
             margin-bottom: 30px;
             padding-bottom: 15px;
-            border-bottom: 4px solid #3498db;
+            border-bottom: 4px solid #F2B705;
             display: flex;
             align-items: center;
             gap: 15px;
@@ -123,8 +123,8 @@
         
         .section h2::before {
             content: attr(data-number);
-            background: #3498db;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
             width: 50px;
             height: 50px;
             border-radius: 50%;
@@ -136,11 +136,11 @@
         }
         
         .section h3 {
-            color: #34495e;
+            color: #1B1B1B;
             font-size: 1.6em;
             margin: 35px 0 20px;
             padding-left: 20px;
-            border-left: 5px solid #3498db;
+            border-left: 5px solid #F2B705;
         }
         
         /* 표 스타일 개선 */
@@ -159,8 +159,8 @@
         }
         
         th {
-            background: #3498db;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
             font-weight: 600;
             padding: 15px;
             text-align: left;
@@ -190,7 +190,7 @@
         }
         
         .checklist h4 {
-            color: #2c3e50;
+            color: #1B1B1B;
             margin-bottom: 20px;
             font-size: 1.3em;
         }
@@ -200,7 +200,7 @@
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 15px;
-            border-left: 5px solid #3498db;
+            border-left: 5px solid #F2B705;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             transition: all 0.3s;
         }
@@ -211,7 +211,7 @@
         }
         
         .checklist-item strong {
-            color: #3498db;
+            color: #1B1B1B;
             display: block;
             margin-bottom: 8px;
             font-size: 1.1em;
@@ -254,7 +254,7 @@
         }
         
         .alert-info {
-            background: #d1ecf1;
+            background: #F6F6F4;
             border: 1px solid #bee5eb;
         }
         
@@ -326,8 +326,8 @@
         }
         
         .step:hover {
-            border-color: #3498db;
-            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.1);
+            border-color: #F2B705;
+            box-shadow: 0 3px 10px rgba(242, 183, 5, 0.1);
         }
         
         .step::before {
@@ -337,8 +337,8 @@
             left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            background: #3498db;
-            color: white;
+            background: #F2B705;
+            color: #1B1B1B;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -350,7 +350,7 @@
         }
         
         .step h5 {
-            color: #2c3e50;
+            color: #1B1B1B;
             margin-bottom: 10px;
             font-size: 1.2em;
         }
@@ -393,11 +393,11 @@
         .spec-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            border-color: #3498db;
+            border-color: #F2B705;
         }
         
         .spec-card h4 {
-            color: #3498db;
+            color: #1B1B1B;
             font-size: 1.8em;
             margin-bottom: 15px;
         }
@@ -405,7 +405,7 @@
         .spec-card .spec-value {
             font-size: 2.5em;
             font-weight: bold;
-            color: #2c3e50;
+            color: #1B1B1B;
             margin: 10px 0;
         }
         
@@ -470,8 +470,20 @@
             }
         }
     </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+<style id="gp-page">
+
+body{background:#F6F6F4}
+th{background:#1B1B1B !important;color:#fff !important}
+.header{background:#1B1B1B !important;color:#fff !important;border-bottom:4px solid #F2B705}
+.header h1,.header p{color:#fff !important}
+
+</style>
 </head>
 <body>
+<div class="gp-topbar"><div class="gp-topbar-inner"><a href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><nav><a href="https://gaseolpartner.com/pages/introduction">가설 설계 프로그램</a><a href="https://gaseolpartner.com/pages/precio">가설재 견적 비교</a><a href="https://gaseolpartner.com/pages/structureatuntroduction">구조검토</a><a href="https://gaseolpartner.com/pages/calculators">지원 서비스</a><a href="https://gaseolpartner.com/pages/support">고객지원</a></nav></div></div><header class="gp-brandbar"><div class="gp-brandbar-inner"><a class="gp-logo" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><div class="gp-brand-links"><a href="index.html">← 시뮬레이터 목록</a><a href="https://pf.kakao.com/_xovuVG/chat" class="gp-cta" target="_blank" rel="noopener">카카오톡 문의</a></div></div></header>
+
     <div class="header">
         <div class="container">
             <h1>시스템 동바리(써포트) 설치 매뉴얼</h1>
@@ -1130,14 +1142,15 @@
             </div>
         </section>
         
-        <div style="background: #2c3e50; color: white; text-align: center; padding: 40px 0; margin-top: 50px;">
+        <div style="background: #1B1B1B; color: white; text-align: center; padding: 40px 0; margin-top: 50px;">
             <p>구조 검토 및 기술 문의</p>
             <h3 style="margin: 10px 0;">가설파트너</h3>
             <p>
                 <a href="https://gaseolpartner.com" target="_blank" style="color: #fff; text-decoration: none;">www.gaseolpartner.com</a>
             </p>
-            <p style="margin-top: 15px; font-size: 0.9em;">© 2024 가설파트너. All rights reserved.</p>
+            <p style="margin-top: 15px; font-size: 0.9em;">© <span class="gp-year">2026</span> 가설파트너. All rights reserved.</p>
         </div>
     </div>
+<footer class="gp-footer"><div class="gp-footer-inner"><div>회사명 : 가설파트너<span class="gp-sep">|</span>주소 : 서울 강남구 가로수길 5<span class="gp-sep">|</span>이메일 : <a href="mailto:fc112@naver.com">fc112@naver.com</a><span class="gp-sep">|</span>전화 : <a href="tel:01079702108">010-7970-2108</a><span class="gp-sep">|</span>사업자등록번호 : 549-20-01841</div><div class="gp-copyline">ⓒ <span class="gp-year">2026</span> 가설파트너 · <a href="https://gaseolpartner.com" target="_blank" rel="noopener">gaseolpartner.com</a></div></div></footer><script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
 </body>
 </html>

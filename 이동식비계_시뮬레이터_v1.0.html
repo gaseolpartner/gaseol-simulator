@@ -3,37 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이동식 비계(롤링타워) 시뮬레이터</title>
+    <title>이동식 비계 시뮬레이터 | 가설파트너</title>
     <style>
         body { margin: 0; font-family: 'Malgun Gothic', sans-serif; background: #1a1a1a; color: #fff; overflow: hidden; }
-        .header-banner { background: #1976D2; color: white; padding: 10px 20px; text-align: center; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; z-index: 2000; }
-        .header-banner a { color: #FFD700; text-decoration: none; font-weight: bold; margin-left: 10px; }
+        .header-banner { background: #F2B705; color: #1B1B1B; padding: 10px 20px; text-align: center; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; z-index: 2000; }
+        .header-banner a { color: #F2B705; text-decoration: none; font-weight: bold; margin-left: 10px; }
         .header-banner a:hover { text-decoration: underline; }
         #canvas-container { position: relative; height: calc(100vh - 40px); }
         #controls { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); max-width: 300px; z-index: 1000; max-height: calc(100vh - 90px); overflow-y: auto; }
-        h2 { margin: 0 0 16px 0; font-size: 20px; color: #00ff88; }
+        h2 { margin: 0 0 16px 0; font-size: 20px; color: #F2B705; }
         .control-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-size: 14px; color: #aaa; }
         input[type="range"] { width: 100%; height: 6px; border-radius: 3px; background: #333; outline: none; -webkit-appearance: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #00ff88; cursor: pointer; }
-        .value-display { display: inline-block; color: #00ff88; font-weight: bold; }
-        button { width: 100%; padding: 10px; margin-top: 8px; background: #00ff88; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-        button:hover { background: #00cc6a; transform: translateY(-2px); }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #F2B705; cursor: pointer; }
+        .value-display { display: inline-block; color: #F2B705; font-weight: bold; }
+        button { width: 100%; padding: 10px; margin-top: 8px; background: #F2B705; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        button:hover { background: #D9A300; transform: translateY(-2px); }
         .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
         input[type="checkbox"] { margin-right: 10px; }
         #info { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; backdrop-filter: blur(10px); font-size: 14px; max-width: 320px; }
         #dimensions { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; backdrop-filter: blur(10px); font-size: 14px; }
         #warn { color: #ff6b6b; font-weight: bold; }
         #canvas { width: 100%; height: 100%; }
-        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: #00ff88; }
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: #F2B705; }
     </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+
 </head>
 <body>
-    <div class="header-banner">
-        🏗️ 가설파트너 이동식 비계(롤링타워) 시뮬레이터 |
-        <a href="https://gaseolpartner.com" target="_blank">홈페이지 방문</a> |
-        © 2025 가설파트너
-    </div>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">이동식 비계 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ <span class="gp-year">2026</span> 가설파트너</span></div></div></div>
+
+    
 
     <div id="canvas-container">
         <div id="loading">로딩 중...</div>
@@ -59,7 +60,7 @@
             <hr style="border-color:#333; margin:14px 0;">
             <div class="checkbox-group"><input type="checkbox" id="stepMode"><label for="stepMode"><b>설치·해체 단계 시연</b></label></div>
             <div id="stepUI" style="display:none;">
-                <div id="stepCaption" style="color:#00ff88; font-weight:bold; margin:6px 0; font-size:13px; min-height:36px; line-height:1.4;"></div>
+                <div id="stepCaption" style="color:#F2B705; font-weight:bold; margin:6px 0; font-size:13px; min-height:36px; line-height:1.4;"></div>
                 <div style="display:flex; gap:6px;">
                     <button id="prevBtn" onclick="stepPrev()" style="margin-top:0;">◀ 이전</button>
                     <button id="nextBtn" onclick="stepNext()" style="margin-top:0;">다음 ▶</button>
@@ -470,5 +471,6 @@
 
         window.addEventListener('load', init);
     </script>
+<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
 </body>
 </html>

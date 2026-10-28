@@ -1,0 +1,115 @@
+/* =========================================================================
+   가설파트너 공통 디자인 (홈페이지 gaseolpartner.com 기준)
+   - 상단 바 · 로고 · 버튼 · 카드 · 표 머리줄 · 하단
+   - 이 파일은 겉모양만 바꿉니다. 계산·기능과는 무관합니다.
+   ========================================================================= */
+:root{
+  --gp-y:#F2B705; --gp-yh:#D9A300; --gp-ink:#1B1B1B; --gp-card-d:#222222; --gp-line-d:#3A3A3A;
+  --gp-bg:#FFFFFF; --gp-bg2:#F6F6F4; --gp-text:#2B2B2B; --gp-sub:#666666; --gp-mute:#888888; --gp-line:#E3E3E3;
+}
+body,button,input,select,textarea{font-family:Pretendard,'Noto Sans KR',sans-serif}
+body{word-break:keep-all}
+
+/* ---- 상단 바 ---- */
+.gp-topbar{background:#1B1B1B;font-size:13px;line-height:1.4;position:relative;z-index:3000;word-break:keep-all}
+.gp-topbar-inner{max-width:1180px;margin:0 auto;padding:9px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-sizing:border-box}
+.gp-topbar a{color:#ddd;text-decoration:none;white-space:nowrap}
+.gp-topbar a:hover{color:#F2B705}
+.gp-topbar .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#F2B705;margin-right:7px;vertical-align:1px}
+.gp-topbar nav{display:flex;gap:18px}
+.gp-topbar .gp-tb-left{display:flex;align-items:center;gap:16px;min-width:0}
+.gp-topbar .gp-back{color:#F2B705;font-weight:700}
+.gp-topbar .gp-copy{color:#888;white-space:nowrap}
+@media(max-width:700px){.gp-topbar nav{display:none}.gp-topbar-inner{padding:9px 16px}}
+
+/* ---- 로고 줄 (흰 바탕) ---- */
+.gp-brandbar{background:#fff;border-bottom:1px solid #E3E3E3;position:relative;z-index:2999}
+.gp-brandbar-inner{max-width:1180px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box}
+.gp-brandbar .gp-brand-links{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.gp-brandbar .gp-brand-links a{color:#2B2B2B;text-decoration:none;font-size:14px;font-weight:700;padding:8px 12px;border-radius:10px;white-space:nowrap}
+.gp-brandbar .gp-brand-links a:hover{background:#F6F6F4}
+.gp-brandbar .gp-brand-links a.gp-cta{background:#F2B705;color:#1B1B1B}
+.gp-brandbar .gp-brand-links a.gp-cta:hover{background:#D9A300}
+@media(max-width:700px){.gp-brandbar-inner{padding:8px 12px 8px 16px;gap:8px}.gp-brandbar .gp-brand-links{flex-wrap:nowrap;gap:2px}.gp-brandbar .gp-brand-links a{padding:7px 7px;font-size:12.5px}.gp-brandbar .gp-brand-links a.gp-hide-m{display:none}.gp-brandbar .gp-logo{gap:8px}}
+
+/* ---- 로고: 악수 그림만 + 글자 (홈페이지와 동일) ---- */
+.gp-logo{display:inline-flex;align-items:center;gap:12px;text-decoration:none}
+.gp-li{width:118px;height:49px;background:url(https://gaseolpartner.com/storage/upload_images/nmifMZo9uxaKHd2Wp36g3Sd6Ji1m27rzCWLnsyuk.png) no-repeat 0 0/118px auto;flex:none}
+.gp-lt{display:flex;flex-direction:column;line-height:1}
+.gp-lt b{font-size:24px;font-weight:800;color:#2B2B2B}
+.gp-lt small{font-size:10px;font-weight:700;color:#8A8A8A;letter-spacing:3px;margin-top:6px}
+.dark .gp-li{filter:invert(1)} .dark .gp-lt b{color:#fff}
+@media(max-width:700px){.gp-li{width:84px;height:35px;background-size:84px auto}.gp-lt b{font-size:19px}.gp-lt small{font-size:8px;letter-spacing:2px;margin-top:4px}}
+/* 상단 바 안의 작은 로고 (3D 화면용) */
+.gp-logo.gp-logo-mini{gap:8px}
+.gp-logo-mini .gp-li{width:58px;height:24px;background-size:58px auto;filter:invert(1)}
+.gp-logo-mini .gp-lt b{font-size:14px;color:#fff}
+.gp-logo-mini .gp-lt small{display:none}
+
+/* ---- 버튼 ---- */
+.gp-btn{display:inline-block;background:#F2B705;color:#1B1B1B;font-weight:800;border:0;border-radius:10px;padding:13px 22px;text-decoration:none;cursor:pointer;transition:background .15s}
+.gp-btn:hover{background:#D9A300;color:#1B1B1B}
+.gp-btn-line{display:inline-block;background:transparent;color:inherit;border:1.5px solid #CFCFCF;border-radius:10px;padding:13px 22px;font-weight:700;text-decoration:none;cursor:pointer}
+.gp-btn-line:hover{border-color:#F2B705}
+.dark .gp-btn-line{border-color:#555;color:#fff}
+
+/* ---- 첫 화면 띠 ---- */
+.gp-hero{background:#1B1B1B;color:#fff;padding:56px 0}
+.gp-hero-inner{max-width:1140px;margin:0 auto;padding:0 20px;box-sizing:border-box}
+.gp-hero .gp-label{display:inline-block;background:#F2B705;color:#1B1B1B;font-weight:800;font-size:13px;border-radius:999px;padding:5px 12px}
+.gp-hero h1{font-size:38px;font-weight:800;margin:16px 0 12px;line-height:1.3;color:#fff}
+.gp-hero h1 em{font-style:normal;color:#F2B705}
+.gp-hero p{color:#CFCFCF;font-size:17px;line-height:1.7;margin:0}
+.gp-hero .gp-hero-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+@media(max-width:700px){.gp-hero{padding:40px 0}.gp-hero-inner{padding:0 16px}.gp-hero h1{font-size:28px}.gp-hero p{font-size:15px}}
+
+/* ---- 섹션 · 카드 ---- */
+.gp-wrap{max-width:1140px;margin:0 auto;padding:0 20px;box-sizing:border-box}
+@media(max-width:700px){.gp-wrap{padding:0 16px}}
+.gp-section{padding:48px 0}
+.gp-section.gp-alt{background:#F6F6F4}
+.gp-section-title{font-size:26px;font-weight:800;color:#1B1B1B;margin:0 0 6px}
+.gp-section-title:after{content:"";display:block;width:36px;height:4px;background:#F2B705;border-radius:2px;margin-top:10px}
+.gp-section-desc{color:#666;font-size:15px;margin:10px 0 24px;line-height:1.6}
+.gp-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.gp-card{display:flex;flex-direction:column;background:#fff;border:1px solid #E3E3E3;border-radius:14px;padding:26px 24px;color:#2B2B2B;text-decoration:none;transition:border-color .15s,transform .15s,box-shadow .15s;box-sizing:border-box}
+.gp-card:hover{border-color:#F2B705;transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.06)}
+.gp-card .gp-card-ico{font-size:30px;line-height:1;margin-bottom:14px}
+.gp-card h3{font-size:20px;font-weight:800;color:#1B1B1B;margin:0 0 8px}
+.gp-card p{font-size:14px;color:#666;line-height:1.6;margin:0 0 14px}
+.gp-card ul{list-style:none;padding:0;margin:0 0 18px;flex:1}
+.gp-card li{font-size:14px;color:#2B2B2B;padding:4px 0 4px 22px;position:relative}
+.gp-card li:before{content:"";position:absolute;left:2px;top:11px;width:10px;height:6px;border-left:2px solid #D9A300;border-bottom:2px solid #D9A300;transform:rotate(-45deg)}
+.gp-card .gp-tag{display:inline-block;font-size:12px;font-weight:800;color:#7F6000;background:#FFF6D6;border-radius:999px;padding:3px 10px;margin-left:6px;vertical-align:3px}
+.gp-card .gp-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.gp-card .gp-card-actions a,.gp-card .gp-card-actions span{flex:1;text-align:center;padding:11px 14px;font-size:14px}
+.gp-note{border:1px solid #E3E3E3;border-left:4px solid #F2B705;background:#fff;border-radius:12px;padding:18px 20px;color:#2B2B2B;font-size:14px;line-height:1.7}
+.gp-note.gp-warn{border-left-color:#E5484D}
+.gp-note strong{color:#1B1B1B}
+.gp-note.gp-warn .gp-red{color:#D93036}
+
+/* ---- 표 머리줄 ---- */
+.gp-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #E3E3E3;border-radius:12px;overflow:hidden}
+.gp-table th{background:#1B1B1B;color:#fff;font-weight:700;padding:10px 12px}
+.gp-table td{border-top:1px solid #E3E3E3;padding:10px 12px}
+
+/* ---- 하단 ---- */
+.gp-footer{background:#1B1B1B;color:#9A9A9A;font-size:12.5px;line-height:1.8;padding:22px 0;margin-top:0}
+.gp-footer-inner{max-width:1180px;margin:0 auto;padding:0 20px;box-sizing:border-box}
+.gp-footer a{color:#cfcfcf;text-decoration:none}
+.gp-footer a:hover{color:#F2B705}
+.gp-footer .gp-sep{color:#555;margin:0 6px}
+.gp-footer .gp-copyline{color:#777;margin-top:4px}
+@media(max-width:700px){.gp-footer-inner{padding:0 16px}.gp-footer .gp-sep{margin:0 4px}}
+
+/* ---- 인쇄할 때는 상단 바·하단 숨김 ---- */
+@media print{.gp-topbar,.gp-brandbar,.gp-footer{display:none!important}}
+
+/* ---- 화면 꽉 차는 앱 · 3D 화면용 얇은 상단 바 (높이 40px 고정) ---- */
+.gp-topbar.gp-topbar-3d{height:40px;box-sizing:border-box}
+.gp-topbar-3d .gp-topbar-inner{max-width:none;height:40px;padding:0 16px}
+.gp-topbar-3d .gp-tb-left{gap:14px}
+.gp-topbar-3d .gp-tb-cta{background:#F2B705;color:#1B1B1B;font-weight:800;border-radius:8px;padding:5px 10px}
+.gp-topbar-3d .gp-tb-cta:hover{background:#D9A300;color:#1B1B1B}
+@media(max-width:700px){.gp-topbar .gp-hide-m{display:none}.gp-topbar-3d .gp-logo-mini .gp-lt{display:none}.gp-topbar-3d .gp-tb-left{gap:10px}}
+.gp-topbar-3d .gp-tb-title{color:#fff;font-weight:700;padding-left:14px;border-left:1px solid #444}
