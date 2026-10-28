@@ -113,3 +113,14 @@ body{word-break:keep-all}
 .gp-topbar-3d .gp-tb-cta:hover{background:#D9A300;color:#1B1B1B}
 @media(max-width:700px){.gp-topbar .gp-hide-m{display:none}.gp-topbar-3d .gp-logo-mini .gp-lt{display:none}.gp-topbar-3d .gp-tb-left{gap:10px}}
 .gp-topbar-3d .gp-tb-title{color:#fff;font-weight:700;padding-left:14px;border-left:1px solid #444}
+
+/* 아주 좁은 화면(휴대폰): 로고 줄이 화면 밖으로 나가지 않게 */
+@media(max-width:480px){
+ .gp-brandbar-inner{flex-wrap:wrap;row-gap:6px}
+ .gp-brandbar .gp-logo{min-width:0}
+ .gp-brandbar .gp-lt small{display:none}
+ .gp-brandbar .gp-lt b{font-size:17px}
+ .gp-brandbar .gp-li{width:70px;height:29px;background-size:70px auto}
+ .gp-brandbar .gp-brand-links{flex-wrap:wrap;justify-content:flex-end;min-width:0;margin-left:auto}
+ .gp-brandbar .gp-brand-links a{padding:6px 7px;font-size:12px}
+}
