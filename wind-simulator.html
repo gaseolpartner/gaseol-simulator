@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>비계 풍하중·전도 시뮬레이터 | 가설파트너</title>
+<meta name="description" content="바람이 세지면 벽이음이 끊어지고 비계가 넘어지는 과정을 3D로 보는 안전교육 시뮬레이터. 구조계산 프로그램과 같은 풍하중 식을 씁니다.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="gp-sim-quality.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pretendard,'Malgun Gothic',sans-serif}
+*{box-sizing:border-box}
+#app{position:fixed;left:0;right:0;bottom:0;top:40px;display:flex}
+#view{position:relative;flex:1;min-width:0;background:#15171A;overflow:hidden}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+#panel{width:370px;flex:none;overflow-y:auto;background:#222222;border-left:1px solid #3A3A3A;padding:18px 18px 32px}
+#panel h1{font-size:20px;margin:0 0 6px;color:#FFFFFF;font-weight:800}
+#panel .lead{margin:0 0 16px;color:#BBBBBB;font-size:13.5px;line-height:1.6}
+.sec{border-top:1px solid #3A3A3A;padding-top:14px;margin-top:14px}
+.sec h2{font-size:14px;margin:0 0 10px;color:#F2B705;font-weight:800;letter-spacing:-.2px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.row label{font-size:13.5px;color:#DDDDDD;flex:1}
+.row select,.row input[type=number]{width:150px;background:#1B1B1B;color:#FFFFFF;border:1px solid #444444;border-radius:8px;padding:7px 8px;font:inherit;font-size:13.5px}
+.row input[type=number]{width:100px;text-align:right}
+.slider{margin:6px 0 10px}
+.slider .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:#DDDDDD}
+.slider .top b{color:#FFFFFF;font-size:16px}
+.slider input[type=range]{width:100%;accent-color:#F2B705;margin:6px 0 0}
+.big .top b{font-size:26px;color:#F2B705}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#F2B705;color:#1B1B1B;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.btn:hover{background:#D9A300}
+.btn.line{background:transparent;color:#FFFFFF;border:1px solid #555555}
+.btn.line:hover{border-color:#F2B705;color:#F2B705}
+.note{font-size:12.5px;color:#999999;line-height:1.6;margin:6px 0 0}
+.res{background:#1B1B1B;border:1px solid #3A3A3A;border-radius:12px;padding:12px 14px;margin:8px 0}
+.res .k{font-size:12.5px;color:#AAAAAA}
+.res .v{font-size:18px;font-weight:800;color:#FFFFFF;margin-top:2px}
+.res .s{font-size:12.5px;color:#BBBBBB;margin-top:3px;line-height:1.5}
+.ok{color:#4CC38A !important}.warn{color:#F2B705 !important}.ng{color:#FF6369 !important}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.badge.ok{background:rgba(76,195,138,.15)}.badge.ng{background:rgba(255,99,105,.15)}.badge.warn{background:rgba(242,183,5,.15)}
+.links a{display:block;color:#F2B705;text-decoration:none;font-size:13.5px;margin:6px 0}
+.links a:hover{text-decoration:underline}
+#hud{position:absolute;left:14px;top:12px;right:14px;pointer-events:none;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.hcard{background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;min-width:220px}
+.hcard .t{font-size:12px;color:#BBBBBB}
+.hcard .n{font-size:22px;font-weight:800;color:#FFFFFF}
+.gauge{height:10px;border-radius:6px;background:#333333;overflow:hidden;margin-top:6px}
+.gauge i{display:block;height:100%;width:0;background:#4CC38A;transition:width .15s,background .15s}
+#banner{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #FF6369;color:#FFFFFF;border-radius:12px;padding:12px 18px;font-weight:800;font-size:16px;display:none;text-align:center;max-width:92%;pointer-events:none}
+#banner.warn{border-color:#F2B705}
+#banner[style*="block"] ~ #hint{display:none}
+#hint{position:absolute;right:14px;bottom:14px;font-size:12px;color:#999999;background:rgba(0,0,0,.5);padding:6px 10px;border-radius:8px;pointer-events:none}
+@media(max-width:800px){
+  #app{flex-direction:column}
+  #view{flex:none;height:50%}
+  #panel{width:auto;flex:1;border-left:0;border-top:1px solid #3A3A3A;padding:14px 16px 28px}
+  .hcard{min-width:0;padding:8px 10px}.hcard .n{font-size:18px}
+  .hcard{flex:1}.hcard .t{font-size:11px}
+  #hint{display:none}
+  #banner{font-size:14px;bottom:10px}
+}
+</style>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가설파트너">
+<meta property="og:title" content="비계 풍하중·전도 시뮬레이터 | 가설파트너">
+<meta property="og:description" content="바람이 세지면 벽이음이 끊어지고 비계가 넘어지는 과정을 3D로 보는 안전교육 시뮬레이터. 구조계산 프로그램과 같은 풍하중 식을 씁니다.">
+<meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/wind-simulator.html">
+<meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+
+</head>
+<body>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">비계 풍하중·전도 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
+
+<div id="app">
+  <div id="view">
+    <div id="hud">
+      <div class="hcard"><div class="t">지금 바람</div><div class="n" id="hV">0 m/s</div><div class="t" id="hCls">-</div></div>
+      <div class="hcard"><div class="t">가장 힘든 벽이음 (끊어지는 기준 9.81kN)</div><div class="n" id="hT">0.00 kN</div><div class="gauge"><i id="hG"></i></div></div>
+    </div>
+    <div id="banner"></div>
+    <div id="hint">마우스 끌기: 돌리기 · 휠: 확대 · 노란 벽이음 클릭: 빼기/넣기</div>
+  </div>
+  <aside id="panel">
+    <h1>비계 풍하중·전도 시뮬레이터</h1>
+    <p class="lead">바람이 세지면 벽이음에 걸리는 힘이 커집니다. 벽이음이 버티는 힘(9.81kN)을 넘으면 하나씩 끊어지고, 절반 넘게 끊어지면 비계가 넘어집니다.</p>
+
+    <div class="sec">
+      <h2>① 바람 세기</h2>
+      <div class="slider big"><div class="top"><span>지금 부는 바람</span><b id="vLbl">0 m/s</b></div>
+        <input type="range" id="vIn" min="0" max="60" step="0.5" value="0"></div>
+      <div class="btns">
+        <button class="btn" id="bRamp" type="button">▶ 바람 점점 세게</button>
+        <button class="btn line" id="bDesign" type="button">설계 풍속으로</button>
+        <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>② 현장 조건</h2>
+      <div class="row"><label for="tIn">비계 종류</label><select id="tIn"><option value="system">시스템 비계</option><option value="pipe">강관 비계</option></select></div>
+      <div class="row"><label for="rIn">지역 (기본풍속)</label><select id="rIn"></select></div>
+      <div class="row"><label for="v0In">기본풍속 (m/s)</label><input type="number" id="v0In" min="20" max="50" step="1" value="26"></div>
+      <div class="slider"><div class="top"><span>설치 높이</span><b id="hLbl">14 m</b></div><input type="range" id="hIn" min="4" max="40" step="1" value="14"></div>
+      <div class="row"><label for="eIn">노풍도</label><select id="eIn"><option value="A">A</option><option value="B">B</option><option value="C" selected>C (일반)</option><option value="D">D</option></select></div>
+      <div class="row"><label for="nIn">외부 마감 (충실률)</label><select id="nIn">
+        <option value="0.3" selected>메쉬방호망 0.3</option><option value="0.5">수직보호망 0.5</option><option value="0.7">방수시트 0.7</option><option value="0.9">분진망 0.9</option><option value="1.0">방음패널 1.0</option></select></div>
+      <div class="row"><label for="shIn">벽이음 수평간격 (mm)</label><input type="number" id="shIn" min="1000" max="7400" step="1" value="3658"></div>
+      <div class="row"><label for="svIn">벽이음 수직간격 (mm)</label><input type="number" id="svIn" min="1900" max="7600" step="100" value="3800"></div>
+      <p class="note">구멍이 적은 마감(분진망·방음패널)일수록 바람을 많이 받습니다.</p>
+    </div>
+
+    <div class="sec">
+      <h2>③ 벽이음 빼 보기</h2>
+      <p class="note" style="margin-top:0">3D 화면에서 노란 벽이음을 누르면 빠집니다. 빠진 자리의 힘은 양옆 벽이음이 나눠 받습니다.</p>
+      <div class="btns"><button class="btn line" id="bMiss" type="button">누락 예시 넣기</button><button class="btn line" id="bFix" type="button">벽이음 모두 복구</button></div>
+    </div>
+
+    <div class="sec">
+      <h2>④ 결과</h2>
+      <div class="res"><div class="k">설계 기준 (기본풍속 <span id="rV0">26</span>m/s)</div><div class="v" id="rDesign">-</div><div class="s" id="rDesignS"></div></div>
+      <div class="res"><div class="k">이 조건에서 버티는 최대 바람</div><div class="v" id="rVf">-</div><div class="s" id="rVfS"></div></div>
+      <div class="res"><div class="k">지금 상태</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
+      <p class="note">계산식은 가설파트너 구조계산 프로그램(시스템 비계)과 같습니다.<br>풍압 = 0.613×V²/1000 × 노풍도계수×(높이/10)^0.2 × (1.2+충실률)<br>벽이음 1개 인장력 = 풍압 × 수평간격 × 수직간격 (안전인증 기준 9.81kN)</p>
+      <p class="note">교육용 시뮬레이션입니다. 실제로는 기준을 넘는 즉시 무너지지 않을 수도 있지만, 안전 여유가 없는 위험한 상태입니다. 실제 설계·시공은 구조검토서를 따르세요.</p>
+    </div>
+
+    <div class="sec links">
+      <h2>더 알아보기</h2>
+      <a href="https://gaseolpartner.github.io/structure-calc/system-scaffold.html" target="_blank" rel="noopener">시스템 비계 구조계산 (무료) →</a>
+      <a href="https://gaseolpartner.github.io/calculators/structural-review-request.html" target="_blank" rel="noopener">구조검토 의뢰하기 →</a>
+      <a href="외부쌍줄비계_시뮬레이터_v1.0.html">외부 쌍줄비계 설치 시뮬레이터 →</a>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  // 지역별 기본풍속 (구조계산 프로그램과 같은 표)
+  var REGION = {"가평":26,"강릉":34,"강진":32,"강화":28,"거제":36,"거창":24,"경산":28,"경주":36,"계룡":26,"고령":26,"고성":34,"고양":26,"고창":28,"고흥":34,"곡성":24,"공주":28,"과천":26,"광명":26,"광양":28,"광주":26,"괴산":24,"구례":24,"구리":26,"구미":24,"군위":26,"군포":26,"금산":24,"기장":36,"김제":28,"김천":24,"김포":26,"김해":34,"나주":30,"남양주":26,"남원":24,"남해":34,"논산":24,"단양":24,"달성":26,"담양":24,"당진":32,"대구":28,"대전":28,"독도":40,"동두천":26,"동해":30,"목포":32,"무안":34,"무주":24,"문경":24,"밀양":28,"보령":30,"보성":26,"보은":24,"봉화":24,"부산":38,"부안":32,"부여":28,"부천":26,"사천":30,"산청":24,"삼척":30,"상주":24,"서귀포":44,"서산":34,"서울":26,"서천":30,"성남":26,"성주":26,"세종":28,"속초":34,"수원":26,"순창":24,"순천":28,"시흥":28,"신안":34,"아산":26,"안동":24,"안산":28,"안성":24,"안양":26,"양구":26,"양산":34,"양양":34,"양주":26,"양평":26,"여수":34,"여주":24,"연천":24,"영광":30,"영덕":32,"영동":24,"영암":32,"영양":26,"영월":24,"영주":24,"영천":30,"예산":28,"예천":24,"오산":26,"옥천":24,"옹진":30,"완도":36,"완주":26,"용인":26,"울릉":40,"울산":34,"울주":34,"울진":30,"원주":24,"음성":24,"의령":24,"의성":24,"의왕":26,"의정부":26,"이천":24,"익산":28,"인제":30,"인천":28,"임실":24,"장성":26,"장수":24,"장흥":34,"전주":26,"정선":30,"정읍":24,"제주":44,"제천":24,"증평":24,"진도":34,"진안":24,"진주":26,"진천":26,"창령":26,"창원":30,"천안":24,"철원":24,"청도":28,"청송":28,"청양":24,"청원":30,"청주":30,"추풍령":24,"춘천":24,"칠곡":26,"태백":24,"태안":34,"통영":36,"파주":26,"평창":24,"평택":28,"포천":26,"포항":36,"하남":26,"하동":28,"함안":26,"함양":24,"함평":30,"합천":24,"해남":36,"홍성":30,"홍천":30,"화성":26,"화천":24,"횡성":24};
+  var EXPO = { A: 0.7, B: 0.85, C: 1.0, D: 1.15 };
+  var TIE_ALLOW = 9.81; // kN, 안전인증 기준 (구조계산 프로그램과 같음)
+  var TYPES = {
+    system: { name: '시스템 비계', bay: 1.829, width: 0.914, post: 0xC9CED6 },
+    pipe: { name: '강관 비계', bay: 1.817, width: 0.902, post: 0xB4BAC2 }
+  };
+  var NETS = {
+    '0.3': { color: 0x3E8E41, op: 0.30 }, '0.5': { color: 0x2F6FB0, op: 0.45 }, '0.7': { color: 0x4A6FA5, op: 0.72 },
+    '0.9': { color: 0x8A8F96, op: 0.82 }, '1.0': { color: 0xD9DDE2, op: 0.95 }
+  };
+  var NB = 6; // 경간 수
+  var $ = function (id) { return document.getElementById(id); };
+  var S = { type: 'system', v0: 26, H: 14, expo: 'C', net: '0.3', sh: 3658, sv: 3800, V: 0, ramp: false,
+            missing: {}, state: 'ok', ties: [], rows: 0, cols: 0, failT: 0, a: 0, w: 0 };
+
+  // ---------- 계산 ----------
+  function coef() { return 0.613 / 1000 * EXPO[S.expo] * Math.pow(S.H / 10, 0.2) * (1.2 + parseFloat(S.net)); }
+  function pressure(V) { return coef() * V * V; }
+  function tieBase(V) { return pressure(V) * (S.sh / 1000) * (S.sv / 1000); }
+  function typhoon(V) {
+    if (V < 17) return '태풍보다 약한 바람';
+    if (V < 25) return '태풍 (강도 표기 전 단계, 17~25m/s)';
+    if (V < 33) return '태풍 강도 「중」 (25~33m/s)';
+    if (V < 44) return '태풍 강도 「강」 (33~44m/s)';
+    if (V < 54) return '태풍 강도 「매우 강」 (44~54m/s)';
+    return '태풍 강도 「초강력」 (54m/s 이상)';
+  }
+  function gone(t) { return t.failed || !!S.missing[t.key]; }
+  function factors() {
+    S.ties.forEach(function (t) { t.f = gone(t) ? 0 : 1; });
+    S.ties.forEach(function (t) { if (gone(t)) share(t, 1); });
+  }
+  function at(r, c) { return S.grid[r] && S.grid[r][c]; }
+  function share(t, amt) {
+    var L = null, R = null, c, r;
+    for (c = t.c - 1; c >= 0; c--) { if (at(t.r, c) && !gone(at(t.r, c))) { L = at(t.r, c); break; } }
+    for (c = t.c + 1; c < S.cols; c++) { if (at(t.r, c) && !gone(at(t.r, c))) { R = at(t.r, c); break; } }
+    if (L && R) { L.f += amt / 2; R.f += amt / 2; return; }
+    if (L || R) { (L || R).f += amt; return; }
+    var U = null, D = null;
+    for (r = t.r - 1; r >= 0; r--) { if (at(r, t.c) && !gone(at(r, t.c))) { D = at(r, t.c); break; } }
+    for (r = t.r + 1; r < S.rows; r++) { if (at(r, t.c) && !gone(at(r, t.c))) { U = at(r, t.c); break; } }
+    if (U && D) { U.f += amt / 2; D.f += amt / 2; } else if (U || D) { (U || D).f += amt; }
+  }
+  function maxF() { var m = 0; S.ties.forEach(function (t) { if (!gone(t)) m = Math.max(m, t.f); }); return m || 1; }
+  function goneCount() { var n = 0; S.ties.forEach(function (t) { if (gone(t)) n++; }); return n; }
+
+  // ---------- 3D ----------
+  var scene, camera, renderer, controls, pivot, scaf, tieGroup, wallGroup, wind, clock, raycaster, mouse;
+  var UP = new THREE.Vector3(0, 1, 0);
+  var MAT = {};
+  function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.55, metalness: 0.35 }, o || {})); }
+  function rod(a, b, r, m, seg) {
+    var d = new THREE.Vector3().subVectors(b, a), L = d.length();
+    var mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, L, seg || 12), m);
+    mesh.position.copy(a).addScaledVector(d, 0.5);
+    mesh.quaternion.setFromUnitVectors(UP, d.normalize());
+    return mesh;
+  }
+  function box(w, h, d, m, x, y, z) { var b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); return b; }
+  function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
+  function disposeTree(o) {
+    if (!o) return;
+    o.traverse(function (c) { if (c.geometry) c.geometry.dispose(); if (c.material && c.material._own) c.material.dispose(); });
+    if (o.parent) o.parent.remove(o);
+  }
+
+  function init() {
+    var view = $('view');
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setClearColor(0x15171A);
+    view.insertBefore(renderer.domElement, view.firstChild);
+    scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x15171A, 70, 160);
+    camera = new THREE.PerspectiveCamera(45, 1, 0.1, 600);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 4; controls.maxDistance = 140;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x30343a, 0.75));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.85); dl.position.set(20, 35, 25); scene.add(dl);
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color: 0x2A2D31, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    var grid = new THREE.GridHelper(120, 60, 0x3A3E44, 0x30343A); grid.position.y = 0.005; scene.add(grid);
+    MAT.post = mat(0xC9CED6); MAT.ledger = mat(0xB9BFC7); MAT.plank = mat(0x8C939B, { metalness: 0.5 });
+    MAT.brace = mat(0xA9AFB7); MAT.wall = new THREE.MeshStandardMaterial({ color: 0x6B7078, roughness: 0.9 });
+    MAT.slab = new THREE.MeshStandardMaterial({ color: 0x5A5F66, roughness: 0.9 });
+    MAT.base = mat(0x777C84);
+    buildWind();
+    raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
+    var down = null;
+    renderer.domElement.addEventListener('pointerdown', function (e) { down = [e.clientX, e.clientY]; });
+    renderer.domElement.addEventListener('pointerup', function (e) {
+      if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+      pick(e);
+    });
+    clock = new THREE.Clock();
+    resize();
+    window.addEventListener('resize', resize);
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(view);
+  }
+  function resize() {
+    var v = $('view'), w = v.clientWidth, h = v.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+
+  function build() {
+    disposeTree(pivot); disposeTree(tieGroup); disposeTree(wallGroup);
+    var T = TYPES[S.type];
+    MAT.post.color.setHex(T.post);
+    var L = NB * T.bay, H = S.H;
+    var lv = Math.max(2, Math.round(H / 1.9)), lh = H / lv;
+    var zi = 0.35, zo = zi + T.width;
+    S.L = L; S.zi = zi; S.zo = zo;
+    pivot = new THREE.Group(); pivot.position.set(0, 0, zo); scene.add(pivot);
+    scaf = new THREE.Group(); scaf.position.set(0, 0, -zo); pivot.add(scaf);
+    var i, j, x, y;
+    // 기둥
+    for (i = 0; i <= NB; i++) {
+      x = i * T.bay;
+      [zi, zo].forEach(function (z) {
+        scaf.add(rod(V3(x, 0.05, z), V3(x, H + 1.0, z), 0.0243, MAT.post));
+        scaf.add(box(0.14, 0.03, 0.14, MAT.base, x, 0.015, z));
+      });
+    }
+    // 띠장·장선·발판
+    for (j = 1; j <= lv; j++) {
+      y = j * lh;
+      for (i = 0; i < NB; i++) {
+        x = i * T.bay;
+        scaf.add(rod(V3(x, y, zi), V3(x + T.bay, y, zi), 0.0214, MAT.ledger, 10));
+        scaf.add(rod(V3(x, y, zo), V3(x + T.bay, y, zo), 0.0214, MAT.ledger, 10));
+        scaf.add(box(T.bay - 0.03, 0.04, T.width - 0.06, MAT.plank, x + T.bay / 2, y + 0.03, (zi + zo) / 2));
+      }
+      for (i = 0; i <= NB; i++) scaf.add(rod(V3(i * T.bay, y, zi), V3(i * T.bay, y, zo), 0.0214, MAT.ledger, 10));
+      // 바깥쪽 안전난간
+      for (i = 0; i < NB; i++) { x = i * T.bay; scaf.add(rod(V3(x, y + 0.9, zo), V3(x + T.bay, y + 0.9, zo), 0.017, MAT.ledger, 8)); }
+    }
+    // 가새 (바깥면, 양끝 경간)
+    for (j = 0; j < lv; j++) {
+      [0, NB - 1].forEach(function (b) {
+        var x0 = b * T.bay, y0 = j * lh;
+        var up = (j % 2 === 0);
+        scaf.add(rod(V3(x0, y0 + (up ? 0.1 : lh), zo + 0.03), V3(x0 + T.bay, y0 + (up ? lh : 0.1), zo + 0.03), 0.017, MAT.brace, 8));
+      });
+    }
+    // 외부 마감(망)
+    var N = NETS[S.net];
+    var netM = new THREE.MeshStandardMaterial({ color: N.color, transparent: true, opacity: N.op, side: THREE.DoubleSide, depthWrite: false, roughness: 1 });
+    netM._own = true;
+    var net = new THREE.Mesh(new THREE.PlaneGeometry(L, H + 0.9), netM);
+    net.position.set(L / 2, (H + 0.9) / 2 + 0.1, zo + 0.06); scaf.add(net);
+
+    // 건물 벽
+    wallGroup = new THREE.Group(); scene.add(wallGroup);
+    var WH = H + 4;
+    wallGroup.add(box(L + 8, WH, 0.6, MAT.wall, L / 2, WH / 2, -0.3));
+    for (y = 3; y < WH; y += 3) wallGroup.add(box(L + 8.02, 0.25, 0.62, MAT.slab, L / 2, y, -0.3));
+
+    // 벽이음
+    tieGroup = new THREE.Group(); scene.add(tieGroup);
+    var k = Math.max(1, Math.round(S.sh / 1000 / T.bay));
+    var m = Math.max(1, Math.round(S.sv / 1000 / lh));
+    var rowsY = [], colsX = [];
+    for (j = m; j <= lv; j += m) rowsY.push(j * lh - 0.25);
+    for (i = 0; i <= NB; i += k) colsX.push(i * T.bay);
+    S.rows = rowsY.length; S.cols = colsX.length; S.ties = []; S.grid = [];
+    rowsY.forEach(function (yy, r) {
+      S.grid[r] = [];
+      colsX.forEach(function (xx, c) {
+        var tm = new THREE.MeshStandardMaterial({ color: 0xF2B705, roughness: 0.4, metalness: 0.3, emissive: 0x000000 });
+        tm._own = true;
+        var mesh = rod(V3(xx, yy, 0), V3(xx, yy, zi), 0.05, tm);
+        mesh.userData.full = { z: mesh.position.z, len: zi };
+        // 누르기 쉽게 보이지 않는 큰 판정 막대
+        var hit = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, zi + 0.3), new THREE.MeshBasicMaterial({ visible: false }));
+        hit.position.set(xx, yy, zi / 2);
+        var t = { r: r, c: c, key: r + '-' + c, mesh: mesh, hit: hit, failed: false, f: 1 };
+        hit.userData.tie = t;
+        tieGroup.add(mesh); tieGroup.add(hit);
+        S.ties.push(t); S.grid[r][c] = t;
+      });
+    });
+    // 없어진 칸의 누락 표시는 정리
+    Object.keys(S.missing).forEach(function (key) { if (!S.ties.some(function (t) { return t.key === key; })) delete S.missing[key]; });
+    S.state = 'ok'; S.a = 0; S.w = 0; pivot.rotation.x = 0;
+    paintTies(); frameCamera(); update();
+  }
+  function frameCamera() {
+    var L = S.L, H = S.H, d = (Math.max(L, H) * 1.25 + 6) / Math.min(1, camera.aspect * 0.95);
+    // 옆에서 비스듬히: 벽과 비계 사이 벽이음, 바깥으로 넘어지는 모습이 잘 보이게
+    controls.target.set(L * 0.55, H * 0.42, 1.5);
+    camera.position.set(L * 0.55 + d * 0.78, H * 0.5 + 3, d * 0.72);
+    controls.update();
+  }
+  function paintTies() {
+    S.ties.forEach(function (t) {
+      var m = t.mesh, mt = m.material;
+      if (t.failed) { mt.color.setHex(0xFF4D4F); mt.transparent = false; mt.opacity = 1; m.scale.set(1, 0.4, 1); m.position.z = S.zi * 0.2; m.visible = true; }
+      else if (S.missing[t.key]) { mt.color.setHex(0x8A8F96); mt.transparent = true; mt.opacity = 0.22; m.scale.set(1, 1, 1); m.position.z = S.zi / 2; }
+      else { mt.transparent = false; mt.opacity = 1; m.scale.set(1, 1, 1); m.position.z = S.zi / 2; }
+    });
+  }
+  function colorTiesByLoad(base) {
+    S.ties.forEach(function (t) {
+      if (gone(t)) return;
+      var r = base * t.f / TIE_ALLOW;
+      t.mesh.material.color.setHex(r >= 0.9 ? 0xFF6369 : r >= 0.7 ? 0xFF9F1C : 0xF2B705);
+    });
+  }
+
+  // 바람 입자
+  var WN = 420, wpos, wspd;
+  function buildWind() {
+    var g = new THREE.BufferGeometry();
+    wpos = new Float32Array(WN * 6); wspd = new Float32Array(WN);
+    for (var i = 0; i < WN; i++) seedWind(i, true);
+    g.setAttribute('position', new THREE.BufferAttribute(wpos, 3));
+    wind = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xBFE3FF, transparent: true, opacity: 0.0 }));
+    scene.add(wind);
+  }
+  function seedWind(i, anyZ) {
+    var L = S.L || 11, H = S.H || 14;
+    var x = -6 + Math.random() * (L + 12), y = 0.3 + Math.random() * (H + 3), z = anyZ ? Math.random() * 14 : 0.1 + Math.random() * 0.6;
+    wpos[i * 6] = x; wpos[i * 6 + 1] = y; wpos[i * 6 + 2] = z;
+    wpos[i * 6 + 3] = x; wpos[i * 6 + 4] = y; wpos[i * 6 + 5] = z;
+    wspd[i] = 0.7 + Math.random() * 0.6;
+  }
+  function stepWind(dt) {
+    var V = S.V, sp = V * 0.35;
+    wind.material.opacity = Math.min(0.75, V / 30);
+    if (V <= 0) return;
+    for (var i = 0; i < WN; i++) {
+      var k = i * 6, s = sp * wspd[i] * dt;
+      var x = wpos[k + 3] + s * 0.45, z = wpos[k + 5] + s * 0.9, y = wpos[k + 4] + Math.sin((x + z) * 0.5) * 0.01;
+      var len = 0.25 + V * 0.03;
+      wpos[k] = x - 0.45 * len; wpos[k + 1] = y; wpos[k + 2] = z - 0.9 * len;
+      wpos[k + 3] = x; wpos[k + 4] = y; wpos[k + 5] = z;
+      if (z > 16 || x > (S.L || 11) + 8) seedWind(i, false);
+    }
+    wind.geometry.attributes.position.needsUpdate = true;
+  }
+
+  function pick(e) {
+    if (S.state !== 'ok') return;
+    var r = renderer.domElement.getBoundingClientRect();
+    mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    raycaster.setFromCamera(mouse, camera);
+    var hits = raycaster.intersectObjects(S.ties.map(function (t) { return t.hit; }), false);
+    if (!hits.length) return;
+    var t = hits[0].object.userData.tie;
+    if (S.missing[t.key]) delete S.missing[t.key]; else S.missing[t.key] = true;
+    paintTies(); update();
+  }
+
+  // ---------- 화면 갱신 ----------
+  function fmt(n, d) { return n.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function update() {
+    factors();
+    var mf = maxF();
+    // 설계 기준 (누락 없음, 구조계산 프로그램과 같은 조건)
+    var T0 = tieBase(S.v0), ok0 = T0 < TIE_ALLOW;
+    $('rV0').textContent = S.v0;
+    $('rDesign').innerHTML = fmt(T0, 2) + ' kN / 9.81 kN <span class="badge ' + (ok0 ? 'ok">OK' : 'ng">NG') + '</span>';
+    $('rDesign').className = 'v';
+    $('rDesignS').textContent = '풍압 ' + fmt(pressure(S.v0), 3) + ' kN/㎡ · 안전율 ' + fmt(TIE_ALLOW / T0, 2) + (ok0 ? ' (기준 만족)' : ' (기준 초과: 벽이음 간격을 줄이세요)');
+    // 버티는 최대 풍속 (지금 빠진 벽이음 반영)
+    var unit = coef() * (S.sh / 1000) * (S.sv / 1000) * mf;
+    var Vf = Math.sqrt(TIE_ALLOW / unit);
+    var nMiss = Object.keys(S.missing).length;
+    $('rVf').textContent = '약 ' + fmt(Vf, 1) + ' m/s';
+    $('rVf').className = 'v ' + (Vf < S.v0 ? 'ng' : Vf < S.v0 * 1.2 ? 'warn' : 'ok');
+    $('rVfS').textContent = typhoon(Vf) + (nMiss ? ' · 빠진 벽이음 ' + nMiss + '개 반영' : '') + ' · 이 바람부터 벽이음이 끊어지기 시작합니다.';
+    refreshNow();
+  }
+  function refreshNow() {
+    var base = tieBase(S.V), mf = maxF(), Tm = base * mf, ratio = Tm / TIE_ALLOW;
+    $('vLbl').textContent = fmt(S.V, 1) + ' m/s';
+    $('hV').textContent = fmt(S.V, 1) + ' m/s';
+    $('hCls').textContent = typhoon(S.V);
+    $('hT').textContent = fmt(Tm, 2) + ' kN';
+    var g = $('hG'); g.style.width = Math.min(100, ratio * 100) + '%';
+    g.style.background = ratio >= 1 ? '#FF6369' : ratio >= 0.8 ? '#F2B705' : '#4CC38A';
+    var gc = goneCount(), nf = S.ties.filter(function (t) { return t.failed; }).length;
+    var txt, cls, sub;
+    if (S.state === 'falling' || S.state === 'down') { txt = '비계 넘어짐 (전도)'; cls = 'ng'; sub = '벽이음 ' + nf + '개 끊어짐 · 바람이 남은 벽이음이 버티는 힘을 넘었습니다.'; }
+    else if (nf) { txt = '벽이음 ' + nf + '개 끊어짐 · 위험'; cls = 'ng'; sub = '남은 벽이음이 더 많은 힘을 받고 있습니다. 즉시 작업 중지·대피 상황입니다.'; }
+    else if (ratio >= 1) { txt = '기준 초과 (' + fmt(ratio * 100, 0) + '%)'; cls = 'ng'; sub = '가장 힘든 벽이음 ' + fmt(Tm, 2) + 'kN — 곧 끊어집니다.'; }
+    else if (ratio >= 0.8) { txt = '한계 근접 (' + fmt(ratio * 100, 0) + '%)'; cls = 'warn'; sub = '가장 힘든 벽이음 ' + fmt(Tm, 2) + 'kN. 작업 중지, 마감재(망) 걷기 검토.'; }
+    else { txt = '버티는 중 (' + fmt(ratio * 100, 0) + '%)'; cls = 'ok'; sub = '가장 힘든 벽이음 ' + fmt(Tm, 2) + 'kN / 9.81kN'; }
+    $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub + (gc - nf ? ' · 처음부터 빠진 벽이음 ' + (gc - nf) + '개' : '');
+    if (S.state === 'ok') colorTiesByLoad(base);
+    var b = $('banner');
+    if (S.state === 'falling' || S.state === 'down') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 비계 전도 — 바람 ' + fmt(S.V, 1) + 'm/s, 벽이음 ' + nf + '개 끊어짐'; }
+    else if (nf) { b.className = 'warn'; b.style.display = 'block'; b.textContent = '⚠ 벽이음 ' + nf + '개 끊어짐 — 비계가 크게 흔들립니다'; }
+    else b.style.display = 'none';
+  }
+
+  function failStep(now) {
+    if (S.state !== 'ok' || now < S.failT) return;
+    var base = tieBase(S.V); if (base <= 0) return;
+    factors();
+    var worst = null;
+    S.ties.forEach(function (t) { if (!gone(t) && base * t.f >= TIE_ALLOW && (!worst || t.f > worst.f)) worst = t; });
+    if (!worst) return;
+    // 같은 힘을 받는 벽이음이 여럿이면 하나씩 무작위로 (연쇄 파단 연출)
+    var cands = S.ties.filter(function (t) { return !gone(t) && Math.abs(t.f - worst.f) < 1e-6; });
+    var t = cands[Math.floor(Math.random() * cands.length)];
+    t.failed = true; S.ramp = S.ramp; S.failT = now + 0.16;
+    t.mesh.material.emissive.setHex(0x661111);
+    paintTies(); factors();
+    if (goneCount() / S.ties.length >= 0.5) {
+      S.state = 'falling'; S.a = 0.02; S.w = 0; S.ramp = false;
+      S.ties.forEach(function (x) { if (!S.missing[x.key]) x.failed = true; });
+      paintTies(); $('bRamp').textContent = '▶ 바람 점점 세게';
+    }
+    refreshNow();
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.05), now = clock.elapsedTime;
+    if (S.ramp && S.state === 'ok') {
+      S.V = Math.min(60, S.V + 3.2 * dt); $('vIn').value = S.V; refreshNow();
+      if (S.V >= 60) { S.ramp = false; $('bRamp').textContent = '▶ 바람 점점 세게'; }
+    }
+    failStep(now);
+    if (S.state === 'ok') {
+      var ratio = tieBase(S.V) * maxF() / TIE_ALLOW;
+      var nf = S.ties.filter(function (t) { return t.failed; }).length;
+      var amp = (S.V > 0 ? 0.0025 * Math.pow(Math.min(ratio, 1.2), 2) : 0) * (nf ? 3 : 1);
+      pivot.rotation.x = amp * (1 + Math.sin(now * 2 * Math.PI * 1.3)) * (0.6 + 0.4 * Math.sin(now * 5.1));
+    } else if (S.state === 'falling') {
+      var Leff = Math.max(3, S.H * 0.55);
+      var acc = 9.81 / Leff * Math.sin(S.a) + 0.15 + S.V * 0.01;
+      S.w += acc * dt; S.a += S.w * dt;
+      if (S.a >= Math.PI / 2) {
+        S.a = Math.PI / 2; S.w = -S.w * 0.18;
+        if (Math.abs(S.w) < 0.08) { S.w = 0; S.state = 'down'; refreshNow(); }
+      }
+      pivot.rotation.x = S.a;
+    }
+    stepWind(dt);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  // ---------- 입력 ----------
+  function bind() {
+    var rs = $('rIn');
+    rs.innerHTML = '<option value="">직접 입력</option>' + Object.keys(REGION).sort().map(function (k) { return '<option>' + k + '</option>'; }).join('');
+    rs.value = '서울'; $('v0In').value = REGION['서울']; $('v0In').readOnly = true;
+    rs.onchange = function () {
+      if (rs.value) { S.v0 = REGION[rs.value]; $('v0In').value = S.v0; $('v0In').readOnly = true; }
+      else $('v0In').readOnly = false;
+      update();
+    };
+    $('v0In').oninput = function () { var v = parseFloat(this.value); if (v > 0) { S.v0 = v; update(); } };
+    $('vIn').oninput = function () { if (S.state !== 'ok') { this.value = S.V; return; } S.V = parseFloat(this.value) || 0; S.ramp = false; $('bRamp').textContent = '▶ 바람 점점 세게'; refreshNow(); };
+    $('hIn').oninput = function () { S.H = parseFloat(this.value); $('hLbl').textContent = S.H + ' m'; resetFail(); build(); };
+    $('tIn').onchange = function () { S.type = this.value; resetFail(); build(); };
+    $('eIn').onchange = function () { S.expo = this.value; update(); };
+    $('nIn').onchange = function () { S.net = this.value; resetFail(); build(); };
+    var tieChange = function () {
+      var sh = parseFloat($('shIn').value), sv = parseFloat($('svIn').value);
+      if (!(sh >= 500) || !(sv >= 500)) return;
+      S.sh = sh; S.sv = sv; S.missing = {}; resetFail(); build();
+    };
+    $('shIn').onchange = tieChange; $('svIn').onchange = tieChange;
+    $('bRamp').onclick = function () {
+      if (S.state !== 'ok') { resetFail(); build(); }
+      S.ramp = !S.ramp; this.textContent = S.ramp ? '⏸ 멈추기' : '▶ 바람 점점 세게';
+    };
+    $('bDesign').onclick = function () { if (S.state !== 'ok') { resetFail(); build(); } S.ramp = false; $('bRamp').textContent = '▶ 바람 점점 세게'; S.V = S.v0; $('vIn').value = S.V; refreshNow(); };
+    $('bReset').onclick = function () { S.ramp = false; $('bRamp').textContent = '▶ 바람 점점 세게'; S.V = 0; $('vIn').value = 0; resetFail(); build(); };
+    $('bMiss').onclick = function () {
+      if (S.state !== 'ok') { resetFail(); build(); }
+      S.missing = {};
+      var r = Math.floor((S.rows - 1) / 2);
+      for (var c = 1; c < S.cols; c += 2) S.missing[r + '-' + c] = true;
+      if (S.rows > 1) S.missing[(r + 1) + '-' + Math.min(S.cols - 1, 2)] = true;
+      paintTies(); update();
+    };
+    $('bFix').onclick = function () { S.missing = {}; if (S.state !== 'ok') { resetFail(); build(); } paintTies(); update(); };
+  }
+  function resetFail() { S.ties.forEach(function (t) { t.failed = false; }); S.state = 'ok'; S.a = 0; S.w = 0; S.failT = 0; }
+
+  // 테스트·외부 확인용
+  window.GPWind = { S: S, tieBase: tieBase, pressure: pressure, update: update };
+
+  bind(); init(); build(); animate();
+})();
+</script>
+<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+</body>
+</html>

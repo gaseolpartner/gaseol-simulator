@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>동바리 과하중 붕괴 시뮬레이터 | 가설파트너</title>
+<meta name="description" content="동바리 1본이 받는 하중이 허용하중을 넘으면 어떻게 휘고 연쇄 붕괴가 일어나는지 3D로 보는 안전교육 시뮬레이터. 시스템 동바리와 일반 동바리(파이프서포트)를 비교합니다.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="gp-sim-quality.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pretendard,'Malgun Gothic',sans-serif}
+*{box-sizing:border-box}
+#app{position:fixed;left:0;right:0;bottom:0;top:40px;display:flex}
+#view{position:relative;flex:1;min-width:0;background:#15171A;overflow:hidden}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+#panel{width:370px;flex:none;overflow-y:auto;background:#222222;border-left:1px solid #3A3A3A;padding:18px 18px 32px}
+#panel h1{font-size:20px;margin:0 0 6px;color:#FFFFFF;font-weight:800}
+#panel .lead{margin:0 0 16px;color:#BBBBBB;font-size:13.5px;line-height:1.6}
+.sec{border-top:1px solid #3A3A3A;padding-top:14px;margin-top:14px}
+.sec h2{font-size:14px;margin:0 0 10px;color:#F2B705;font-weight:800;letter-spacing:-.2px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.row label{font-size:13.5px;color:#DDDDDD;flex:1}
+.row select,.row input[type=number]{width:150px;background:#1B1B1B;color:#FFFFFF;border:1px solid #444444;border-radius:8px;padding:7px 8px;font:inherit;font-size:13.5px}
+.row input[type=number]{width:100px;text-align:right}
+.slider{margin:6px 0 10px}
+.slider .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:#DDDDDD}
+.slider .top b{color:#FFFFFF;font-size:16px}
+.slider input[type=range]{width:100%;accent-color:#F2B705;margin:6px 0 0}
+.big .top b{font-size:26px;color:#F2B705}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#F2B705;color:#1B1B1B;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.btn:hover{background:#D9A300}
+.btn.line{background:transparent;color:#FFFFFF;border:1px solid #555555}
+.btn.line:hover{border-color:#F2B705;color:#F2B705}
+.note{font-size:12.5px;color:#999999;line-height:1.6;margin:6px 0 0}
+.res{background:#1B1B1B;border:1px solid #3A3A3A;border-radius:12px;padding:12px 14px;margin:8px 0}
+.res .k{font-size:12.5px;color:#AAAAAA}
+.res .v{font-size:18px;font-weight:800;color:#FFFFFF;margin-top:2px}
+.res .s{font-size:12.5px;color:#BBBBBB;margin-top:3px;line-height:1.5}
+.ok{color:#4CC38A !important}.warn{color:#F2B705 !important}.ng{color:#FF6369 !important}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.badge.ok{background:rgba(76,195,138,.15)}.badge.ng{background:rgba(255,99,105,.15)}.badge.warn{background:rgba(242,183,5,.15)}
+.links a{display:block;color:#F2B705;text-decoration:none;font-size:13.5px;margin:6px 0}
+.links a:hover{text-decoration:underline}
+#hud{position:absolute;left:14px;top:12px;right:14px;pointer-events:none;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.hcard{background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;min-width:220px}
+.hcard .t{font-size:12px;color:#BBBBBB}
+.hcard .n{font-size:22px;font-weight:800;color:#FFFFFF}
+.gauge{height:10px;border-radius:6px;background:#333333;overflow:hidden;margin-top:6px}
+.gauge i{display:block;height:100%;width:0;background:#4CC38A;transition:width .15s,background .15s}
+#banner{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #FF6369;color:#FFFFFF;border-radius:12px;padding:12px 18px;font-weight:800;font-size:16px;display:none;text-align:center;max-width:92%;pointer-events:none}
+#banner.warn{border-color:#F2B705}
+#banner[style*="block"] ~ #hint{display:none}
+#hint{position:absolute;right:14px;bottom:14px;font-size:12px;color:#999999;background:rgba(0,0,0,.5);padding:6px 10px;border-radius:8px;pointer-events:none}
+@media(max-width:800px){
+  #app{flex-direction:column}
+  #view{flex:none;height:50%}
+  #panel{width:auto;flex:1;border-left:0;border-top:1px solid #3A3A3A;padding:14px 16px 28px}
+  .hcard{min-width:0;padding:8px 10px}.hcard .n{font-size:18px}
+  .hcard{flex:1}.hcard .t{font-size:11px}
+  #hint{display:none}
+  #banner{font-size:14px;bottom:10px}
+}
+</style>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가설파트너">
+<meta property="og:title" content="동바리 과하중 붕괴 시뮬레이터 | 가설파트너">
+<meta property="og:description" content="동바리 1본이 받는 하중이 허용하중을 넘으면 어떻게 휘고 연쇄 붕괴가 일어나는지 3D로 보는 안전교육 시뮬레이터. 시스템 동바리와 일반 동바리(파이프서포트)를 비교합니다.">
+<meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/support-collapse-simulator.html">
+<meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+
+</head>
+<body>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">동바리 과하중 붕괴 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
+
+<div id="app">
+  <div id="view">
+    <div id="hud">
+      <div class="hcard"><div class="t">콘크리트 타설</div><div class="n" id="hP">0 %</div><div class="t" id="hQ">-</div></div>
+      <div class="hcard"><div class="t">가장 힘든 동바리 1본 (허용 <span id="hPa">36.0</span>kN)</div><div class="n" id="hT">0.0 kN</div><div class="gauge"><i id="hG"></i></div></div>
+    </div>
+    <div id="banner"></div>
+    <div id="hint">마우스 끌기: 돌리기 · 휠: 확대 · 동바리 클릭: 빼기/넣기</div>
+  </div>
+  <aside id="panel">
+    <h1>동바리 과하중 붕괴 시뮬레이터</h1>
+    <p class="lead">콘크리트를 부으면 동바리 1본이 받는 하중이 커집니다. 허용하중을 넘은 동바리는 휘어 꺾이고, 그 하중이 옆 동바리로 넘어가면서 연쇄 붕괴가 일어납니다.</p>
+
+    <div class="sec">
+      <h2>① 콘크리트 타설</h2>
+      <div class="slider big"><div class="top"><span>타설 진행</span><b id="pLbl">0 %</b></div>
+        <input type="range" id="pIn" min="0" max="100" step="1" value="0"></div>
+      <div class="btns">
+        <button class="btn" id="bPour" type="button">▶ 타설 시작</button>
+        <button class="btn line" id="bExample" type="button">붕괴 예시 보기</button>
+        <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>② 동바리 조건</h2>
+      <div class="row"><label for="tyIn">동바리 종류</label><select id="tyIn"><option value="system">시스템 동바리</option><option value="pipe">일반 동바리 (파이프서포트)</option></select></div>
+      <div class="row"><label for="paIn">허용하중 (kN/본)</label><input type="number" id="paIn" min="1" max="200" step="0.1" value="36"></div>
+      <p class="note" id="paNote"></p>
+      <div class="slider"><div class="top"><span>슬래브 두께</span><b id="tLbl">250 mm</b></div><input type="range" id="tIn" min="150" max="1500" step="10" value="250"></div>
+      <div class="row"><label for="aIn">멍에 간격 (mm)</label><select id="aIn"></select></div>
+      <div class="row"><label for="bIn">동바리 간격 (mm)</label><select id="bIn"></select></div>
+      <div class="slider"><div class="top"><span>동바리 높이</span><b id="hLbl">3.5 m</b></div><input type="range" id="hIn" min="2.5" max="6" step="0.1" value="3.5"></div>
+      <div class="row"><label for="xIn">자재 적치</label><select id="xIn"><option value="0">없음</option><option value="5">가운데 철근 다발 (+5 kN/㎡)</option><option value="10">가운데 자재 과적 (+10 kN/㎡)</option></select></div>
+      <p class="note" id="hNote"></p>
+    </div>
+
+    <div class="sec">
+      <h2>③ 동바리 빼 보기</h2>
+      <p class="note" style="margin-top:0">3D 화면에서 동바리를 누르면 빠집니다(누락·임의 해체). 빠진 동바리의 하중은 멍에 방향 양옆 동바리가 나눠 받습니다.</p>
+      <div class="btns"><button class="btn line" id="bMiss" type="button">누락 예시 넣기</button><button class="btn line" id="bFix" type="button">동바리 모두 복구</button></div>
+    </div>
+
+    <div class="sec">
+      <h2>④ 결과</h2>
+      <div class="res"><div class="k">설계하중 (타설 완료 기준)</div><div class="v" id="rQ">-</div><div class="s" id="rQS"></div></div>
+      <div class="res"><div class="k">동바리 1본 하중 (빠진 동바리 없음)</div><div class="v" id="rP">-</div><div class="s" id="rPS"></div></div>
+      <div class="res"><div class="k">이 간격으로 버티는 슬래브 두께</div><div class="v" id="rT">-</div><div class="s" id="rTS"></div></div>
+      <div class="res"><div class="k">지금 상태</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
+      <p class="note">계산식은 가설파트너 구조계산 프로그램(시스템 동바리)과 같습니다.<br>설계하중 = 두께×24kN/㎥ + 거푸집 0.4 + 작업하중(두께별 2.5~6.0) kN/㎡<br>동바리 1본 하중 = 설계하중 × 멍에 간격 × 동바리 간격</p>
+      <p class="note">교육용 시뮬레이션입니다. 하중이 옆으로 넘어가는 방식은 쉽게 보여 주려고 단순하게 정했습니다(멍에 방향 양옆이 절반씩). 실제 붕괴 여부는 좌굴·접합부·지반 조건 등에 따라 달라지며, 실제 설계·시공은 구조검토서를 따르세요.</p>
+    </div>
+
+    <div class="sec links">
+      <h2>더 알아보기</h2>
+      <a href="https://gaseolpartner.github.io/structure-calc/system-support.html" target="_blank" rel="noopener">시스템 동바리 구조계산 (무료) →</a>
+      <a href="https://gaseolpartner.github.io/calculators/system-support-calculator.html" target="_blank" rel="noopener">시스템 동바리 물량산출 →</a>
+      <a href="https://gaseolpartner.github.io/calculators/structural-review-request.html" target="_blank" rel="noopener">구조검토 의뢰하기 →</a>
+      <a href="시스템비계동바리_시뮬레이터_v1.0.html">시스템 동바리 설치 시뮬레이터 →</a>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var SYS_ALLOW = 36.0;  // 시스템 동바리 1본 허용하중 (구조계산 프로그램과 같음)
+  var PIPE_ALLOW = 20.0; // 파이프서포트 참고값: 안전인증 압축하중 40kN 이상의 1/2
+  var SPACING = [1829, 1524, 1219, 914, 610];
+  var NX = 7, NZ = 5;   // 동바리 7열 × 5줄
+  var $ = function (id) { return document.getElementById(id); };
+  var S = { type: 'system', Pa: SYS_ALLOW, t: 250, a: 914, b: 1219, H: 3.5, extra: 0, pour: 0, pouring: false,
+            missing: {}, posts: [], grid: [], state: 'ok', failT: 0, collapseT: 0, dirty: true };
+
+  // ---------- 계산 (구조계산 프로그램 calculateTotalLoad 와 같은 식) ----------
+  function liveLoad(t) { return t <= 300 ? 2.5 : t <= 700 ? 3.5 : t <= 1500 ? 5.0 : 6.0; }
+  function designLoad(t) { return (t / 1000) * 24 + 0.4 + liveLoad(t); }
+  function concrete(t) { return (t / 1000) * 24; }
+  function area() { return (S.a / 1000) * (S.b / 1000); }
+  function gone(p) { return p.failed || !!S.missing[p.key]; }
+  function pourFrac(p) {
+    var bm = S.b / 1000, front = -bm / 2 + (S.pour / 100) * NX * bm;
+    return Math.max(0, Math.min(1, (front - (p.x - bm / 2)) / bm));
+  }
+  function isCenter(p) { return p.i >= 2 && p.i <= 4 && p.k >= 1 && p.k <= 3; }
+  function loads() {
+    var A = area(), base = 0.4 + liveLoad(S.t);
+    S.posts.forEach(function (p) {
+      p.own = (concrete(S.t) * pourFrac(p) + base + (isCenter(p) ? S.extra : 0)) * A;
+      p.P = gone(p) ? 0 : p.own;
+    });
+    S.posts.forEach(function (p) { if (gone(p)) share(p, p.own); });
+  }
+  function at(i, k) { return S.grid[k] && S.grid[k][i]; }
+  function share(p, amt) {
+    var L = null, R = null, i, k;
+    for (i = p.i - 1; i >= 0; i--) { if (!gone(at(i, p.k))) { L = at(i, p.k); break; } }
+    for (i = p.i + 1; i < NX; i++) { if (!gone(at(i, p.k))) { R = at(i, p.k); break; } }
+    if (L && R) { L.P += amt / 2; R.P += amt / 2; return; }
+    if (L || R) { (L || R).P += amt; return; }
+    var U = null, D = null;
+    for (k = p.k - 1; k >= 0; k--) { if (!gone(at(p.i, k))) { D = at(p.i, k); break; } }
+    for (k = p.k + 1; k < NZ; k++) { if (!gone(at(p.i, k))) { U = at(p.i, k); break; } }
+    if (U && D) { U.P += amt / 2; D.P += amt / 2; } else if (U || D) { (U || D).P += amt; }
+  }
+  function worst() { var w = null; S.posts.forEach(function (p) { if (!gone(p) && (!w || p.P > w.P)) w = p; }); return w; }
+  function maxThickness() {
+    var A = area(), best = 0;
+    for (var t = 100; t <= 3000; t += 10) { if (designLoad(t) * A <= S.Pa) best = t; else break; }
+    return best;
+  }
+
+  // ---------- 3D ----------
+  var scene, camera, renderer, controls, root, clock, raycaster, mouse;
+  var UP = new THREE.Vector3(0, 1, 0), XAX = new THREE.Vector3(1, 0, 0);
+  var GEO = {}, MAT = {};
+  var ledgers = [], yokes = [], joists = [], deck, slab, pile;
+  function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
+  function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.55, metalness: 0.35 }, o || {})); }
+  var _d = new THREE.Vector3();
+  function placeRod(m, a, b) { // 높이 1 원기둥을 a→b 로
+    _d.subVectors(b, a); var L = _d.length() || 1e-4;
+    m.position.copy(a).addScaledVector(_d, 0.5); m.scale.set(1, L, 1);
+    m.quaternion.setFromUnitVectors(UP, _d.multiplyScalar(1 / L));
+  }
+  function placeBar(m, a, b) { // 길이 1 상자(x방향)를 a→b 로
+    _d.subVectors(b, a); var L = _d.length() || 1e-4;
+    m.position.copy(a).addScaledVector(_d, 0.5); m.scale.set(L, 1, 1);
+    m.quaternion.setFromUnitVectors(XAX, _d.multiplyScalar(1 / L));
+  }
+
+  function init() {
+    var view = $('view');
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setClearColor(0x15171A);
+    view.insertBefore(renderer.domElement, view.firstChild);
+    scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x15171A, 40, 110);
+    camera = new THREE.PerspectiveCamera(45, 1, 0.1, 400);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 3; controls.maxDistance = 80;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x30343a, 0.75));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.85); dl.position.set(14, 25, 18); scene.add(dl);
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ color: 0x2A2D31, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    var gh = new THREE.GridHelper(80, 80, 0x3A3E44, 0x30343A); gh.position.y = 0.005; scene.add(gh);
+    GEO.rodOuter = new THREE.CylinderGeometry(0.0303, 0.0303, 1, 14);
+    GEO.rodInner = new THREE.CylinderGeometry(0.0243, 0.0243, 1, 14);
+    GEO.ledger = new THREE.CylinderGeometry(0.0214, 0.0214, 1, 10);
+    GEO.yoke = new THREE.BoxGeometry(1, 0.125, 0.075);
+    GEO.joist = new THREE.BoxGeometry(1, 0.05, 0.05);
+    GEO.plate = new THREE.BoxGeometry(0.15, 0.02, 0.15);
+    MAT.ledger = mat(0xB9BFC7); MAT.ledgerBad = mat(0xFF4D4F);
+    MAT.yoke = mat(0x9AA1AA, { metalness: 0.5 }); MAT.joist = mat(0xC2C8CF, { metalness: 0.5 });
+    MAT.plate = mat(0x6E737B);
+    MAT.deck = new THREE.MeshStandardMaterial({ color: 0x9C7442, roughness: 0.9 });
+    MAT.slab = new THREE.MeshStandardMaterial({ color: 0x7F848B, roughness: 1 });
+    MAT.pile = mat(0x8B4A2B, { metalness: 0.6 });
+    raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
+    var down = null;
+    renderer.domElement.addEventListener('pointerdown', function (e) { down = [e.clientX, e.clientY]; });
+    renderer.domElement.addEventListener('pointerup', function (e) {
+      if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+      pick(e);
+    });
+    clock = new THREE.Clock();
+    resize(); window.addEventListener('resize', resize);
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(view);
+  }
+  function resize() {
+    var v = $('view'), w = v.clientWidth, h = v.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  function clearRoot() {
+    if (!root) return;
+    root.traverse(function (c) { if (c.material && c.material._own) c.material.dispose(); if (c.geometry && c.geometry._own) c.geometry.dispose(); });
+    scene.remove(root);
+  }
+
+  function build() {
+    clearRoot();
+    root = new THREE.Group(); scene.add(root);
+    var am = S.a / 1000, bm = S.b / 1000, H = S.H, sys = S.type === 'system';
+    S.posts = []; S.grid = []; ledgers = []; yokes = []; joists = [];
+    var i, k;
+    for (k = 0; k < NZ; k++) {
+      S.grid[k] = [];
+      for (i = 0; i < NX; i++) {
+        var lowM = mat(sys ? 0xC9CED6 : 0x2F6FB0); lowM._own = true;
+        var upM = mat(sys ? 0xC9CED6 : 0xD0D5DB); upM._own = true;
+        var lo = new THREE.Mesh(sys ? GEO.rodInner : GEO.rodOuter, lowM);
+        var up = new THREE.Mesh(GEO.rodInner, upM);
+        var ang = Math.random() * Math.PI * 2;
+        var p = { i: i, k: k, key: i + '-' + k, x: i * bm, z: k * am, lo: lo, up: up, lowM: lowM, upM: upM,
+                  dir: V3(Math.cos(ang), 0, Math.sin(ang)), bk: 0, bkT: 0, failed: false, P: 0, own: 0 };
+        p.base = new THREE.Mesh(GEO.plate, MAT.plate); p.base.position.set(p.x, 0.01, p.z);
+        p.head = new THREE.Mesh(GEO.plate, MAT.plate);
+        // 누르기 쉬운 판정 상자
+        p.hit = new THREE.Mesh(new THREE.BoxGeometry(0.45, H, 0.45), new THREE.MeshBasicMaterial({ visible: false }));
+        p.hit.geometry._own = true; p.hit.position.set(p.x, H / 2, p.z); p.hit.userData.post = p;
+        root.add(lo, up, p.base, p.head, p.hit);
+        S.posts.push(p); S.grid[k][i] = p;
+      }
+    }
+    // 시스템 동바리: 수평재(1.5m 마다, 두 방향)
+    if (sys) {
+      for (var y = 0.4; y < H - 0.3; y += 1.5) {
+        for (k = 0; k < NZ; k++) for (i = 0; i < NX; i++) {
+          if (i < NX - 1) addLedger(at(i, k), at(i + 1, k), y);
+          if (k < NZ - 1) addLedger(at(i, k), at(i, k + 1), y);
+        }
+      }
+    }
+    // 멍에(동바리 위, x방향) 와 장선(멍에 위, z방향)
+    for (k = 0; k < NZ; k++) for (i = -1; i < NX; i++) {
+      var ym = new THREE.Mesh(GEO.yoke, MAT.yoke); root.add(ym); yokes.push({ k: k, i: i, m: ym });
+    }
+    var x0 = -bm / 2, x1 = (NX - 0.5) * bm;
+    for (var x = x0 + 0.15; x < x1; x += 0.3) for (k = -1; k < NZ; k++) {
+      var jm = new THREE.Mesh(GEO.joist, MAT.joist); root.add(jm); joists.push({ x: x, k: k, m: jm });
+    }
+    // 합판·슬래브: 격자로 나눈 상자를 동바리 높이에 맞춰 휘게
+    deck = makeSkin(MAT.deck); slab = makeSkin(MAT.slab);
+    root.add(deck, slab);
+    // 자재 적치
+    pile = new THREE.Group();
+    for (var n = 0; n < 14; n++) {
+      var bar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.2, 8), MAT.pile);
+      bar.geometry._own = true;
+      bar.rotation.z = Math.PI / 2; bar.position.set(0, 0.03 + Math.floor(n / 7) * 0.06, (n % 7) * 0.07 - 0.21);
+      pile.add(bar);
+    }
+    root.add(pile);
+    Object.keys(S.missing).forEach(function (key) { if (!S.posts.some(function (p) { return p.key === key; })) delete S.missing[key]; });
+    S.state = 'ok'; S.failT = 0; S.dirty = true;
+    frameCamera(); update();
+  }
+  function addLedger(p, q, y) {
+    var m = new THREE.Mesh(GEO.ledger, MAT.ledger); root.add(m); ledgers.push({ p: p, q: q, y: y, m: m });
+  }
+  function makeSkin(m) {
+    var g = new THREE.BoxGeometry(1, 1, 1, 28, 1, 20); g._own = true;
+    g.userData = { o: g.attributes.position.array.slice() };
+    var mesh = new THREE.Mesh(g, m); return mesh;
+  }
+  function frameCamera() {
+    var bm = S.b / 1000, am = S.a / 1000, W = NX * bm, D = NZ * am;
+    var d = (Math.max(W, D) * 0.85 + S.H + 1.5) / Math.min(1, camera.aspect * 0.95);
+    controls.target.set(W / 2 - bm / 2, S.H * 0.45, D / 2 - am / 2);
+    camera.position.set(W / 2 + d * 0.7, S.H + d * 0.45, D / 2 + d * 0.85);
+    controls.update();
+  }
+
+  // 동바리 모양 (가운데가 꺾이는 좌굴 모양)
+  var THMAX = 0.95, THALL = 1.38;
+  function shape(p) {
+    var th = p.bk, H = S.H, h2 = H / 2;
+    var B = V3(p.x, 0.02, p.z);
+    var K = V3(p.x + p.dir.x * Math.sin(th) * h2, Math.cos(th) * h2, p.z + p.dir.z * Math.sin(th) * h2);
+    var T = V3(p.x, Math.cos(th) * H, p.z);
+    return { B: B, K: K, T: T };
+  }
+  function pointAt(p, y) {
+    var s = shape(p), f = y / S.H;
+    if (f <= 0.5) return s.B.clone().lerp(s.K, f / 0.5);
+    return s.K.clone().lerp(s.T, (f - 0.5) / 0.5);
+  }
+  function topY(p) {
+    if (!S.missing[p.key]) return Math.cos(p.bk) * S.H;
+    // 빠진 동바리 자리: 양옆 높이의 평균에서 조금 처짐
+    var L = at(p.i - 1, p.k), R = at(p.i + 1, p.k), v = [], s = 0;
+    [L, R].forEach(function (q) { if (q && !S.missing[q.key]) v.push(Math.cos(q.bk) * S.H); });
+    if (!v.length) return S.H * 0.97;
+    v.forEach(function (x) { s += x; }); return s / v.length - 0.01;
+  }
+  function surf(x, z) { // 멍에 위 높이 (동바리 꼭대기 높이를 이어서)
+    var bm = S.b / 1000, am = S.a / 1000;
+    var fi = Math.max(0, Math.min(NX - 1, x / bm)), fk = Math.max(0, Math.min(NZ - 1, z / am));
+    var i0 = Math.min(NX - 2, Math.floor(fi)), k0 = Math.min(NZ - 2, Math.floor(fk)), u = fi - i0, v = fk - k0;
+    var a = topY(at(i0, k0)), b = topY(at(i0 + 1, k0)), c = topY(at(i0, k0 + 1)), d = topY(at(i0 + 1, k0 + 1));
+    return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+  }
+  function deformSkin(mesh, xa, xb, za, zb, yOff, th) {
+    var g = mesh.geometry, o = g.userData.o, pos = g.attributes.position.array;
+    for (var n = 0; n < pos.length; n += 3) {
+      var x = xa + (o[n] + 0.5) * (xb - xa), z = za + (o[n + 2] + 0.5) * (zb - za);
+      pos[n] = x; pos[n + 2] = z; pos[n + 1] = surf(x, z) + yOff + (o[n + 1] + 0.5) * th;
+    }
+    g.attributes.position.needsUpdate = true; g.computeVertexNormals(); g.computeBoundingSphere();
+  }
+  function placeAll() {
+    var bm = S.b / 1000, am = S.a / 1000;
+    var YK = 0.0625, JO = 0.125 + 0.025, DK = 0.125 + 0.05;
+    S.posts.forEach(function (p) {
+      var miss = !!S.missing[p.key], vis = !miss;
+      p.lo.visible = p.up.visible = p.head.visible = p.base.visible = vis;
+      if (!vis) return;
+      var s = shape(p);
+      placeRod(p.lo, s.B, s.K); placeRod(p.up, s.K, s.T);
+      p.head.position.set(p.x, s.T.y - 0.01, p.z);
+    });
+    ledgers.forEach(function (l) {
+      var miss = S.missing[l.p.key] || S.missing[l.q.key];
+      l.m.visible = !miss; if (miss) return;
+      l.m.material = (l.p.failed || l.q.failed) ? MAT.ledgerBad : MAT.ledger;
+      placeRod(l.m, pointAt(l.p, l.y), pointAt(l.q, l.y));
+    });
+    yokes.forEach(function (y) {
+      var xa = y.i < 0 ? -bm / 2 : y.i * bm, xb = y.i + 1 >= NX ? (NX - 0.5) * bm : (y.i + 1) * bm, z = y.k * am;
+      placeBar(y.m, V3(xa, surf(xa, z) + YK, z), V3(xb, surf(xb, z) + YK, z));
+    });
+    joists.forEach(function (j) {
+      var za = j.k < 0 ? -am / 2 : j.k * am, zb = j.k + 1 >= NZ ? (NZ - 0.5) * am : (j.k + 1) * am;
+      placeBar(j.m, V3(j.x, surf(j.x, za) + JO, za), V3(j.x, surf(j.x, zb) + JO, zb));
+    });
+    var x0 = -bm / 2, x1 = (NX - 0.5) * bm, z0 = -am / 2, z1 = (NZ - 0.5) * am;
+    deformSkin(deck, x0, x1, z0, z1, DK, 0.012);
+    var len = (S.pour / 100) * (x1 - x0), th = S.t / 1000;
+    slab.visible = len > 0.02;
+    if (slab.visible) deformSkin(slab, x0, x0 + len, z0, z1, DK + 0.012, th);
+    pile.visible = S.extra > 0;
+    if (pile.visible) {
+      var cx = 3 * bm, cz = 2 * am, cover = (cx <= x0 + len) ? th : 0;
+      pile.position.set(cx, surf(cx, cz) + DK + 0.012 + cover, cz);
+      pile.scale.set(S.extra >= 10 ? 1.3 : 1, S.extra >= 10 ? 2 : 1, 1);
+    }
+  }
+  function paintPosts() {
+    var sys = S.type === 'system';
+    S.posts.forEach(function (p) {
+      if (S.missing[p.key]) return;
+      var r = p.P / S.Pa, c1, c2;
+      if (p.failed) { c1 = c2 = 0xFF4D4F; }
+      else if (r >= 1) { c1 = c2 = 0xFF6369; }
+      else if (r >= 0.8) { c1 = c2 = 0xFF9F1C; }
+      else { c1 = sys ? 0xC9CED6 : 0x2F6FB0; c2 = sys ? 0xC9CED6 : 0xD0D5DB; }
+      p.lowM.color.setHex(c1); p.upM.color.setHex(c2);
+    });
+  }
+
+  function pick(e) {
+    if (S.state !== 'ok') return;
+    var r = renderer.domElement.getBoundingClientRect();
+    mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    raycaster.setFromCamera(mouse, camera);
+    var hits = raycaster.intersectObjects(S.posts.filter(function (p) { return !p.failed; }).map(function (p) { return p.hit; }), false);
+    if (!hits.length) return;
+    var p = hits[0].object.userData.post;
+    if (S.missing[p.key]) delete S.missing[p.key]; else S.missing[p.key] = true;
+    S.dirty = true; update();
+  }
+
+  // ---------- 화면 갱신 ----------
+  function fmt(n, d) { return n.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function update() {
+    var q = designLoad(S.t), P0 = q * area(), ok = P0 <= S.Pa;
+    $('rQ').textContent = fmt(q, 2) + ' kN/㎡';
+    $('rQS').textContent = '콘크리트 ' + fmt(concrete(S.t), 2) + ' + 거푸집 0.40 + 작업하중 ' + fmt(liveLoad(S.t), 1) + ' (두께 ' + S.t + 'mm)';
+    $('rP').innerHTML = fmt(P0, 2) + ' kN / ' + fmt(S.Pa, 1) + ' kN <span class="badge ' + (ok ? 'ok">OK' : 'ng">NG') + '</span>';
+    var bmax = S.Pa / (q * S.a / 1000) * 1000, fit = SPACING.filter(function (v) { return v <= bmax; })[0];
+    $('rPS').textContent = '하중률 ' + fmt(P0 / S.Pa * 100, 0) + '% · 안전율 ' + fmt(S.Pa / P0, 2) +
+      (ok ? '' : ' · 멍에 ' + S.a + 'mm 이면 동바리 간격 ' + (fit ? fit + 'mm 이하' : '610mm 보다 좁게') + '로 줄이세요');
+    var tm = maxThickness();
+    $('rT').textContent = tm >= 100 ? '약 ' + tm + ' mm 까지' : '이 간격으로는 부족';
+    $('rT').className = 'v ' + (tm >= S.t ? (tm >= S.t * 1.2 ? 'ok' : 'warn') : 'ng');
+    $('rTS').textContent = '멍에 ' + S.a + ' × 동바리 ' + S.b + 'mm, 허용 ' + fmt(S.Pa, 1) + 'kN 기준';
+    refreshNow();
+  }
+  function refreshNow() {
+    loads();
+    var w = worst(), P = w ? w.P : 0, r = P / S.Pa;
+    $('pLbl').textContent = Math.round(S.pour) + ' %'; $('hP').textContent = Math.round(S.pour) + ' %';
+    $('hQ').textContent = '두께 ' + S.t + 'mm · ' + (S.type === 'system' ? '시스템 동바리' : '파이프서포트');
+    $('hPa').textContent = fmt(S.Pa, 1);
+    $('hT').textContent = fmt(P, 1) + ' kN';
+    var g = $('hG'); g.style.width = Math.min(100, r * 100) + '%';
+    g.style.background = r >= 1 ? '#FF6369' : r >= 0.8 ? '#F2B705' : '#4CC38A';
+    var nf = S.posts.filter(function (p) { return p.failed; }).length, nm = Object.keys(S.missing).length;
+    var txt, cls, sub;
+    if (S.state === 'collapse') { txt = '붕괴'; cls = 'ng'; sub = '동바리 ' + nf + '본이 먼저 꺾인 뒤 하중이 옆으로 몰리며 전체가 무너졌습니다.'; }
+    else if (nf) { txt = '동바리 ' + nf + '본 꺾임 · 위험'; cls = 'ng'; sub = '꺾인 동바리의 하중이 옆 동바리로 넘어가고 있습니다.'; }
+    else if (r >= 1) { txt = '허용하중 초과 (' + fmt(r * 100, 0) + '%)'; cls = 'ng'; sub = '가장 힘든 동바리 ' + fmt(P, 1) + 'kN — 곧 꺾입니다.'; }
+    else if (r >= 0.8) { txt = '한계 근접 (' + fmt(r * 100, 0) + '%)'; cls = 'warn'; sub = '가장 힘든 동바리 ' + fmt(P, 1) + 'kN / ' + fmt(S.Pa, 1) + 'kN'; }
+    else { txt = '버티는 중 (' + fmt(r * 100, 0) + '%)'; cls = 'ok'; sub = '가장 힘든 동바리 ' + fmt(P, 1) + 'kN / ' + fmt(S.Pa, 1) + 'kN'; }
+    $('rNow').textContent = txt; $('rNow').className = 'v ' + cls;
+    $('rNowS').textContent = sub + (nm ? ' · 빠진 동바리 ' + nm + '본' : '') + (S.extra ? ' · 자재 적치 +' + S.extra + 'kN/㎡' : '');
+    if (S.state === 'ok') paintPosts();
+    var b = $('banner');
+    if (S.state === 'collapse') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 동바리 연쇄 붕괴 — 타설 ' + Math.round(S.pour) + '%, 최초 ' + nf + '본 꺾임'; }
+    else if (nf) { b.className = 'warn'; b.style.display = 'block'; b.textContent = '⚠ 동바리 ' + nf + '본 꺾임 — 하중이 옆으로 몰립니다'; }
+    else b.style.display = 'none';
+  }
+
+  function failStep(now) {
+    if (S.state !== 'ok' || now < S.failT) return;
+    loads();
+    var cands = S.posts.filter(function (p) { return !gone(p) && p.P >= S.Pa; });
+    if (!cands.length) return;
+    var mx = Math.max.apply(null, cands.map(function (p) { return p.P; }));
+    cands = cands.filter(function (p) { return p.P >= mx - 1e-6; });
+    var p = cands[Math.floor(Math.random() * cands.length)];
+    p.failed = true; p.bkT = THMAX; S.failT = now + 0.38; S.dirty = true;
+    paintPosts();
+    var nf = S.posts.filter(function (x) { return x.failed; }).length;
+    if (nf >= 3 || (nf + Object.keys(S.missing).length) / S.posts.length >= 0.2) {
+      S.state = 'collapse'; S.pouring = false; $('bPour').textContent = '▶ 타설 시작';
+      S.posts.forEach(function (x) { x.bkT = THALL * (0.9 + Math.random() * 0.1); });
+      S.posts.forEach(function (x) { if (!S.missing[x.key]) { x.lowM.color.setHex(0xFF4D4F); x.upM.color.setHex(0xFF4D4F); } });
+    }
+    refreshNow();
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.05), now = clock.elapsedTime;
+    if (S.pouring && S.state === 'ok') {
+      S.pour = Math.min(100, S.pour + 9 * dt); $('pIn').value = S.pour; S.dirty = true; refreshNow();
+      if (S.pour >= 100) { S.pouring = false; $('bPour').textContent = '▶ 타설 시작'; }
+    }
+    failStep(now);
+    var moving = false, speed = S.state === 'collapse' ? 1.6 : 2.4;
+    S.posts.forEach(function (p) {
+      if (p.bk < p.bkT) { p.bk = Math.min(p.bkT, p.bk + speed * dt * (0.3 + p.bk)); moving = true; }
+    });
+    if (moving || S.dirty) { placeAll(); S.dirty = false; }
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  // ---------- 입력 ----------
+  function setType(ty, keepPa) {
+    S.type = ty; $('tyIn').value = ty;
+    if (!keepPa) { S.Pa = ty === 'system' ? SYS_ALLOW : PIPE_ALLOW; $('paIn').value = S.Pa; }
+    $('paNote').textContent = ty === 'system'
+      ? '기본값 36.0kN은 가설파트너 구조계산 프로그램의 시스템 동바리 허용하중과 같습니다. 제품이 다르면 그 제품의 허용하중으로 바꾸세요.'
+      : '파이프서포트는 제품·사용 길이에 따라 허용하중이 다릅니다. 기본값 20kN은 안전인증 압축하중(40kN 이상)의 1/2로 둔 참고값이니, 사용하는 제품의 허용하중으로 바꿔 넣으세요.';
+    hNote();
+  }
+  function hNote() {
+    $('hNote').textContent = (S.type === 'pipe' && S.H > 3.5)
+      ? '⚠ 파이프서포트 높이가 3.5m를 넘으면 높이 2m 이내마다 수평연결재를 2개 방향으로 설치해야 합니다(산업안전보건기준에 관한 규칙).'
+      : '';
+  }
+  function bind() {
+    ['aIn', 'bIn'].forEach(function (id) { $(id).innerHTML = SPACING.map(function (v) { return '<option value="' + v + '">' + v + '</option>'; }).join(''); });
+    $('aIn').value = S.a; $('bIn').value = S.b;
+    setType('system');
+    $('tyIn').onchange = function () { setType(this.value); resetFail(); build(); };
+    $('paIn').oninput = function () { var v = parseFloat(this.value); if (v > 0) { S.Pa = v; update(); } };
+    $('tIn').oninput = function () { S.t = parseInt(this.value, 10); $('tLbl').textContent = S.t + ' mm'; S.dirty = true; update(); };
+    $('aIn').onchange = function () { S.a = parseInt(this.value, 10); resetFail(); build(); };
+    $('bIn').onchange = function () { S.b = parseInt(this.value, 10); resetFail(); build(); };
+    $('hIn').oninput = function () { S.H = parseFloat(this.value); $('hLbl').textContent = S.H.toFixed(1) + ' m'; hNote(); resetFail(); build(); };
+    $('xIn').onchange = function () { S.extra = parseFloat(this.value); S.dirty = true; update(); };
+    $('pIn').oninput = function () { if (S.state !== 'ok') { this.value = S.pour; return; } S.pour = parseFloat(this.value) || 0; S.pouring = false; $('bPour').textContent = '▶ 타설 시작'; S.dirty = true; refreshNow(); };
+    $('bPour').onclick = function () {
+      if (S.state !== 'ok' || S.pour >= 100) { resetFail(); build(); S.pour = 0; }
+      S.pouring = !S.pouring; this.textContent = S.pouring ? '⏸ 멈추기' : '▶ 타설 시작';
+    };
+    $('bReset').onclick = function () { S.pouring = false; $('bPour').textContent = '▶ 타설 시작'; S.pour = 0; $('pIn').value = 0; resetFail(); build(); };
+    $('bMiss').onclick = function () {
+      if (S.state !== 'ok') { resetFail(); build(); }
+      S.missing = {}; S.missing['3-2'] = true; S.missing['4-1'] = true; S.dirty = true; update();
+    };
+    $('bFix').onclick = function () { S.missing = {}; if (S.state !== 'ok') { resetFail(); build(); } S.dirty = true; update(); };
+    $('bExample').onclick = function () {
+      // 하중률이 높은 현장에서 동바리 1본이 빠지면 → 옆 동바리 과하중 → 연쇄 붕괴
+      var sys = S.type === 'system';
+      S.t = sys ? 600 : 300; $('tIn').value = S.t; $('tLbl').textContent = S.t + ' mm';
+      S.a = 1219; S.b = sys ? 1524 : 1219; $('aIn').value = S.a; $('bIn').value = S.b;
+      S.extra = 0; $('xIn').value = '0';
+      S.Pa = sys ? SYS_ALLOW : PIPE_ALLOW; $('paIn').value = S.Pa;
+      S.missing = { '3-2': true };
+      S.pour = 0; $('pIn').value = 0; resetFail(); build();
+      S.pouring = true; $('bPour').textContent = '⏸ 멈추기';
+    };
+  }
+  function resetFail() { S.posts.forEach(function (p) { p.failed = false; p.bk = 0; p.bkT = 0; }); S.state = 'ok'; S.failT = 0; S.dirty = true; }
+
+  window.GPSupport = { S: S, designLoad: designLoad, loads: loads, update: update };
+
+  bind(); init(); build(); animate();
+})();
+</script>
+<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+</body>
+</html>
