@@ -496,7 +496,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
 
   function animate() {
     requestAnimationFrame(animate);
-    var dt = Math.min(clock.getDelta(), 0.05), now = clock.elapsedTime;
+    var dt = Math.min(clock.getDelta(), 0.25), now = clock.elapsedTime; // 실제 흐른 시간 기준
     if (S.pouring && S.state === 'ok') {
       S.pour = Math.min(100, S.pour + 9 * dt); $('pIn').value = S.pour; S.dirty = true; refreshNow();
       if (S.pour >= 100) { S.pouring = false; $('bPour').textContent = '▶ 타설 시작'; }
