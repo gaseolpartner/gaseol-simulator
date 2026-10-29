@@ -90,6 +90,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="gp-sim-quality.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
         let scene, camera, renderer, controls;
@@ -405,5 +406,7 @@
         window.addEventListener('load', init);
     </script>
 <script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+<script src="gp-sim-tools.js"></script>
+<script>(function(){var c={"name": "안전시설물 시뮬레이터", "groups": {"slabGroup": {"label": "슬래브", "material": false}, "openingGroup": {"label": "개구부", "material": false}, "railGroup": "안전난간", "netGroup": "추락방지망", "vnetGroup": "수직보호망", "coverGroup": "개구부 덮개"}, "slug": "safety-facility"};GPSim.init(c);})();</script>
 </body>
 </html>

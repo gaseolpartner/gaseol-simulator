@@ -249,6 +249,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="gp-sim-quality.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
         // 전역 변수 선언
@@ -1049,5 +1050,7 @@
         window.addEventListener('load', init);
     </script>
 <script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+<script src="gp-sim-tools.js"></script>
+<script>(function(){var c={"name": "시스템 워킹타워 시뮬레이터", "groups": {"scaffoldGroup": "비계 구조(수직재·수평재)", "stairsGroup": "안전계단", "platformsGroup": "작업발판", "railsGroup": "안전난간", "braceGroup": "가새"}, "slug": "walking-tower"};GPSim.init(c);})();</script>
 </body>
 </html>

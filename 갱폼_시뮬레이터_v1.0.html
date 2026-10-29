@@ -106,6 +106,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="gp-sim-quality.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
         let scene, camera, renderer, controls;
@@ -472,5 +473,7 @@
         window.addEventListener('load', init);
     </script>
 <script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+<script src="gp-sim-tools.js"></script>
+<script>(function(){var c={"name": "갱폼 시뮬레이터", "groups": {"wallGroup": {"label": "콘크리트 벽체", "material": false}, "panelGroup": "거푸집 패널", "walerGroup": "멍에·횡띠장", "upperGroup": "상부 작업발판", "lowerGroup": "하부 작업발판(케이지)", "railGroup": "안전난간", "liftGroup": "인양고리"}, "slug": "gang-form"};GPSim.init(c);})();</script>
 </body>
 </html>

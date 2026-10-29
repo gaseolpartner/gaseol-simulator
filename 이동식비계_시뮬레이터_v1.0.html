@@ -104,6 +104,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="gp-sim-quality.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
         let scene, camera, renderer, controls;
@@ -484,5 +485,7 @@
         window.addEventListener('load', init);
     </script>
 <script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+<script src="gp-sim-tools.js"></script>
+<script>(function(){var c={"name": "이동식 비계 시뮬레이터", "groups": {"frameGroup": "프레임(수직재·수평재)", "casterGroup": "바퀴(캐스터)", "outriggerGroup": "아웃트리거", "ladderGroup": "승강 사다리", "railGroup": "안전난간", "braceGroup": "가새", "platformGroup": "작업발판"}, "slug": "mobile-scaffold"};GPSim.init(c);})();</script>
 </body>
 </html>

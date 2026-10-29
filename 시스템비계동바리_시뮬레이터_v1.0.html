@@ -539,6 +539,7 @@ button:disabled{background:#444 !important;color:#888 !important}
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="gp-sim-quality.js"></script>
     <script>
         let scene, camera, renderer;
         let parts = [];
@@ -1845,5 +1846,7 @@ button:disabled{background:#444 !important;color:#888 !important}
         init();
     </script>
 <script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+<script src="gp-sim-tools.js"></script>
+<script>(function(){var c={"name": "시스템 비계·동바리 시뮬레이터", "legend": true, "slug": "scaffold-support"};c.fixedTarget=function(){return [0,(typeof currentSystem!=='undefined'&&currentSystem==='support')?5:3,0];};GPSim.init(c);})();</script>
 </body>
 </html>

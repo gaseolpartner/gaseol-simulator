@@ -107,6 +107,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="gp-sim-quality.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
         let scene, camera, renderer, controls;
@@ -470,5 +471,7 @@
         window.addEventListener('load', init);
     </script>
 <script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+<script src="gp-sim-tools.js"></script>
+<script>(function(){var c={"name": "외부 쌍줄비계 시뮬레이터", "groups": {"buildingGroup": {"label": "건물 외벽", "material": false}, "postGroup": "비계기둥", "ledgerGroup": "띠장", "transomGroup": "장선", "platformGroup": "작업발판", "railGroup": "안전난간·발끝막이판", "braceGroup": "가새", "tieGroup": "벽이음"}, "slug": "double-scaffold"};GPSim.init(c);})();</script>
 </body>
 </html>
