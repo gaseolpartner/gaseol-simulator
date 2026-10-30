@@ -151,7 +151,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
 (function () {
   'use strict';
   var SYS_ALLOW = 36.0;  // 시스템 동바리 1본 허용하중 (구조계산 프로그램과 같음)
-  var PIPE_ALLOW = 20.0; // 파이프서포트 참고값: 안전인증 압축하중 40kN 이상의 1/2
+  var PIPE_ALLOW = 13.3; // 파이프서포트: 안전인증 기준 압축강도 40kN(최대사용길이) ÷ 안전율 3 (구조계산 프로그램 비계 수직재와 같은 안전율)
   var SPACING = [1829, 1524, 1219, 914, 610];
   var NX = 7, NZ = 5;   // 동바리 7열 × 5줄
   var $ = function (id) { return document.getElementById(id); };
@@ -531,7 +531,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     if (!keepPa) { S.Pa = ty === 'system' ? SYS_ALLOW : PIPE_ALLOW; $('paIn').value = S.Pa; }
     $('paNote').textContent = ty === 'system'
       ? '기본값 36.0kN은 가설파트너 구조계산 프로그램의 시스템 동바리 허용하중과 같습니다. 제품이 다르면 그 제품의 허용하중으로 바꾸세요.'
-      : '파이프서포트는 제품·사용 길이에 따라 허용하중이 다릅니다. 기본값 20kN은 안전인증 압축하중(40kN 이상)의 1/2로 둔 참고값이니, 사용하는 제품의 허용하중으로 바꿔 넣으세요.';
+      : '기본값 13.3kN = 한국가설협회 안전인증 기준(최대사용길이에서 압축강도 40,000N 이상) ÷ 안전율 3. 안전율 3은 구조계산 프로그램의 비계 수직재와 같습니다. 사용하는 제품의 허용하중이 따로 있으면 그 값으로 바꿔 넣으세요.';
     hNote();
   }
   function hNote() {
@@ -565,7 +565,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     $('bExample').onclick = function () {
       // 하중률이 높은 현장에서 동바리 1본이 빠지면 → 옆 동바리 과하중 → 연쇄 붕괴
       var sys = S.type === 'system';
-      S.t = sys ? 600 : 300; $('tIn').value = S.t; $('tLbl').textContent = S.t + ' mm';
+      S.t = sys ? 600 : 200; $('tIn').value = S.t; $('tLbl').textContent = S.t + ' mm';
       S.a = 1219; S.b = sys ? 1524 : 1219; $('aIn').value = S.a; $('bIn').value = S.b;
       S.extra = 0; $('xIn').value = '0';
       S.Pa = sys ? SYS_ALLOW : PIPE_ALLOW; $('paIn').value = S.Pa;
