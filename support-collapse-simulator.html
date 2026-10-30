@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>동바리 과하중 붕괴 시뮬레이터 | 가설파트너</title>
+<title>동바리 위험 시뮬레이터 | 가설파트너</title>
 <meta name="description" content="동바리 1본이 받는 하중이 허용하중을 넘으면 어떻게 휘고 연쇄 붕괴가 일어나는지 3D로 보는 안전교육 시뮬레이터. 시스템 동바리와 일반 동바리(파이프서포트)를 비교합니다.">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="gp-sim-quality.js"></script>
@@ -68,7 +68,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="가설파트너">
-<meta property="og:title" content="동바리 과하중 붕괴 시뮬레이터 | 가설파트너">
+<meta property="og:title" content="동바리 위험 시뮬레이터 | 가설파트너">
 <meta property="og:description" content="동바리 1본이 받는 하중이 허용하중을 넘으면 어떻게 휘고 연쇄 붕괴가 일어나는지 3D로 보는 안전교육 시뮬레이터. 시스템 동바리와 일반 동바리(파이프서포트)를 비교합니다.">
 <meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/support-collapse-simulator.html">
 <meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
@@ -80,7 +80,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
 
 </head>
 <body>
-<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">동바리 과하중 붕괴 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">동바리 위험 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
 
 <div id="app">
   <div id="view">
@@ -115,6 +115,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <div class="row"><label for="aIn">멍에 간격 (mm)</label><select id="aIn"></select></div>
       <div class="row"><label for="bIn">동바리 간격 (mm)</label><select id="bIn"></select></div>
       <div class="slider"><div class="top"><span>동바리 높이</span><b id="hLbl">3.5 m</b></div><input type="range" id="hIn" min="2.5" max="6" step="0.1" value="3.5"></div>
+      <div class="row"><label for="mIn">타설 방식</label><select id="mIn"><option value="even">고르게 펴면서 타설</option><option value="heap">한 곳에 몰아 붓기 (편타설)</option></select></div>
       <div class="row"><label for="xIn">자재 적치</label><select id="xIn"><option value="0">없음</option><option value="5">가운데 철근 다발 (+5 kN/㎡)</option><option value="10">가운데 자재 과적 (+10 kN/㎡)</option></select></div>
       <p class="note" id="hNote"></p>
     </div>
@@ -132,6 +133,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <div class="res"><div class="k">이 간격으로 버티는 슬래브 두께</div><div class="v" id="rT">-</div><div class="s" id="rTS"></div></div>
       <div class="res"><div class="k">지금 상태</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
       <p class="note">계산식은 가설파트너 구조계산 프로그램(시스템 동바리)과 같습니다.<br>설계하중 = 두께×24kN/㎥ + 거푸집 0.4 + 작업하중(두께별 2.5~6.0) kN/㎡<br>동바리 1본 하중 = 설계하중 × 멍에 간격 × 동바리 간격</p>
+      <p class="note">편타설: 콘크리트를 펴지 않고 한 곳에 몰아 부으면, 타설 앞쪽 1칸에 설계 두께의 2배가 쌓인다고 가정했습니다(교육용). 타설이 끝나면 고르게 펴진 것으로 봅니다.</p>
       <p class="note">교육용 시뮬레이션입니다. 하중이 옆으로 넘어가는 방식은 쉽게 보여 주려고 단순하게 정했습니다(멍에 방향 양옆이 절반씩). 실제 붕괴 여부는 좌굴·접합부·지반 조건 등에 따라 달라지며, 실제 설계·시공은 구조검토서를 따르세요.</p>
     </div>
 
@@ -153,7 +155,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   var SPACING = [1829, 1524, 1219, 914, 610];
   var NX = 7, NZ = 5;   // 동바리 7열 × 5줄
   var $ = function (id) { return document.getElementById(id); };
-  var S = { type: 'system', Pa: SYS_ALLOW, t: 250, a: 914, b: 1219, H: 3.5, extra: 0, pour: 0, pouring: false,
+  var S = { type: 'system', Pa: SYS_ALLOW, t: 250, a: 914, b: 1219, H: 3.5, extra: 0, heap: false, pour: 0, pouring: false,
             missing: {}, posts: [], grid: [], state: 'ok', failT: 0, collapseT: 0, dirty: true };
 
   // ---------- 계산 (구조계산 프로그램 calculateTotalLoad 와 같은 식) ----------
@@ -166,11 +168,23 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     var bm = S.b / 1000, front = -bm / 2 + (S.pour / 100) * NX * bm;
     return Math.max(0, Math.min(1, (front - (p.x - bm / 2)) / bm));
   }
+  // 편타설: 펴기 전 콘크리트가 타설 앞쪽 1칸에 설계 두께의 2배로 쌓인 상태 (교육용 가정, 타설 중에만)
+  function heapFrac(p) {
+    if (!S.heap || S.pour <= 0 || S.pour >= 100) return 0;
+    var bm = S.b / 1000, front = -bm / 2 + (S.pour / 100) * NX * bm, a = Math.max(front - bm, -bm / 2);
+    var lo = Math.max(a, p.x - bm / 2), hi = Math.min(front, p.x + bm / 2);
+    return Math.max(0, hi - lo) / bm;
+  }
+  function heapAt(x) {
+    if (!S.heap || S.pour <= 0 || S.pour >= 100) return 0;
+    var bm = S.b / 1000, front = -bm / 2 + (S.pour / 100) * NX * bm;
+    var d = front - x; return d < 0 ? 0 : d < bm ? Math.sin(Math.PI * Math.min(1, d / bm)) : 0;
+  }
   function isCenter(p) { return p.i >= 2 && p.i <= 4 && p.k >= 1 && p.k <= 3; }
   function loads() {
     var A = area(), base = 0.4 + liveLoad(S.t);
     S.posts.forEach(function (p) {
-      p.own = (concrete(S.t) * pourFrac(p) + base + (isCenter(p) ? S.extra : 0)) * A;
+      p.own = (concrete(S.t) * (pourFrac(p) + heapFrac(p)) + base + (isCenter(p) ? S.extra : 0)) * A;
       p.P = gone(p) ? 0 : p.own;
     });
     S.posts.forEach(function (p) { if (gone(p)) share(p, p.own); });
@@ -364,11 +378,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     var a = topY(at(i0, k0)), b = topY(at(i0 + 1, k0)), c = topY(at(i0, k0 + 1)), d = topY(at(i0 + 1, k0 + 1));
     return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
   }
-  function deformSkin(mesh, xa, xb, za, zb, yOff, th) {
+  function deformSkin(mesh, xa, xb, za, zb, yOff, th, thFn) {
     var g = mesh.geometry, o = g.userData.o, pos = g.attributes.position.array;
     for (var n = 0; n < pos.length; n += 3) {
       var x = xa + (o[n] + 0.5) * (xb - xa), z = za + (o[n + 2] + 0.5) * (zb - za);
-      pos[n] = x; pos[n + 2] = z; pos[n + 1] = surf(x, z) + yOff + (o[n + 1] + 0.5) * th;
+      pos[n] = x; pos[n + 2] = z; pos[n + 1] = surf(x, z) + yOff + (o[n + 1] + 0.5) * th * (thFn ? 1 + thFn(x) : 1);
     }
     g.attributes.position.needsUpdate = true; g.computeVertexNormals(); g.computeBoundingSphere();
   }
@@ -401,7 +415,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     deformSkin(deck, x0, x1, z0, z1, DK, 0.012);
     var len = (S.pour / 100) * (x1 - x0), th = S.t / 1000;
     slab.visible = len > 0.02;
-    if (slab.visible) deformSkin(slab, x0, x0 + len, z0, z1, DK + 0.012, th);
+    if (slab.visible) deformSkin(slab, x0, x0 + len, z0, z1, DK + 0.012, th, S.heap ? heapAt : null);
     pile.visible = S.extra > 0;
     if (pile.visible) {
       var cx = 3 * bm, cz = 2 * am, cover = (cx <= x0 + len) ? th : 0;
@@ -467,7 +481,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     else if (r >= 0.8) { txt = '한계 근접 (' + fmt(r * 100, 0) + '%)'; cls = 'warn'; sub = '가장 힘든 동바리 ' + fmt(P, 1) + 'kN / ' + fmt(S.Pa, 1) + 'kN'; }
     else { txt = '버티는 중 (' + fmt(r * 100, 0) + '%)'; cls = 'ok'; sub = '가장 힘든 동바리 ' + fmt(P, 1) + 'kN / ' + fmt(S.Pa, 1) + 'kN'; }
     $('rNow').textContent = txt; $('rNow').className = 'v ' + cls;
-    $('rNowS').textContent = sub + (nm ? ' · 빠진 동바리 ' + nm + '본' : '') + (S.extra ? ' · 자재 적치 +' + S.extra + 'kN/㎡' : '');
+    $('rNowS').textContent = sub + (nm ? ' · 빠진 동바리 ' + nm + '본' : '') + (S.extra ? ' · 자재 적치 +' + S.extra + 'kN/㎡' : '') + (S.heap ? ' · 편타설(한 곳에 몰아 붓기)' : '');
     if (S.state === 'ok') paintPosts();
     var b = $('banner');
     if (S.state === 'collapse') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 동바리 연쇄 붕괴 — 타설 ' + Math.round(S.pour) + '%, 최초 ' + nf + '본 꺾임'; }
@@ -535,6 +549,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     $('aIn').onchange = function () { S.a = parseInt(this.value, 10); resetFail(); build(); };
     $('bIn').onchange = function () { S.b = parseInt(this.value, 10); resetFail(); build(); };
     $('hIn').oninput = function () { S.H = parseFloat(this.value); $('hLbl').textContent = S.H.toFixed(1) + ' m'; hNote(); resetFail(); build(); };
+    $('mIn').onchange = function () { S.heap = this.value === 'heap'; S.dirty = true; update(); };
     $('xIn').onchange = function () { S.extra = parseFloat(this.value); S.dirty = true; update(); };
     $('pIn').oninput = function () { if (S.state !== 'ok') { this.value = S.pour; return; } S.pour = parseFloat(this.value) || 0; S.pouring = false; $('bPour').textContent = '▶ 타설 시작'; S.dirty = true; refreshNow(); };
     $('bPour').onclick = function () {

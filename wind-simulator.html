@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>비계 풍하중·전도 시뮬레이터 | 가설파트너</title>
-<meta name="description" content="바람이 세지면 벽이음이 끊어지고 비계가 넘어지는 과정을 3D로 보는 안전교육 시뮬레이터. 구조계산 프로그램과 같은 풍하중 식을 씁니다.">
+<title>비계 위험 시뮬레이터 | 가설파트너</title>
+<meta name="description" content="비계 사고를 3D로 보는 안전교육 시뮬레이터. 바람에 의한 전도, 기초 침하, 잘못된 해체 순서, 이동식 비계 전도를 한 곳에서 체험합니다.">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="gp-sim-quality.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -62,14 +62,25 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   #hint{display:none}
   #banner{font-size:14px;bottom:10px}
 }
+[hidden]{display:none !important}
+.layer{position:absolute;inset:0}
+.layer canvas{display:block;width:100%;height:100%;touch-action:none}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 16px}
+.tab{background:#1B1B1B;color:#DDDDDD;border:1px solid #444444;border-radius:10px;padding:9px 6px;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+.tab:hover{border-color:#F2B705}
+.tab.on{background:#F2B705;color:#1B1B1B;border-color:#F2B705}
+.hudx{position:absolute;left:14px;top:12px;right:14px;pointer-events:none;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.bannerx{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #FF6369;color:#FFFFFF;border-radius:12px;padding:12px 18px;font-weight:800;font-size:16px;display:none;text-align:center;max-width:92%;pointer-events:none}
+.bannerx.warn{border-color:#F2B705}
+@media(max-width:800px){.tabs{grid-template-columns:repeat(4,1fr);gap:4px}.tab{font-size:12px;padding:8px 2px}.bannerx{font-size:14px;bottom:10px}}
 </style>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="가설파트너">
-<meta property="og:title" content="비계 풍하중·전도 시뮬레이터 | 가설파트너">
-<meta property="og:description" content="바람이 세지면 벽이음이 끊어지고 비계가 넘어지는 과정을 3D로 보는 안전교육 시뮬레이터. 구조계산 프로그램과 같은 풍하중 식을 씁니다.">
+<meta property="og:title" content="비계 위험 시뮬레이터 | 가설파트너">
+<meta property="og:description" content="비계 사고를 3D로 보는 안전교육 시뮬레이터. 바람에 의한 전도, 기초 침하, 잘못된 해체 순서, 이동식 비계 전도를 한 곳에서 체험합니다.">
 <meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/wind-simulator.html">
 <meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
 <meta property="og:image:width" content="1200">
@@ -80,18 +91,48 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
 
 </head>
 <body>
-<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">비계 풍하중·전도 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">비계 위험 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
 
 <div id="app">
   <div id="view">
+   <div class="layer" id="L-wind" data-mode="wind">
     <div id="hud">
       <div class="hcard"><div class="t">지금 바람</div><div class="n" id="hV">0 m/s</div><div class="t" id="hCls">-</div></div>
       <div class="hcard"><div class="t">가장 힘든 벽이음 (끊어지는 기준 9.81kN)</div><div class="n" id="hT">0.00 kN</div><div class="gauge"><i id="hG"></i></div></div>
     </div>
     <div id="banner"></div>
     <div id="hint">마우스 끌기: 돌리기 · 휠: 확대 · 노란 벽이음 클릭: 빼기/넣기</div>
+   </div>
+   <div class="layer" id="L-settle" data-mode="settle" hidden>
+    <div class="hudx">
+      <div class="hcard"><div class="t">바깥줄 기둥 침하</div><div class="n" id="sH1">0 mm</div><div class="t" id="sH1s">-</div></div>
+      <div class="hcard"><div class="t">맨 위 기울어짐</div><div class="n" id="sH2">0 mm</div><div class="gauge"><i id="sHG"></i></div></div>
+    </div>
+    <div class="bannerx" id="sBan"></div>
+   </div>
+   <div class="layer" id="L-dismantle" data-mode="dismantle" hidden>
+    <div class="hudx">
+      <div class="hcard"><div class="t">남은 비계 높이</div><div class="n" id="dH1">-</div><div class="t" id="dH1s">-</div></div>
+      <div class="hcard"><div class="t">넘어지려는 힘 / 버티는 힘</div><div class="n" id="dH2">-</div><div class="gauge"><i id="dHG"></i></div></div>
+    </div>
+    <div class="bannerx" id="dBan"></div>
+   </div>
+   <div class="layer" id="L-mobile" data-mode="mobile" hidden>
+    <div class="hudx">
+      <div class="hcard"><div class="t">작업발판 높이 · 적재</div><div class="n" id="mH1">-</div><div class="t" id="mH1s">-</div></div>
+      <div class="hcard"><div class="t">넘어지려는 힘 / 버티는 힘</div><div class="n" id="mH2">-</div><div class="gauge"><i id="mHG"></i></div></div>
+    </div>
+    <div class="bannerx" id="mBan"></div>
+   </div>
   </div>
   <aside id="panel">
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab on" data-tab="wind">🌪️ 바람·전도</button>
+      <button type="button" class="tab" data-tab="settle">🕳️ 기초 침하</button>
+      <button type="button" class="tab" data-tab="dismantle">🔧 해체 순서</button>
+      <button type="button" class="tab" data-tab="mobile">🛞 이동식 비계</button>
+    </div>
+   <div class="mpanel" data-mode="wind">
     <h1>비계 풍하중·전도 시뮬레이터</h1>
     <p class="lead">바람이 세지면 벽이음에 걸리는 힘이 커집니다. 벽이음이 버티는 힘(9.81kN)을 넘으면 하나씩 끊어지고, 절반 넘게 끊어지면 비계가 넘어집니다.</p>
 
@@ -141,6 +182,106 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <a href="https://gaseolpartner.github.io/calculators/structural-review-request.html" target="_blank" rel="noopener">구조검토 의뢰하기 →</a>
       <a href="외부쌍줄비계_시뮬레이터_v1.0.html">외부 쌍줄비계 설치 시뮬레이터 →</a>
     </div>
+   </div>
+   <div class="mpanel" data-mode="settle" hidden>
+    <h1>비계 기초 침하 시뮬레이터</h1>
+    <p class="lead">비계 기둥은 좁은 받침판으로 땅을 누릅니다. 땅이 버티는 힘(허용지지력)보다 세게 누르면 기둥이 가라앉고, 한쪽 줄만 가라앉으면 비계가 기울어 넘어집니다.</p>
+    <div class="sec">
+      <h2>① 진행</h2>
+      <div class="btns">
+        <button class="btn" id="sRun" type="button">▶ 작업 진행 (시간 흐름)</button>
+        <button class="btn line" id="sEx" type="button">위험 예시 보기</button>
+        <button class="btn line" id="sReset" type="button">↺ 처음으로</button>
+      </div>
+    </div>
+    <div class="sec">
+      <h2>② 현장 조건</h2>
+      <div class="row"><label for="sType">비계 종류</label><select id="sType"><option value="system">시스템 비계</option><option value="pipe">강관 비계</option></select></div>
+      <div class="slider"><div class="top"><span>설치 높이</span><b id="sHLbl">14 m</b></div><input type="range" id="sHIn" min="4" max="30" step="1" value="14"></div>
+      <div class="row"><label for="sWork">작업 하중</label><select id="sWork"><option value="1">경작업 1.0 kN/㎡</option><option value="2">중작업 2.0 kN/㎡</option><option value="3.5" selected>돌붙임 공사 3.5 kN/㎡</option></select></div>
+      <div class="row"><label for="sBase">기둥 받침</label><select id="sBase"><option value="plate">베이스판만 (140×140mm)</option><option value="block" selected>깔목 (200×600mm)</option><option value="board">깔판 (300×1,000mm)</option></select></div>
+      <div class="row"><label for="sGin">안쪽 줄 지반</label><select id="sGin"></select></div>
+      <div class="row"><label for="sGout">바깥쪽 줄 지반</label><select id="sGout"></select></div>
+      <p class="note">비 온 뒤 바깥쪽에 물이 고이거나, 되메우기 한 흙 위에 바깥줄이 서는 경우가 많습니다.</p>
+    </div>
+    <div class="sec">
+      <h2>③ 결과</h2>
+      <div class="res"><div class="k">기둥 1본 하중</div><div class="v" id="sRP">-</div><div class="s" id="sRPs"></div></div>
+      <div class="res"><div class="k">안쪽 줄: 땅을 누르는 힘 / 땅이 버티는 힘</div><div class="v" id="sRin">-</div><div class="s" id="sRins"></div></div>
+      <div class="res"><div class="k">바깥쪽 줄: 땅을 누르는 힘 / 땅이 버티는 힘</div><div class="v" id="sRout">-</div><div class="s" id="sRouts"></div></div>
+      <div class="res"><div class="k">지금 상태</div><div class="v" id="sNow">-</div><div class="s" id="sNows"></div></div>
+      <p class="note">기둥 1본 하중은 가설파트너 구조계산 프로그램(시스템 비계)의 '수직재 1본의 하중'과 같은 식입니다(작업층수는 높이 15m 이하 3개층, 25m 이하 2개층, 그 위 1개층).<br>땅을 누르는 힘 = 기둥 1본 하중 ÷ 받침 면적. 땅이 버티는 힘은 건축물 구조기준의 장기 허용지내력 값이며, '참고값'은 흔한 연약 지반을 보여 주려고 넣은 값입니다. 실제는 지반 확인이 필요합니다.</p>
+      <p class="note">가라앉는 양과 '벽이음이 버티는 기울기(맨 위 300mm)'는 쉽게 보여 주려고 정한 교육용 값입니다.</p>
+    </div>
+    <div class="sec links">
+      <h2>더 알아보기</h2>
+      <a href="https://gaseolpartner.github.io/structure-calc/system-scaffold.html" target="_blank" rel="noopener">시스템 비계 구조계산 (무료) →</a>
+      <a href="https://gaseolpartner.github.io/calculators/structural-review-request.html" target="_blank" rel="noopener">구조검토 의뢰하기 →</a>
+    </div>
+   </div>
+
+   <div class="mpanel" data-mode="dismantle" hidden>
+    <h1>비계 해체 순서 시뮬레이터</h1>
+    <p class="lead">비계는 위에서부터 한 단씩 해체하고, 벽이음은 그 단을 해체할 때 뗍니다. 벽이음을 먼저 다 떼면, 홀로 선 비계는 약한 바람에도 넘어집니다.</p>
+    <div class="sec">
+      <h2>① 해체 시작</h2>
+      <div class="btns">
+        <button class="btn" id="dRight" type="button">✔ 올바른 순서로 해체</button>
+        <button class="btn line" id="dWrong" type="button">✖ 벽이음 먼저 떼고 해체</button>
+        <button class="btn line" id="dReset" type="button">↺ 처음으로</button>
+      </div>
+    </div>
+    <div class="sec">
+      <h2>② 현장 조건</h2>
+      <div class="slider big"><div class="top"><span>지금 부는 바람</span><b id="dVLbl">5 m/s</b></div><input type="range" id="dVIn" min="0" max="20" step="0.5" value="5"></div>
+      <div class="row"><label for="dType">비계 종류</label><select id="dType"><option value="system">시스템 비계</option><option value="pipe">강관 비계</option></select></div>
+      <div class="slider"><div class="top"><span>설치 높이</span><b id="dHLbl">14 m</b></div><input type="range" id="dHIn" min="4" max="30" step="1" value="14"></div>
+      <div class="row"><label for="dNet">외부 마감 (충실률)</label><select id="dNet"><option value="0.3" selected>메쉬방호망 0.3</option><option value="0.5">수직보호망 0.5</option><option value="0.7">방수시트 0.7</option><option value="0.9">분진망 0.9</option><option value="1.0">방음패널 1.0</option></select></div>
+    </div>
+    <div class="sec">
+      <h2>③ 결과</h2>
+      <div class="res"><div class="k">벽이음 없이 홀로 섰을 때 버티는 바람</div><div class="v" id="dRV">-</div><div class="s" id="dRVs"></div></div>
+      <div class="res"><div class="k">지금 상태</div><div class="v" id="dNow">-</div><div class="s" id="dNows"></div></div>
+      <p class="note">넘어지려는 힘 = 풍압 × 비계 면적 × 높이/2 (풍압은 구조계산 프로그램과 같은 식, 노풍도 C)<br>버티는 힘 = 비계 자중 × 비계 폭/2 (부재 단위중량은 구조계산 프로그램 값, 발판 0.2kN/㎡, 10% 할증)</p>
+      <p class="note">교육용 시뮬레이션입니다. 실제 해체 계획은 작업계획서와 구조검토서를 따르세요.</p>
+    </div>
+   </div>
+
+   <div class="mpanel" data-mode="mobile" hidden>
+    <h1>이동식 비계 전도 시뮬레이터</h1>
+    <p class="lead">이동식 비계는 밑변이 좁아 위에서 조금만 밀거나 당겨도 넘어질 수 있습니다. 바퀴 잠금과 아웃트리거가 왜 필요한지 확인해 보세요.</p>
+    <div class="sec">
+      <h2>① 작업하기</h2>
+      <div class="slider big"><div class="top"><span>작업자가 미는(당기는) 힘</span><b id="mFLbl">0 N</b></div><input type="range" id="mFIn" min="0" max="400" step="5" value="0"></div>
+      <p class="note" style="margin-top:0">천장 드릴 작업, 배관을 당기기, 벽을 밀기 같은 반력입니다. 100N ≈ 10kg을 옆으로 미는 힘.</p>
+      <div class="btns">
+        <button class="btn line" id="mEx" type="button">위험 예시 보기</button>
+        <button class="btn line" id="mReset" type="button">↺ 처음으로</button>
+      </div>
+    </div>
+    <div class="sec">
+      <h2>② 비계 조건</h2>
+      <div class="slider"><div class="top"><span>단수 (1단 1.7m)</span><b id="mLLbl">2단</b></div><input type="range" id="mLIn" min="1" max="6" step="1" value="2"></div>
+      <div class="row"><label for="mLock">바퀴 잠금</label><select id="mLock"><option value="1">잠금</option><option value="0">안 잠금</option></select></div>
+      <div class="row"><label for="mOut">아웃트리거</label><select id="mOut"><option value="1">설치</option><option value="0">설치 안 함</option></select></div>
+      <div class="row"><label for="mPpl">작업자 수 (1인 75kg 가정)</label><select id="mPpl"><option>1</option><option>2</option><option>3</option></select></div>
+      <div class="slider"><div class="top"><span>발판 위 자재</span><b id="mMLbl">0 kg</b></div><input type="range" id="mMIn" min="0" max="300" step="10" value="0"></div>
+      <div class="slider"><div class="top"><span>작업자 위치 (가운데 → 난간 쪽)</span><b id="mELbl">가운데</b></div><input type="range" id="mEIn" min="0" max="100" step="5" value="0"></div>
+    </div>
+    <div class="sec">
+      <h2>③ 결과</h2>
+      <div class="res"><div class="k">높이 기준 (비계 높이 ≤ 밑변 최소폭 × 4)</div><div class="v" id="mRH">-</div><div class="s" id="mRHs"></div></div>
+      <div class="res"><div class="k">작업발판 최대 적재 (250kg 이하)</div><div class="v" id="mRW">-</div><div class="s" id="mRWs"></div></div>
+      <div class="res"><div class="k">이 조건에서 버티는 미는 힘</div><div class="v" id="mRF">-</div><div class="s" id="mRFs"></div></div>
+      <div class="res"><div class="k">지금 상태</div><div class="v" id="mNow">-</div><div class="s" id="mNows"></div></div>
+      <p class="note">넘어지려는 힘 = 미는 힘 × (발판 높이 + 1m) · 버티는 힘 = 무게 × 넘어지는 쪽 모서리까지 거리<br>가정: 밑변 1.2m × 1.8m, 비계 자중 약 50kg/단, 아웃트리거는 양쪽으로 0.6m씩 넓힘. 제품마다 다르니 실제는 제조사 사용설명서를 따르세요.</p>
+      <p class="note">높이 4배·적재 250kg·바퀴 잠금·아웃트리거·안전난간은 이동식 비계 안전 기준(산업안전보건기준에 관한 규칙 제68조 및 KOSHA 지침)에 나오는 내용입니다.</p>
+    </div>
+    <div class="sec links">
+      <h2>더 알아보기</h2>
+      <a href="이동식비계_시뮬레이터_v1.0.html">이동식 비계 설치 시뮬레이터 →</a>
+    </div>
+   </div>
   </aside>
 </div>
 
@@ -217,7 +358,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   }
 
   function init() {
-    var view = $('view');
+    var view = $('L-wind');
     renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     renderer.setClearColor(0x15171A);
     view.insertBefore(renderer.domElement, view.firstChild);
@@ -469,6 +610,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
 
   function animate() {
     requestAnimationFrame(animate);
+    if (window.GPMode && window.GPMode.cur !== 'wind') return; // 다른 탭을 보는 동안 멈춤
     // 실제 흐른 시간 기준 (느린 컴퓨터에서도 같은 속도), 넘어짐 계산만 잘게 나눠서
     var dt = Math.min(clock.getDelta(), 0.25), now = clock.elapsedTime;
     if (S.ramp && S.state === 'ok') {
@@ -544,6 +686,489 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   bind(); init(); build(); animate();
 })();
 </script>
+<script>
+/* 비계 위험 시뮬레이터 — 기초 침하 · 해체 순서 · 이동식 비계 탭
+ * 바람·전도 탭(위 코드)은 그대로 두고, 탭마다 따로 3D 화면을 만든다(처음 열 때만).
+ */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var UP = new THREE.Vector3(0, 1, 0);
+  function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
+  function fmt(n, d) { return n.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.55, metalness: 0.35 }, o || {})); }
+  function rod(a, b, r, m, seg) {
+    var d = new THREE.Vector3().subVectors(b, a), L = d.length();
+    var mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, L, seg || 12), m);
+    mesh.position.copy(a).addScaledVector(d, 0.5); mesh.quaternion.setFromUnitVectors(UP, d.normalize());
+    return mesh;
+  }
+  function box(w, h, d, m, x, y, z) { var b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); return b; }
+  function dispose(o) {
+    if (!o) return;
+    o.traverse(function (c) { if (c.geometry) c.geometry.dispose(); if (c.material && c.material._own) c.material.dispose(); });
+    if (o.parent) o.parent.remove(o);
+  }
+  function gaugeSet(el, r) {
+    el.style.width = Math.min(100, Math.max(0, r * 100)) + '%';
+    el.style.background = r >= 1 ? '#FF6369' : r >= 0.8 ? '#F2B705' : '#4CC38A';
+  }
+  function setRes(id, txt, cls) { $(id).innerHTML = txt; $(id).className = 'v ' + (cls || ''); }
+  function banner(id, txt, warn) {
+    var b = $(id);
+    if (!txt) { b.style.display = 'none'; return; }
+    b.textContent = txt; b.className = 'bannerx' + (warn ? ' warn' : ''); b.style.display = 'block';
+  }
+
+  // ----- 공통 3D 화면 -----
+  function mkApp(layerId, onFrame) {
+    var layer = $(layerId);
+    var A = { layer: layer };
+    A.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    A.renderer.setClearColor(0x15171A);
+    layer.insertBefore(A.renderer.domElement, layer.firstChild);
+    A.scene = new THREE.Scene(); A.scene.fog = new THREE.Fog(0x15171A, 70, 160);
+    A.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 600);
+    A.controls = new THREE.OrbitControls(A.camera, A.renderer.domElement);
+    A.controls.enableDamping = true; A.controls.maxPolarAngle = Math.PI * 0.495; A.controls.minDistance = 2; A.controls.maxDistance = 140;
+    A.scene.add(new THREE.HemisphereLight(0xffffff, 0x30343a, 0.75));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.85); dl.position.set(20, 35, 25); A.scene.add(dl);
+    var g = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color: 0x2A2D31, roughness: 1 }));
+    g.rotation.x = -Math.PI / 2; A.scene.add(g);
+    var gh = new THREE.GridHelper(120, 60, 0x3A3E44, 0x30343A); gh.position.y = 0.005; A.scene.add(gh);
+    A.clock = new THREE.Clock();
+    A.resize = function () {
+      var w = layer.clientWidth, h = layer.clientHeight;
+      if (!w || !h) return;
+      A.renderer.setSize(w, h, false); A.camera.aspect = w / h; A.camera.updateProjectionMatrix();
+    };
+    A.resize();
+    window.addEventListener('resize', A.resize);
+    if (window.ResizeObserver) new ResizeObserver(A.resize).observe(layer);
+    (function loop() {
+      requestAnimationFrame(loop);
+      if (GPMode.cur !== A.mode) { A.clock.getDelta(); return; }
+      var dt = Math.min(A.clock.getDelta(), 0.25);
+      onFrame(dt, A.clock.elapsedTime);
+      A.controls.update(); A.renderer.render(A.scene, A.camera);
+    })();
+    return A;
+  }
+
+  // ----- 비계 공통 (구조계산 프로그램과 같은 값) -----
+  var SPEC = {
+    system: { bay: 1.829, width: 0.914, uv: 0.02626, uh: 0.02197, ud: 0.01798, color: 0xC9CED6 },
+    pipe: { bay: 1.817, width: 0.902, uv: 0.02626, uh: 0.02626, ud: 0.02626, color: 0xB4BAC2 }
+  };
+  var NB = 6;
+  function windCoef(H, net) { return 0.613 / 1000 * 1.0 * Math.pow(Math.max(H, 1) / 10, 0.2) * (1.2 + parseFloat(net)); } // 노풍도 C
+  // 구조계산 프로그램 calculateVerticalLoad 와 같은 식 (수직재 1본의 하중)
+  function postLoad(type, H, live) {
+    var s = SPEC[type], h = s.bay, j = s.width, levels = Math.ceil(H / 1.9);
+    var layers = H > 25 ? 1 : H > 15 ? 2 : 3;
+    var trib = h * j / 2;
+    var work = trib * live * layers, deck = trib * 0.2 * levels;
+    var vert = s.uv * 1.9 * levels * 1.1, hor = s.uh * (h + j) * levels * 1.1;
+    var diag = s.ud * Math.sqrt(h * h + 1.9 * 1.9) * levels * 1.1;
+    return { total: work + deck + vert + hor + diag, layers: layers, levels: levels };
+  }
+  // 비계 전체 자중 (kN): 기둥·띠장·장선·난간·발판, 10% 할증
+  function scafWeight(type, H) {
+    var s = SPEC[type], lv = Math.max(1, Math.round(H / 1.9));
+    var posts = 2 * (NB + 1) * (H + 1) * s.uv;
+    var ledg = (2 * NB * s.bay + (NB + 1) * s.width + NB * s.bay) * lv * s.uh;
+    var deck = NB * s.bay * s.width * 0.2 * lv;
+    var brace = 2 * lv * Math.sqrt(s.bay * s.bay + 1.9 * 1.9) * s.ud;
+    return (posts + ledg + deck + brace) * 1.1;
+  }
+  // 비계 3D (pivot = 바깥줄 바닥 모서리 기준으로 돌릴 수 있게)
+  function buildScaf(A, o) {
+    var s = SPEC[o.type], L = NB * s.bay, H = o.H, lv = Math.max(1, Math.round(H / 1.9)), lh = H / lv;
+    var zi = 0.35, zo = zi + s.width;
+    var M = A.M || (A.M = {
+      post: mat(0xC9CED6), led: mat(0xB9BFC7), plank: mat(0x8C939B, { metalness: 0.5 }), base: mat(0x777C84),
+      wall: new THREE.MeshStandardMaterial({ color: 0x6B7078, roughness: 0.9 }), slab: new THREE.MeshStandardMaterial({ color: 0x5A5F66, roughness: 0.9 }),
+      block: new THREE.MeshStandardMaterial({ color: 0x8B6B43, roughness: 0.9 })
+    });
+    M.post.color.setHex(s.color);
+    var pivot = new THREE.Group(); pivot.position.set(0, 0, zo); A.scene.add(pivot);
+    var g = new THREE.Group(); g.position.set(0, 0, -zo); pivot.add(g);
+    var i, j, x, y;
+    for (i = 0; i <= NB; i++) {
+      x = i * s.bay;
+      [zi, zo].forEach(function (z) {
+        g.add(rod(V3(x, 0.05, z), V3(x, H + 1.0, z), 0.0243, M.post));
+        g.add(box(0.14, 0.03, 0.14, M.base, x, 0.015, z));
+        if (o.block) g.add(box(o.block[0], 0.05, o.block[1], M.block, x, -0.01, z));
+      });
+    }
+    for (j = 1; j <= lv; j++) {
+      y = j * lh;
+      for (i = 0; i < NB; i++) {
+        x = i * s.bay;
+        g.add(rod(V3(x, y, zi), V3(x + s.bay, y, zi), 0.0214, M.led, 10));
+        g.add(rod(V3(x, y, zo), V3(x + s.bay, y, zo), 0.0214, M.led, 10));
+        g.add(rod(V3(x, y + 0.9, zo), V3(x + s.bay, y + 0.9, zo), 0.017, M.led, 8));
+        g.add(box(s.bay - 0.03, 0.04, s.width - 0.06, M.plank, x + s.bay / 2, y + 0.03, (zi + zo) / 2));
+      }
+      for (i = 0; i <= NB; i++) g.add(rod(V3(i * s.bay, y, zi), V3(i * s.bay, y, zo), 0.0214, M.led, 10));
+    }
+    if (o.net) {
+      var nm = new THREE.MeshStandardMaterial({ color: 0x3E8E41, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false });
+      nm._own = true;
+      var net = new THREE.Mesh(new THREE.PlaneGeometry(L, H + 0.9), nm); net.position.set(L / 2, (H + 0.9) / 2 + 0.1, zo + 0.06); g.add(net);
+    }
+    var wall = new THREE.Group(); A.scene.add(wall);
+    var WH = (o.wallH || H) + 4;
+    wall.add(box(L + 8, WH, 0.6, M.wall, L / 2, WH / 2, -0.3));
+    for (y = 3; y < WH; y += 3) wall.add(box(L + 8.02, 0.25, 0.62, M.slab, L / 2, y, -0.3));
+    // 벽이음 (2경간 × 2단 마다)
+    var ties = new THREE.Group(); A.scene.add(ties);
+    var tieList = [];
+    for (j = 2; j <= lv; j += 2) for (i = 0; i <= NB; i += 2) {
+      var tm = new THREE.MeshStandardMaterial({ color: 0xF2B705, roughness: 0.4, metalness: 0.3 }); tm._own = true;
+      var t = rod(V3(i * s.bay, j * lh - 0.25, 0), V3(i * s.bay, j * lh - 0.25, zi), 0.05, tm);
+      t.userData.y = j * lh - 0.25; ties.add(t); tieList.push(t);
+    }
+    return { pivot: pivot, g: g, wall: wall, ties: ties, tieList: tieList, L: L, H: H, lv: lv, lh: lh, zi: zi, zo: zo, s: s };
+  }
+  function frameScaf(A, L, H) {
+    var d = (Math.max(L, H) * 1.25 + 6) / Math.min(1, A.camera.aspect * 0.95);
+    A.controls.target.set(L * 0.55, H * 0.42, 1.5);
+    A.camera.position.set(L * 0.55 + d * 0.78, H * 0.5 + 3, d * 0.72);
+    A.controls.update();
+  }
+  function clearScaf(o) { if (!o) return; dispose(o.pivot); dispose(o.wall); dispose(o.ties); }
+
+  // =====================================================================
+  // 1) 기초 침하
+  // =====================================================================
+  var GROUNDS = [
+    { v: 300, n: '자갈 (300)' }, { v: 200, n: '자갈+모래 (200)' }, { v: 150, n: '모래 섞인 점토 (150)' },
+    { v: 100, n: '모래 또는 점토 (100)' }, { v: 50, n: '다짐 안 된 흙·되메우기 (50, 참고값)' }, { v: 25, n: '물 고인 흙·뻘 (25, 참고값)' }
+  ];
+  var BASES = { plate: { A: 0.14 * 0.14, sz: null }, block: { A: 0.2 * 0.6, sz: [0.2, 0.6] }, board: { A: 0.3 * 1.0, sz: [0.3, 1.0] } };
+  var ST = { type: 'system', H: 14, live: 3.5, base: 'block', gin: 300, gout: 100, run: false, sIn: 0, sOut: 0, state: 'ok', a: 0, w: 0 };
+  var SA = null, SO = null;
+  function settleCalc() {
+    var P = postLoad(ST.type, ST.H, ST.live), Ab = BASES[ST.base].A;
+    var q = P.total / Ab;
+    return { P: P, q: q, rIn: q / ST.gin, rOut: q / ST.gout };
+  }
+  function settleTarget(r) { return r > 1 ? Math.min(0.35, 0.04 * (r - 1)) : 0; }
+  function settleBuild() {
+    clearScaf(SO);
+    SO = buildScaf(SA, { type: ST.type, H: ST.H, block: BASES[ST.base].sz, net: true });
+    ST.sIn = ST.sOut = 0; ST.a = 0; ST.w = 0; ST.state = 'ok';
+    frameScaf(SA, SO.L, ST.H); settleUpdate();
+  }
+  function settleUpdate() {
+    var c = settleCalc(), Ab = BASES[ST.base].A;
+    setRes('sRP', fmt(c.P.total, 2) + ' kN');
+    $('sRPs').textContent = '작업층 ' + c.P.layers + '개 · ' + c.P.levels + '단 · 받침 면적 ' + fmt(Ab, 4) + '㎡';
+    [['sRin', 'sRins', c.rIn, ST.gin], ['sRout', 'sRouts', c.rOut, ST.gout]].forEach(function (r) {
+      var ok = r[2] <= 1;
+      setRes(r[0], fmt(c.q, 0) + ' / ' + r[3] + ' kN/㎡ <span class="badge ' + (ok ? 'ok">OK' : 'ng">NG') + '</span>');
+      $(r[1]).textContent = ok ? '땅이 버팁니다 (' + fmt(r[2] * 100, 0) + '%)' : '땅이 못 버팁니다 → 가라앉음 (' + fmt(r[2] * 100, 0) + '%)';
+    });
+    settleNow();
+  }
+  function settleNow() {
+    var top = ST.H * Math.sin(ST.a), dis = ST.sOut - ST.sIn;
+    $('sH1').textContent = fmt(ST.sOut * 1000, 0) + ' mm'; $('sH1s').textContent = '안쪽 줄 ' + fmt(ST.sIn * 1000, 0) + ' mm';
+    var fell = ST.state === 'falling' || ST.state === 'down';
+    $('sH2').textContent = fell ? '전도' : fmt(Math.max(0, top) * 1000, 0) + ' mm'; gaugeSet($('sHG'), fell ? 1 : Math.max(0, top) / 0.3);
+    var t, cls, sub;
+    if (ST.state === 'falling' || ST.state === 'down') { t = '비계 전도'; cls = 'ng'; sub = '바깥줄이 가라앉아 기울어지자 벽이음이 끊어지고 넘어졌습니다.'; banner('sBan', '⚠ 기초 침하로 비계 전도 — 바깥줄 ' + fmt(ST.sOut * 1000, 0) + 'mm 침하'); }
+    else if (top >= 0.1) { t = '크게 기울어짐'; cls = 'ng'; sub = '맨 위가 ' + fmt(top * 1000, 0) + 'mm 기울었습니다. 벽이음이 당겨지고 있습니다 — 즉시 작업 중지.'; banner('sBan', '⚠ 비계가 기울고 있습니다 (맨 위 ' + fmt(top * 1000, 0) + 'mm)', true); }
+    else if (ST.sOut > 0.005 || ST.sIn > 0.005) { t = dis > 0.005 ? '한쪽이 가라앉는 중' : '전체가 가라앉는 중'; cls = 'warn'; sub = dis > 0.005 ? '바깥줄이 더 가라앉아 비계가 바깥으로 기웁니다.' : '양쪽이 같이 가라앉아 기울지는 않지만 수평이 틀어집니다.'; banner('sBan', ''); }
+    else { t = ST.run ? '버티는 중' : '대기 중'; cls = 'ok'; sub = '▶ 작업 진행을 누르면 시간이 흐르며 결과를 볼 수 있습니다.'; banner('sBan', ''); }
+    setRes('sNow', t, cls); $('sNows').textContent = sub;
+  }
+  function settleFrame(dt) {
+    if (!SO) return;
+    var c = settleCalc();
+    if (ST.run && ST.state === 'ok') {
+      var k = Math.min(1, dt * 0.45);
+      ST.sIn += (settleTarget(c.rIn) - ST.sIn) * k;
+      ST.sOut += (settleTarget(c.rOut) - ST.sOut) * k;
+      ST.a = Math.atan2(ST.sOut - ST.sIn, SO.s.width);
+      var top = ST.H * Math.sin(ST.a);
+      SO.tieList.forEach(function (t) { t.material.color.setHex(top >= 0.2 ? 0xFF6369 : top >= 0.1 ? 0xFF9F1C : 0xF2B705); });
+      if (top >= 0.3) { ST.state = 'falling'; ST.w = 0.05; ST.run = false; $('sRun').textContent = '▶ 작업 진행 (시간 흐름)'; SO.tieList.forEach(function (t) { t.scale.set(1, 0.4, 1); t.position.z = SO.zi * 0.2; t.material.color.setHex(0xFF4D4F); }); }
+      settleNow();
+    } else if (ST.state === 'falling') {
+      var Leff = Math.max(3, ST.H * 0.55), n = Math.ceil(dt / 0.01), h = dt / n;
+      for (var s = 0; s < n && ST.state === 'falling'; s++) {
+        ST.w += (9.81 / Leff * Math.sin(ST.a) + 0.15) * h; ST.a += ST.w * h;
+        if (ST.a >= Math.PI / 2) { ST.a = Math.PI / 2; ST.w = -ST.w * 0.18; if (Math.abs(ST.w) < 0.08) { ST.state = 'down'; settleNow(); } }
+      }
+    }
+    SO.pivot.rotation.x = Math.max(ST.a, -0.02);
+    SO.pivot.position.y = -ST.sOut;
+  }
+  function settleInit() {
+    var opts = GROUNDS.map(function (g) { return '<option value="' + g.v + '">' + g.n + '</option>'; }).join('');
+    $('sGin').innerHTML = opts; $('sGout').innerHTML = opts; $('sGin').value = '300'; $('sGout').value = '100';
+    SA = mkApp('L-settle', settleFrame); SA.mode = 'settle';
+    var reb = function () { ST.run = false; $('sRun').textContent = '▶ 작업 진행 (시간 흐름)'; settleBuild(); };
+    $('sType').onchange = function () { ST.type = this.value; reb(); };
+    $('sHIn').oninput = function () { ST.H = parseFloat(this.value); $('sHLbl').textContent = ST.H + ' m'; reb(); };
+    $('sWork').onchange = function () { ST.live = parseFloat(this.value); reb(); };
+    $('sBase').onchange = function () { ST.base = this.value; reb(); };
+    $('sGin').onchange = function () { ST.gin = parseFloat(this.value); reb(); };
+    $('sGout').onchange = function () { ST.gout = parseFloat(this.value); reb(); };
+    $('sRun').onclick = function () {
+      if (ST.state !== 'ok') reb();
+      ST.run = !ST.run; this.textContent = ST.run ? '⏸ 멈추기' : '▶ 작업 진행 (시간 흐름)'; settleNow();
+    };
+    $('sEx').onclick = function () {
+      ST.base = 'plate'; $('sBase').value = 'plate'; ST.gin = 300; $('sGin').value = '300'; ST.gout = 50; $('sGout').value = '50';
+      reb(); ST.run = true; $('sRun').textContent = '⏸ 멈추기';
+    };
+    $('sReset').onclick = reb;
+    settleBuild();
+  }
+
+  // =====================================================================
+  // 2) 해체 순서
+  // =====================================================================
+  var DT = { type: 'system', H: 14, V: 5, net: '0.3', state: 'idle', order: null, lvCur: 0, next: 0, a: 0, w: 0 };
+  var DA = null, DO = null;
+  function disStab(Hc) {
+    // 홀로 선 부분의 높이 (올바른 순서: 남은 벽이음 위쪽만, 잘못된 순서: 전체)
+    var lh = DO ? DO.lh : 1.9, topTie = 0;
+    if (DT.order === 'right' && DO) DO.tieList.forEach(function (t) { if (t.visible && t.userData.y <= Hc) topTie = Math.max(topTie, t.userData.y); });
+    var hf = Math.max(0, Hc - topTie);
+    var L = NB * SPEC[DT.type].bay, w = SPEC[DT.type].width;
+    var p = windCoef(Hc, DT.net) * DT.V * DT.V;
+    var Mot = p * L * hf * hf / 2;
+    var Mr = hf > 0 ? scafWeight(DT.type, hf) * w / 2 : 1;
+    var Vmax = hf > 0 ? Math.sqrt(Mr / (windCoef(Hc, DT.net) * L * hf * hf / 2)) : 99;
+    return { hf: hf, Mot: Mot, Mr: Mr, r: Mot / Mr, Vmax: Vmax, lh: lh };
+  }
+  function disBuild(Hc, keepCam) {
+    var oldTies = DO ? DO.tieList.map(function (t) { return t.visible; }) : null;
+    clearScaf(DO);
+    DO = buildScaf(DA, { type: DT.type, H: Hc, net: true, wallH: DT.H });
+    if (DT.order === 'wrong' && DT.state !== 'idle') DO.tieList.forEach(function (t) { t.visible = false; });
+    if (!keepCam) frameScaf(DA, DO.L, DT.H);
+    disUpdate();
+  }
+  function disUpdate() {
+    var Hc = DO ? DO.H : DT.H, st = disStab(Hc);
+    // 결과: 처음 높이 기준, 벽이음 없이 홀로 섰을 때
+    var full = (function () { var o = DT.order; DT.order = 'wrong'; var r = disStab(DT.H); DT.order = o; return r; })();
+    setRes('dRV', '약 ' + fmt(full.Vmax, 1) + ' m/s', full.Vmax < 10 ? 'ng' : full.Vmax < 15 ? 'warn' : 'ok');
+    $('dRVs').textContent = '높이 ' + DT.H + 'm 전체가 벽이음 없이 서 있으면 이 정도 바람에 넘어집니다. (나뭇잎이 계속 흔들리는 바람 ≈ 3.4~5.4 m/s, 작은 나무가 흔들리는 바람 ≈ 8~10.7 m/s · 보퍼트 풍력계급)';
+    $('dH1').textContent = fmt(Hc, 1) + ' m';
+    $('dH1s').textContent = DT.order === 'wrong' && DT.state !== 'idle' ? '벽이음 없음 (홀로 선 높이 ' + fmt(st.hf, 1) + 'm)' : '벽이음 위로 홀로 선 높이 ' + fmt(st.hf, 1) + 'm';
+    $('dH2').textContent = fmt(st.r * 100, 0) + ' %'; gaugeSet($('dHG'), st.r);
+    var t, cls, sub;
+    if (DT.state === 'falling' || DT.state === 'down') { t = '비계 전도'; cls = 'ng'; sub = '벽이음 없이 ' + fmt(st.hf, 1) + 'm 높이로 홀로 선 비계가 바람 ' + DT.V + 'm/s 에 넘어졌습니다.'; banner('dBan', '⚠ 해체 중 전도 — 벽이음을 먼저 떼면 안 됩니다'); }
+    else if (DT.state === 'done') { t = '해체 완료 (안전)'; cls = 'ok'; sub = '위에서부터 한 단씩, 벽이음은 그 단을 해체할 때 떼었습니다.'; banner('dBan', ''); }
+    else if (DT.state === 'running') { t = (DT.order === 'right' ? '올바른 순서로 해체 중' : '벽이음 없이 해체 중'); cls = st.r >= 0.8 ? 'warn' : 'ok'; sub = '넘어지려는 힘 ' + fmt(st.Mot, 1) + ' / 버티는 힘 ' + fmt(st.Mr, 1) + ' kN·m'; banner('dBan', DT.order === 'wrong' ? '벽이음을 모두 뗀 상태입니다' : '', true); }
+    else { t = '대기 중'; cls = 'ok'; sub = '두 가지 순서를 각각 눌러 비교해 보세요.'; banner('dBan', ''); }
+    setRes('dNow', t, cls); $('dNows').textContent = sub;
+  }
+  function disStart(order) {
+    DT.order = order; DT.state = 'running'; DT.lvCur = Math.max(1, Math.round(DT.H / 1.9)); DT.a = 0; DT.w = 0;
+    disBuild(DT.H, true);
+    DT.next = DA.clock.elapsedTime + (order === 'wrong' ? 1.2 : 0.9);
+  }
+  function disFrame(dt, now) {
+    if (!DO) return;
+    if (DT.state === 'running') {
+      var st = disStab(DO.H);
+      if (st.r >= 1) { DT.state = 'falling'; DT.w = 0.03; DT.a = 0.01; disUpdate(); }
+      else if (now >= DT.next) {
+        DT.lvCur -= 1;
+        if (DT.lvCur <= 0) { DT.state = 'done'; clearScaf(DO); DO = buildScaf(DA, { type: DT.type, H: 0.01, wallH: DT.H }); DO.g.visible = false; DO.ties.visible = false; disUpdate(); }
+        else {
+          var Hc = DT.lvCur * (DT.H / Math.max(1, Math.round(DT.H / 1.9)));
+          disBuild(Hc, true);
+          DT.next = now + 0.9;
+        }
+      }
+    } else if (DT.state === 'falling') {
+      var Leff = Math.max(2, DO.H * 0.55), n = Math.ceil(dt / 0.01), h = dt / n;
+      for (var s = 0; s < n && DT.state === 'falling'; s++) {
+        DT.w += (9.81 / Leff * Math.sin(DT.a) + 0.15 + DT.V * 0.01) * h; DT.a += DT.w * h;
+        if (DT.a >= Math.PI / 2) { DT.a = Math.PI / 2; DT.w = -DT.w * 0.18; if (Math.abs(DT.w) < 0.08) { DT.state = 'down'; disUpdate(); } }
+      }
+      DO.pivot.rotation.x = DT.a;
+    }
+  }
+  function disInit() {
+    DA = mkApp('L-dismantle', disFrame); DA.mode = 'dismantle';
+    var reset = function () { DT.state = 'idle'; DT.order = null; DT.a = 0; disBuild(DT.H); };
+    $('dType').onchange = function () { DT.type = this.value; reset(); };
+    $('dHIn').oninput = function () { DT.H = parseFloat(this.value); $('dHLbl').textContent = DT.H + ' m'; reset(); };
+    $('dNet').onchange = function () { DT.net = this.value; disUpdate(); };
+    $('dVIn').oninput = function () { DT.V = parseFloat(this.value); $('dVLbl').textContent = fmt(DT.V, 1) + ' m/s'; disUpdate(); };
+    $('dRight').onclick = function () { disStart('right'); };
+    $('dWrong').onclick = function () { disStart('wrong'); };
+    $('dReset').onclick = reset;
+    reset();
+  }
+
+  // =====================================================================
+  // 3) 이동식 비계
+  // =====================================================================
+  var MB = { B: 1.2, Lz: 1.8, fh: 1.7, kgPerLv: 50, outReach: 0.6 };
+  var MT = { lv: 2, lock: true, out: true, ppl: 1, mat: 0, e: 0, F: 0, state: 'ok', a: 0, w: 0, x: 0 };
+  var MA = null, MO = null;
+  function mobCalc() {
+    var hp = MT.lv * MB.fh, beff = MT.out ? MB.B + 2 * MB.outReach : MB.B;
+    var Wt = (MB.kgPerLv * MT.lv + 30) * 9.81 / 1000, Wm = MT.mat * 9.81 / 1000, Wp = MT.ppl * 75 * 9.81 / 1000;
+    var ex = MT.e * (MB.B / 2 - 0.15);
+    var Mr = (Wt + Wm) * beff / 2 + Wp * (beff / 2 - ex);
+    var arm = hp + 1.0, Mot = MT.F / 1000 * arm;
+    return { hp: hp, beff: beff, Mr: Mr, Mot: Mot, r: Mot / Math.max(Mr, 1e-6), Fmax: Mr / arm * 1000, load: MT.ppl * 75 + MT.mat, ex: ex };
+  }
+  function mobBuild() {
+    dispose(MO && MO.root);
+    var M = MA.M || (MA.M = { fr: mat(0xC9CED6), plat: mat(0x8C939B, { metalness: 0.5 }), wheel: mat(0x222222, { metalness: 0.2 }),
+      out: mat(0xF2B705), body: mat(0x2F6FB0, { metalness: 0.1 }), helm: mat(0xF2B705, { metalness: 0.1 }), skin: mat(0xE0B990, { metalness: 0 }), matl: mat(0x8B4A2B) });
+    var root = new THREE.Group(); MA.scene.add(root);
+    var mover = new THREE.Group(); root.add(mover);           // 바퀴로 굴러가는 이동
+    var pivot = new THREE.Group(); mover.add(pivot);          // 넘어질 때 도는 축 (+x 쪽 모서리)
+    var c = mobCalc(); pivot.position.set(c.beff / 2, 0, 0);
+    var g = new THREE.Group(); g.position.set(-c.beff / 2, 0, 0); pivot.add(g);
+    var B = MB.B, Lz = MB.Lz, hp = c.hp, y0 = 0.18, i, y;
+    var xs = [-B / 2, B / 2], zs = [-Lz / 2, Lz / 2];
+    xs.forEach(function (x) { zs.forEach(function (z) {
+      g.add(rod(V3(x, y0, z), V3(x, y0 + hp + 1.0, z), 0.024, M.fr));
+      var w = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.05, 16), M.wheel); w.rotation.x = Math.PI / 2; w.position.set(x, 0.075, z); g.add(w);
+      g.add(rod(V3(x, 0.15, z), V3(x, y0, z), 0.015, M.fr, 8));
+    }); });
+    for (i = 0; i <= MT.lv; i++) {
+      y = y0 + i * MB.fh;
+      xs.forEach(function (x) { g.add(rod(V3(x, y, -Lz / 2), V3(x, y, Lz / 2), 0.018, M.fr, 8)); });
+      zs.forEach(function (z) { g.add(rod(V3(-B / 2, y, z), V3(B / 2, y, z), 0.018, M.fr, 8)); });
+      if (i < MT.lv) xs.forEach(function (x) { g.add(rod(V3(x, y, -Lz / 2), V3(x, y + MB.fh, Lz / 2), 0.014, M.fr, 8)); });
+    }
+    // 승강 사다리 가로대
+    for (y = y0 + 0.3; y < y0 + hp; y += 0.3) g.add(rod(V3(-B / 2 - 0.001, y, -0.2), V3(-B / 2 - 0.001, y, 0.2), 0.012, M.fr, 6));
+    g.add(box(B - 0.05, 0.05, Lz - 0.05, M.plat, 0, y0 + hp + 0.03, 0));
+    [0.5, 1.0].forEach(function (dy) {
+      xs.forEach(function (x) { g.add(rod(V3(x, y0 + hp + dy, -Lz / 2), V3(x, y0 + hp + dy, Lz / 2), 0.016, M.fr, 8)); });
+      zs.forEach(function (z) { g.add(rod(V3(-B / 2, y0 + hp + dy, z), V3(B / 2, y0 + hp + dy, z), 0.016, M.fr, 8)); });
+    });
+    if (MT.out) xs.forEach(function (x) { zs.forEach(function (z) {
+      var sx = Math.sign(x), sz = Math.sign(z);
+      g.add(rod(V3(x, y0 + 1.2, z), V3(x + sx * MB.outReach, 0.05, z + sz * 0.35), 0.02, M.out, 8));
+      g.add(box(0.12, 0.03, 0.12, M.out, x + sx * MB.outReach, 0.015, z + sz * 0.35));
+    }); });
+    // 작업자
+    var py = y0 + hp + 0.06, people = [];
+    for (i = 0; i < MT.ppl; i++) {
+      var p = new THREE.Group();
+      p.add(rod(V3(0, 0, 0), V3(0, 0.85, 0), 0.11, M.body)); p.add(rod(V3(0, 0.85, 0), V3(0, 1.4, 0), 0.16, M.body));
+      var head = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 12), M.skin); head.position.y = 1.55; p.add(head);
+      var hel = new THREE.Mesh(new THREE.SphereGeometry(0.125, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.helm); hel.position.y = 1.58; p.add(hel);
+      p.add(rod(V3(0.05, 1.3, 0), V3(0.5, 1.45, 0), 0.04, M.body));
+      p.position.set(c.ex, py, (i - (MT.ppl - 1) / 2) * 0.45); g.add(p); people.push(p);
+    }
+    if (MT.mat > 0) { var mb = box(0.5, 0.1 + MT.mat / 600, 0.4, M.matl, -B / 2 + 0.35, py + (0.1 + MT.mat / 600) / 2, Lz / 2 - 0.3); g.add(mb); }
+    var arrow = new THREE.ArrowHelper(V3(1, 0, 0), V3(c.ex + 0.55, py + 1.45, 0), 1, 0xFF6369, 0.25, 0.15);
+    g.add(arrow);
+    MO = { root: root, mover: mover, pivot: pivot, g: g, arrow: arrow, beff: c.beff };
+    MT.a = 0; MT.w = 0; MT.x = 0; MT.state = 'ok';
+    // 넘어진 뒤 모습(+x 쪽)까지 보이게
+    var d = (hp + 9) / Math.min(1, MA.camera.aspect * 0.95);
+    MA.controls.target.set(hp * 0.35, hp * 0.4, 0);
+    MA.camera.position.set(hp * 0.35 + d * 0.35, hp * 0.55 + 2, d * 1.0); MA.controls.update();
+    mobUpdate();
+  }
+  function mobUpdate() {
+    var c = mobCalc();
+    var hOk = c.hp <= 4 * MB.B;
+    setRes('mRH', fmt(c.hp, 1) + ' m / ' + fmt(4 * MB.B, 1) + ' m <span class="badge ' + (hOk ? 'ok">OK' : 'ng">NG') + '</span>');
+    $('mRHs').textContent = '밑변 최소폭 ' + MB.B + 'm × 4 = ' + fmt(4 * MB.B, 1) + 'm' + (hOk ? '' : ' 초과 — 단수를 줄이세요');
+    var wOk = c.load <= 250;
+    setRes('mRW', c.load + ' kg / 250 kg <span class="badge ' + (wOk ? 'ok">OK' : 'ng">NG') + '</span>');
+    $('mRWs').textContent = '작업자 ' + MT.ppl + '명(' + MT.ppl * 75 + 'kg) + 자재 ' + MT.mat + 'kg';
+    setRes('mRF', '약 ' + fmt(c.Fmax, 0) + ' N (≈ ' + fmt(c.Fmax / 9.81, 0) + 'kg 힘)', c.Fmax < 100 ? 'ng' : c.Fmax < 200 ? 'warn' : 'ok');
+    $('mRFs').textContent = '아웃트리거 ' + (MT.out ? '설치: 밑변 ' + fmt(c.beff, 1) + 'm' : '없음: 밑변 ' + MB.B + 'm') + ' · 작업자가 난간 쪽에 붙을수록 줄어듭니다';
+    $('mH1').textContent = fmt(c.hp, 1) + ' m'; $('mH1s').textContent = '적재 ' + c.load + 'kg';
+    $('mH2').textContent = fmt(c.r * 100, 0) + ' %'; gaugeSet($('mHG'), c.r);
+    var t, cls, sub;
+    if (MT.state === 'falling' || MT.state === 'down') { t = '이동식 비계 전도'; cls = 'ng'; sub = '미는 힘 ' + MT.F + 'N 이 버티는 힘(' + fmt(c.Fmax, 0) + 'N)을 넘었습니다.'; banner('mBan', '⚠ 이동식 비계 전도 — ' + (MT.out ? '' : '아웃트리거 없음, ') + '높이 ' + fmt(c.hp, 1) + 'm'); }
+    else if (!MT.lock && MT.F > 20) { t = '바퀴가 굴러감'; cls = 'ng'; sub = '바퀴를 잠그지 않아 미는 힘에 비계가 밀려갑니다. 작업자 추락 위험.'; banner('mBan', '⚠ 바퀴 잠금 안 함 — 비계가 밀려갑니다'); }
+    else if (c.r >= 0.8) { t = '한계 근접 (' + fmt(c.r * 100, 0) + '%)'; cls = 'warn'; sub = '조금만 더 세게 밀면 넘어집니다.'; banner('mBan', ''); }
+    else { t = '버티는 중 (' + fmt(c.r * 100, 0) + '%)'; cls = 'ok'; sub = '넘어지려는 힘 ' + fmt(c.Mot, 2) + ' / 버티는 힘 ' + fmt(c.Mr, 2) + ' kN·m'; banner('mBan', !hOk || !wOk ? '⚠ 기준 위반: ' + (!hOk ? '높이 초과 ' : '') + (!wOk ? '적재 초과' : '') : '', true); }
+    setRes('mNow', t, cls); $('mNows').textContent = sub;
+    if (MO) { var L = 0.3 + MT.F / 400 * 1.2; MO.arrow.visible = MT.F > 0; MO.arrow.setLength(L, 0.25, 0.15); }
+  }
+  function mobFrame(dt) {
+    if (!MO) return;
+    var c = mobCalc();
+    if (MT.state === 'ok') {
+      if (c.r >= 1) { MT.state = 'falling'; MT.w = 0.05; MT.a = 0.01; mobUpdate(); }
+      else if (!MT.lock && MT.F > 20 && MT.x < 4) { MT.x += (MT.F / 250) * dt; MO.mover.position.x = MT.x; }
+      // 작은 흔들림
+      MO.pivot.rotation.z = -0.004 * c.r * c.r * (1 + Math.sin(MA.clock.elapsedTime * 7));
+    } else if (MT.state === 'falling') {
+      var Leff = Math.max(1.5, c.hp * 0.6), n = Math.ceil(dt / 0.01), h = dt / n;
+      for (var s = 0; s < n && MT.state === 'falling'; s++) {
+        MT.w += (9.81 / Leff * Math.sin(MT.a) + 0.2) * h; MT.a += MT.w * h;
+        if (MT.a >= Math.PI / 2 - 0.05) { MT.a = Math.PI / 2 - 0.05; MT.w = -MT.w * 0.2; if (Math.abs(MT.w) < 0.08) { MT.state = 'down'; mobUpdate(); } }
+      }
+      MO.pivot.rotation.z = -MT.a;
+    }
+  }
+  function mobInit() {
+    MA = mkApp('L-mobile', mobFrame); MA.mode = 'mobile';
+    var reb = function () { mobBuild(); };
+    $('mFIn').oninput = function () { if (MT.state !== 'ok') { this.value = MT.F; return; } MT.F = parseFloat(this.value); $('mFLbl').textContent = MT.F + ' N'; mobUpdate(); };
+    $('mLIn').oninput = function () { MT.lv = parseInt(this.value, 10); $('mLLbl').textContent = MT.lv + '단'; reb(); };
+    $('mLock').onchange = function () { MT.lock = this.value === '1'; reb(); };
+    $('mOut').onchange = function () { MT.out = this.value === '1'; reb(); };
+    $('mPpl').onchange = function () { MT.ppl = parseInt(this.value, 10); reb(); };
+    $('mMIn').oninput = function () { MT.mat = parseFloat(this.value); $('mMLbl').textContent = MT.mat + ' kg'; reb(); };
+    $('mEIn').oninput = function () { MT.e = parseFloat(this.value) / 100; $('mELbl').textContent = MT.e === 0 ? '가운데' : MT.e >= 1 ? '난간에 붙음' : Math.round(MT.e * 100) + '%'; reb(); };
+    $('mReset').onclick = function () { MT.F = 0; $('mFIn').value = 0; $('mFLbl').textContent = '0 N'; reb(); };
+    $('mEx').onclick = function () {
+      MT.lv = 4; $('mLIn').value = 4; $('mLLbl').textContent = '4단';
+      MT.out = false; $('mOut').value = '0'; MT.lock = true; $('mLock').value = '1';
+      MT.e = 1; $('mEIn').value = 100; $('mELbl').textContent = '난간에 붙음';
+      MT.F = 0; $('mFIn').value = 0; reb();
+      var target = Math.ceil(mobCalc().Fmax / 5) * 5 + 20, f = 0;
+      var tm = setInterval(function () {
+        if (MT.state !== 'ok' || f >= target) { clearInterval(tm); return; }
+        f += 5; MT.F = f; $('mFIn').value = f; $('mFLbl').textContent = f + ' N'; mobUpdate();
+      }, 40);
+    };
+    mobBuild();
+  }
+
+  // =====================================================================
+  // 탭
+  // =====================================================================
+  var inited = {};
+  var INIT = { settle: settleInit, dismantle: disInit, mobile: mobInit };
+  window.GPMode = {
+    cur: 'wind',
+    set: function (m) {
+      if (!document.querySelector('.tab[data-tab="' + m + '"]')) m = 'wind';
+      this.cur = m;
+      document.querySelectorAll('.tab').forEach(function (b) { var on = b.getAttribute('data-tab') === m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+      document.querySelectorAll('.layer,.mpanel').forEach(function (el) { el.hidden = el.getAttribute('data-mode') !== m; });
+      if (INIT[m] && !inited[m]) { inited[m] = true; INIT[m](); }
+      var A = { settle: SA, dismantle: DA, mobile: MA }[m]; if (A) A.resize();
+      window.dispatchEvent(new Event('resize'));
+      try { history.replaceState(null, '', m === 'wind' ? location.pathname : '#' + m); } catch (e) {}
+      $('panel').scrollTop = 0;
+    }
+  };
+  document.querySelectorAll('.tab').forEach(function (b) { b.onclick = function () { GPMode.set(b.getAttribute('data-tab')); }; });
+  window.GPScaf = { ST: ST, DT: DT, MT: MT, settleCalc: settleCalc, disStab: disStab, mobCalc: mobCalc, postLoad: postLoad, scafWeight: scafWeight };
+  var h = (location.hash || '').replace('#', '');
+  if (h && h !== 'wind') GPMode.set(h);
+})();
+</script>
+
 <script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
 </body>
 </html>

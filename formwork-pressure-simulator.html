@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>거푸집 측압 시뮬레이터 | 가설파트너</title>
+<meta name="description" content="벽체 콘크리트를 빨리 부으면 거푸집을 미는 힘(측압)이 커져 폼타이가 끊어지고 거푸집이 터지는 과정을 3D로 보는 안전교육 시뮬레이터.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="gp-sim-quality.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pretendard,'Malgun Gothic',sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+#app{position:fixed;left:0;right:0;bottom:0;top:40px;display:flex}
+#view{position:relative;flex:1;min-width:0;background:#15171A;overflow:hidden}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+#panel{width:370px;flex:none;overflow-y:auto;background:#222222;border-left:1px solid #3A3A3A;padding:18px 18px 32px}
+#panel h1{font-size:20px;margin:0 0 6px;color:#FFFFFF;font-weight:800}
+#panel .lead{margin:0 0 16px;color:#BBBBBB;font-size:13.5px;line-height:1.6}
+.sec{border-top:1px solid #3A3A3A;padding-top:14px;margin-top:14px}
+.sec h2{font-size:14px;margin:0 0 10px;color:#F2B705;font-weight:800;letter-spacing:-.2px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.row label{font-size:13.5px;color:#DDDDDD;flex:1}
+.row select,.row input[type=number]{width:150px;background:#1B1B1B;color:#FFFFFF;border:1px solid #444444;border-radius:8px;padding:7px 8px;font:inherit;font-size:13.5px}
+.row input[type=number]{width:100px;text-align:right}
+.slider{margin:6px 0 10px}
+.slider .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:#DDDDDD}
+.slider .top b{color:#FFFFFF;font-size:16px}
+.slider input[type=range]{width:100%;accent-color:#F2B705;margin:6px 0 0}
+.big .top b{font-size:26px;color:#F2B705}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#F2B705;color:#1B1B1B;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.btn:hover{background:#D9A300}
+.btn.line{background:transparent;color:#FFFFFF;border:1px solid #555555}
+.btn.line:hover{border-color:#F2B705;color:#F2B705}
+.note{font-size:12.5px;color:#999999;line-height:1.6;margin:6px 0 0}
+.res{background:#1B1B1B;border:1px solid #3A3A3A;border-radius:12px;padding:12px 14px;margin:8px 0}
+.res .k{font-size:12.5px;color:#AAAAAA}
+.res .v{font-size:18px;font-weight:800;color:#FFFFFF;margin-top:2px}
+.res .s{font-size:12.5px;color:#BBBBBB;margin-top:3px;line-height:1.5}
+.ok{color:#4CC38A !important}.warn{color:#F2B705 !important}.ng{color:#FF6369 !important}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.badge.ok{background:rgba(76,195,138,.15)}.badge.ng{background:rgba(255,99,105,.15)}.badge.warn{background:rgba(242,183,5,.15)}
+.links a{display:block;color:#F2B705;text-decoration:none;font-size:13.5px;margin:6px 0}
+.links a:hover{text-decoration:underline}
+#hud{position:absolute;left:14px;top:12px;right:14px;pointer-events:none;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.hcard{background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;min-width:220px}
+.hcard .t{font-size:12px;color:#BBBBBB}
+.hcard .n{font-size:22px;font-weight:800;color:#FFFFFF}
+.gauge{height:10px;border-radius:6px;background:#333333;overflow:hidden;margin-top:6px}
+.gauge i{display:block;height:100%;width:0;background:#4CC38A;transition:width .15s,background .15s}
+#banner{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #FF6369;color:#FFFFFF;border-radius:12px;padding:12px 18px;font-weight:800;font-size:16px;display:none;text-align:center;max-width:92%;pointer-events:none}
+#banner.warn{border-color:#F2B705}
+#hint{position:absolute;right:14px;bottom:14px;font-size:12px;color:#999999;background:rgba(0,0,0,.5);padding:6px 10px;border-radius:8px;pointer-events:none}
+@media(max-width:800px){
+  #app{flex-direction:column}
+  #view{flex:none;height:50%}
+  #panel{width:auto;flex:1;border-left:0;border-top:1px solid #3A3A3A;padding:14px 16px 28px}
+  .hcard{min-width:0;padding:8px 10px}.hcard .n{font-size:18px}
+  #hud .hcard:last-child{display:none}
+  #hint{display:none}
+  #banner{font-size:14px;bottom:10px}
+}
+</style>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가설파트너">
+<meta property="og:title" content="거푸집 측압 시뮬레이터 | 가설파트너">
+<meta property="og:description" content="벽체 콘크리트를 빨리 부으면 거푸집을 미는 힘(측압)이 커져 폼타이가 끊어지고 거푸집이 터지는 과정을 3D로 보는 안전교육 시뮬레이터.">
+<meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/formwork-pressure-simulator.html">
+<meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+
+</head>
+<body>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">거푸집 측압 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
+
+<div id="app">
+  <div id="view">
+    <div id="hud">
+      <div class="hcard"><div class="t">타설 높이 · 경과 시간</div><div class="n" id="hP">0.0 m</div><div class="t" id="hQ">-</div></div>
+      <div class="hcard"><div class="t">가장 힘든 폼타이 (허용 <span id="hPa">20.0</span>kN)</div><div class="n" id="hT">0.0 kN</div><div class="gauge"><i id="hG"></i></div></div>
+    </div>
+    <div id="banner"></div>
+    <div id="hint">마우스 끌기: 돌리기 · 휠: 확대 · 오른쪽 빨간 그림: 높이별 측압</div>
+  </div>
+  <aside id="panel">
+    <h1>거푸집 측압 시뮬레이터</h1>
+    <p class="lead">굳지 않은 콘크리트는 물처럼 거푸집을 옆으로 밉니다(측압). 빨리 부을수록, 날이 추울수록 측압이 커지고, 폼타이가 버티는 힘을 넘으면 끊어지면서 거푸집이 터집니다.</p>
+
+    <div class="sec">
+      <h2>① 타설</h2>
+      <div class="slider big"><div class="top"><span>타설 속도 (1시간에 올라가는 높이)</span><b id="rLbl">2.0 m/h</b></div><input type="range" id="rIn" min="0.5" max="10" step="0.1" value="2"></div>
+      <div class="btns">
+        <button class="btn" id="bPour" type="button">▶ 타설 시작</button>
+        <button class="btn line" id="bEx" type="button">위험 예시 보기</button>
+        <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
+      </div>
+      <p class="note">화면에서는 1초가 6분입니다.</p>
+    </div>
+
+    <div class="sec">
+      <h2>② 조건</h2>
+      <div class="row"><label for="cIn">콘크리트</label><select id="cIn"><option value="std">일반 (슬럼프 175mm 이하, 내부 진동)</option><option value="fluid">고유동·고슬럼프 (액체처럼 계산)</option></select></div>
+      <div class="slider"><div class="top"><span>콘크리트 온도</span><b id="tLbl">20 ℃</b></div><input type="range" id="tIn" min="5" max="35" step="1" value="20"></div>
+      <div class="slider"><div class="top"><span>벽 높이</span><b id="hLbl">3.0 m</b></div><input type="range" id="hIn" min="2.4" max="6" step="0.3" value="3"></div>
+      <div class="row"><label for="shIn">폼타이 수평간격 (mm)</label><select id="shIn"><option>450</option><option selected>600</option><option>900</option></select></div>
+      <div class="row"><label for="svIn">폼타이 수직간격 (mm)</label><select id="svIn"><option>450</option><option selected>600</option><option>750</option><option>900</option></select></div>
+      <div class="row"><label for="paIn">폼타이 허용인장력 (kN)</label><input type="number" id="paIn" min="1" max="200" step="0.1" value="20"></div>
+      <p class="note">허용인장력 기본값 20kN은 예시입니다. 사용하는 폼타이의 제품 값으로 바꿔 넣으세요.</p>
+    </div>
+
+    <div class="sec">
+      <h2>③ 결과</h2>
+      <div class="res"><div class="k">최대 측압</div><div class="v" id="rP">-</div><div class="s" id="rPs"></div></div>
+      <div class="res"><div class="k">폼타이 1개 최대 하중</div><div class="v" id="rT">-</div><div class="s" id="rTs"></div></div>
+      <div class="res"><div class="k">이 조건에서 안전한 타설 속도</div><div class="v" id="rR">-</div><div class="s" id="rRs"></div></div>
+      <div class="res"><div class="k">지금 상태</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
+      <p class="note">측압식 (ACI 347, 콘크리트 단위중량 24kN/㎥, 보통 시멘트 Cw=Cc=1):<br>
+      · 타설속도 R &lt; 2.1m/h, 벽 높이 4.2m 이하: P = 7.2 + 785R/(T+17.8)<br>
+      · R &lt; 2.1m/h 이고 4.2m 초과, 또는 2.1 ≤ R ≤ 4.5m/h: P = 7.2 + 1156/(T+17.8) + 244R/(T+17.8)<br>
+      · R &gt; 4.5m/h 또는 고유동 콘크리트: P = 24 × 높이 (액압)<br>
+      · 최소 30kN/㎡, 최대 24 × 높이. 높이별 측압은 위에서부터 24kN/㎥로 늘다가 P에서 멈춥니다.<br>
+      콘크리트 표준시방서·KDS의 측압식도 같은 형식입니다. 폼타이 1개 하중 = 측압 × 수평간격 × 수직간격.</p>
+      <p class="note">교육용 시뮬레이션입니다. 끊어진 폼타이의 힘이 양옆으로 넘어가는 방식은 쉽게 보여 주려고 단순하게 정했습니다. 실제 설계는 구조검토서를 따르세요.</p>
+    </div>
+
+    <div class="sec links">
+      <h2>더 알아보기</h2>
+      <a href="https://gaseolpartner.github.io/calculators/structural-review-request.html" target="_blank" rel="noopener">구조검토 의뢰하기 →</a>
+      <a href="갱폼_시뮬레이터_v1.0.html">갱폼 시뮬레이터 →</a>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var GAMMA = 24;         // kN/㎥
+  var TIME_SCALE = 0.1;   // 화면 1초 = 0.1시간(6분)
+  var LW = 4.8, TW = 0.2; // 벽 길이·두께 (m)
+  var S = { R: 2, T: 20, H: 3, conc: 'std', sh: 600, sv: 600, Pa: 20, hc: 0, time: 0, pouring: false, state: 'ok', ties: [], failT: 0, burst: 0 };
+
+  // ---------- 계산 (ACI 347, Cw=Cc=1) ----------
+  function pmaxInfo(R, T, H) {
+    var hyd = GAMMA * H, p, how;
+    if (S.conc === 'fluid' || R > 4.5) { p = hyd; how = S.conc === 'fluid' ? '고유동 콘크리트 → 액압' : '타설속도 4.5m/h 초과 → 액압'; }
+    else if (R < 2.1 && H <= 4.2) { p = 7.2 + 785 * R / (T + 17.8); how = '7.2 + 785R/(T+17.8)'; }
+    else { p = 7.2 + 1156 / (T + 17.8) + 244 * R / (T + 17.8); how = '7.2 + 1156/(T+17.8) + 244R/(T+17.8)'; }
+    var lim = '';
+    if (p < 30) { p = 30; lim = ' (최소값 30 적용)'; }
+    if (p > hyd) { p = hyd; lim = ' (액압 24×높이로 제한)'; }
+    return { p: p, how: how + lim };
+  }
+  function pAt(z) { // 높이 z 에서의 측압 (지금 타설 높이 기준)
+    if (z >= S.hc) return 0;
+    return Math.min(GAMMA * (S.hc - z), pmaxInfo(S.R, S.T, S.H).p);
+  }
+  function tieArea() { return (S.sh / 1000) * (S.sv / 1000); }
+  function safeR() {
+    var best = 0;
+    for (var R = 0.1; R <= 10.001; R += 0.1) { if (pmaxInfo(R, S.T, S.H).p * tieArea() <= S.Pa) best = R; else break; }
+    return best;
+  }
+  function gone(t) { return t.failed; }
+  function loads() {
+    var A = tieArea();
+    S.ties.forEach(function (t) { t.own = pAt(t.y) * A; t.P = gone(t) ? 0 : t.own; });
+    S.ties.forEach(function (t) {
+      if (!gone(t)) return;
+      var row = S.rows[t.r], L = null, R = null, c;
+      for (c = t.c - 1; c >= 0; c--) if (!gone(row[c])) { L = row[c]; break; }
+      for (c = t.c + 1; c < row.length; c++) if (!gone(row[c])) { R = row[c]; break; }
+      if (L && R) { L.P += t.own / 2; R.P += t.own / 2; } else if (L || R) (L || R).P += t.own;
+    });
+  }
+  function worst() { var w = null; S.ties.forEach(function (t) { if (!gone(t) && (!w || t.P > w.P)) w = t; }); return w; }
+
+  // ---------- 3D ----------
+  var scene, camera, renderer, controls, clock, root, conc, diag, spill;
+  var MAT = {}, UP = new THREE.Vector3(0, 1, 0);
+  function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
+  function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6, metalness: 0.3 }, o || {})); }
+  function rod(a, b, r, m) {
+    var d = new THREE.Vector3().subVectors(b, a), L = d.length();
+    var mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, L, 12), m);
+    mesh.position.copy(a).addScaledVector(d, 0.5); mesh.quaternion.setFromUnitVectors(UP, d.normalize()); return mesh;
+  }
+  function box(w, h, d, m, x, y, z) { var b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); return b; }
+
+  function init() {
+    var view = $('view');
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setClearColor(0x15171A); view.insertBefore(renderer.domElement, view.firstChild);
+    scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x15171A, 30, 80);
+    camera = new THREE.PerspectiveCamera(45, 1, 0.05, 300);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 2; controls.maxDistance = 40;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x30343a, 0.8));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(8, 14, 10); scene.add(dl);
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x2A2D31, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    var gh = new THREE.GridHelper(40, 40, 0x3A3E44, 0x30343A); gh.position.y = 0.005; scene.add(gh);
+    MAT.ply = mat(0xC89B5C, { metalness: 0, roughness: 0.85 }); MAT.frame = mat(0x6F7680, { metalness: 0.5 });
+    MAT.waler = mat(0x9AA1AA, { metalness: 0.5 }); MAT.conc = new THREE.MeshStandardMaterial({ color: 0x6F747B, roughness: 1 });
+    MAT.footing = new THREE.MeshStandardMaterial({ color: 0x6B7078, roughness: 1 });
+    MAT.diag = new THREE.MeshBasicMaterial({ color: 0xFF6369, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+    clock = new THREE.Clock();
+    resize(); window.addEventListener('resize', resize);
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(view);
+  }
+  function resize() {
+    var v = $('view'), w = v.clientWidth, h = v.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  function build() {
+    if (root) { root.traverse(function (c) { if (c.geometry) c.geometry.dispose(); if (c.material && c.material._own) c.material.dispose(); }); scene.remove(root); }
+    root = new THREE.Group(); scene.add(root);
+    var H = S.H, i, j, x, y;
+    root.add(box(LW + 0.6, 0.3, TW + 0.8, MAT.footing, LW / 2, 0.15, 0));
+    var y0 = 0.3;
+    // 양쪽 유로폼 (600 x 1200 패널). 바깥쪽(+z) 패널은 터질 때 따로 움직이게 보관
+    S.panels = [];
+    [-1, 1].forEach(function (side) {
+      for (i = 0; i < LW / 0.6; i++) for (y = 0; y < H - 0.01; y += 1.2) {
+        var ph = Math.min(1.2, H - y), g = new THREE.Group();
+        g.add(box(0.6, ph, 0.063, MAT.frame, 0, ph / 2, side * 0.0315));
+        g.add(box(0.57, ph - 0.03, 0.014, MAT.ply, 0, ph / 2, 0));
+        g.position.set(i * 0.6 + 0.3, y0 + y, side * (TW / 2 + 0.007));
+        root.add(g);
+        if (side > 0) S.panels.push({ g: g, x: i * 0.6 + 0.3, y: y0 + y, h: ph, a: 0, target: 0 });
+      }
+    });
+    // 폼타이 + 띠장(각파이프 2줄)
+    var sh = S.sh / 1000, sv = S.sv / 1000;
+    S.ties = []; S.rows = [];
+    var r = 0;
+    for (y = sv / 2; y < H; y += sv, r++) {
+      S.rows[r] = [];
+      [-1, 1].forEach(function (side) {
+        [-0.03, 0.03].forEach(function (dy) { root.add(rod(V3(-0.2, y0 + y + dy, side * (TW / 2 + 0.11)), V3(LW + 0.2, y0 + y + dy, side * (TW / 2 + 0.11)), 0.025, MAT.waler)); });
+      });
+      var c = 0;
+      for (x = sh / 2; x < LW; x += sh, c++) {
+        var tm = mat(0xF2B705, { metalness: 0.4 }); tm._own = true;
+        var m = rod(V3(x, y0 + y, -(TW / 2 + 0.17)), V3(x, y0 + y, TW / 2 + 0.17), 0.012, tm);
+        var nut = box(0.07, 0.07, 0.03, tm, x, y0 + y, TW / 2 + 0.16); var nut2 = box(0.07, 0.07, 0.03, tm, x, y0 + y, -(TW / 2 + 0.16));
+        root.add(m, nut, nut2);
+        var t = { r: r, c: c, x: x, y: y, mesh: m, nuts: [nut, nut2], mat: tm, failed: false, P: 0, own: 0 };
+        S.ties.push(t); S.rows[r].push(t);
+      }
+    }
+    // 콘크리트
+    conc = box(LW - 0.02, 1, TW - 0.01, MAT.conc, LW / 2, y0, 0); conc.visible = false; root.add(conc);
+    spill = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), MAT.conc);
+    spill.visible = false; root.add(spill);
+    // 측압 그림 (벽 오른쪽 끝)
+    diag = new THREE.Mesh(new THREE.BufferGeometry(), MAT.diag); root.add(diag);
+    S.state = 'ok'; S.failT = 0; S.burst = 0;
+    var d = (Math.max(LW, H) + 3.5) / Math.min(1, camera.aspect * 0.95);
+    controls.target.set(LW / 2, H * 0.45, 0);
+    camera.position.set(LW / 2 + d * 0.75, H * 0.6 + 1, d * 0.9); controls.update();
+    place(); update();
+  }
+  function place() {
+    var y0 = 0.3;
+    conc.visible = S.hc > 0.01;
+    if (conc.visible) { conc.scale.y = S.hc; conc.position.y = y0 + S.hc / 2; }
+    // 측압 그림: 높이별 측압을 벽 끝에 가로 막대로 (1kN/㎡ = 1.2cm)
+    var pts = [], n = 30, k = 0.012, xE = LW + 0.25;
+    for (var i = 0; i <= n; i++) {
+      var z = S.hc * i / n, p = pAt(z);
+      pts.push([y0 + z, p * k]);
+    }
+    var pos = [];
+    for (i = 0; i < n; i++) {
+      var a = pts[i], b = pts[i + 1];
+      pos.push(xE, a[0], 0, xE + a[1], a[0], 0, xE + b[1], b[0], 0);
+      pos.push(xE, a[0], 0, xE + b[1], b[0], 0, xE, b[0], 0);
+    }
+    diag.geometry.dispose(); diag.geometry = new THREE.BufferGeometry();
+    diag.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    diag.visible = S.hc > 0.01;
+  }
+  function paint() {
+    S.ties.forEach(function (t) {
+      var r = t.P / S.Pa;
+      t.mat.color.setHex(t.failed ? 0xFF4D4F : r >= 1 ? 0xFF6369 : r >= 0.8 ? 0xFF9F1C : 0xF2B705);
+    });
+  }
+
+  // ---------- 화면 갱신 ----------
+  function fmt(n, d) { return n.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function update() {
+    var pi = pmaxInfo(S.R, S.T, S.H), A = tieArea(), Tm = pi.p * A, ok = Tm <= S.Pa;
+    $('rP').textContent = fmt(pi.p, 1) + ' kN/㎡';
+    $('rPs').textContent = pi.how + ' · R=' + fmt(S.R, 1) + 'm/h, T=' + S.T + '℃, 높이 ' + fmt(S.H, 1) + 'm';
+    $('rT').innerHTML = fmt(Tm, 1) + ' kN / ' + fmt(S.Pa, 1) + ' kN <span class="badge ' + (ok ? 'ok">OK' : 'ng">NG') + '</span>';
+    $('rTs').textContent = '측압 ' + fmt(pi.p, 1) + ' × ' + S.sh + ' × ' + S.sv + 'mm · 하중률 ' + fmt(Tm / S.Pa * 100, 0) + '%';
+    var sr = safeR();
+    $('rR').textContent = sr >= 10 ? '10 m/h 이상' : sr > 0 ? fmt(sr, 1) + ' m/h 이하' : '이 간격으로는 부족';
+    $('rR').className = 'v ' + (S.R <= sr ? 'ok' : 'ng');
+    $('rRs').textContent = S.R <= sr ? '지금 속도(' + fmt(S.R, 1) + 'm/h)는 안전 범위입니다.' : '지금 속도가 너무 빠릅니다. 천천히 나눠 붓거나 폼타이 간격을 줄이세요.';
+    refreshNow();
+  }
+  function refreshNow() {
+    loads();
+    var w = worst(), P = w ? w.P : 0, r = P / S.Pa;
+    $('hP').textContent = fmt(S.hc, 2) + ' m'; $('hQ').textContent = Math.floor(S.time * 60) + '분 경과 · ' + fmt(S.R, 1) + 'm/h';
+    $('hPa').textContent = fmt(S.Pa, 1); $('hT').textContent = fmt(P, 1) + ' kN';
+    var g = $('hG'); g.style.width = Math.min(100, r * 100) + '%'; g.style.background = r >= 1 ? '#FF6369' : r >= 0.8 ? '#F2B705' : '#4CC38A';
+    var nf = S.ties.filter(gone).length, txt, cls, sub;
+    if (S.state === 'burst') { txt = '거푸집 터짐'; cls = 'ng'; sub = '폼타이 ' + nf + '개가 끊어져 거푸집이 벌어지고 콘크리트가 새어 나왔습니다.'; }
+    else if (nf) { txt = '폼타이 ' + nf + '개 끊어짐 · 위험'; cls = 'ng'; sub = '옆 폼타이가 더 큰 힘을 받고 있습니다. 즉시 타설 중지.'; }
+    else if (r >= 1) { txt = '허용인장력 초과 (' + fmt(r * 100, 0) + '%)'; cls = 'ng'; sub = '곧 끊어집니다.'; }
+    else if (r >= 0.8) { txt = '한계 근접 (' + fmt(r * 100, 0) + '%)'; cls = 'warn'; sub = '가장 힘든 폼타이 ' + fmt(P, 1) + 'kN'; }
+    else if (S.hc >= S.H - 0.001) { txt = '타설 완료 (' + fmt(r * 100, 0) + '%)'; cls = 'ok'; sub = '거푸집이 버텼습니다.'; }
+    else { txt = '버티는 중 (' + fmt(r * 100, 0) + '%)'; cls = 'ok'; sub = '가장 힘든 폼타이 ' + fmt(P, 1) + 'kN / ' + fmt(S.Pa, 1) + 'kN'; }
+    $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub;
+    if (S.state === 'ok') paint();
+    var b = $('banner');
+    if (S.state === 'burst') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 거푸집 터짐 — 타설속도 ' + fmt(S.R, 1) + 'm/h, 폼타이 ' + nf + '개 파단'; }
+    else if (nf) { b.className = 'warn'; b.style.display = 'block'; b.textContent = '⚠ 폼타이 ' + nf + '개 끊어짐'; }
+    else b.style.display = 'none';
+  }
+  function failStep(now) {
+    if (S.state !== 'ok' || now < S.failT) return;
+    loads();
+    var c = S.ties.filter(function (t) { return !gone(t) && t.P >= S.Pa; });
+    if (!c.length) return;
+    var mx = Math.max.apply(null, c.map(function (t) { return t.P; }));
+    c = c.filter(function (t) { return t.P >= mx - 1e-6; });
+    var t = c[Math.floor(Math.random() * c.length)];
+    t.failed = true; S.failT = now + 0.18;
+    t.mesh.scale.set(1, 0.45, 1); t.nuts[0].position.z += 0.25; t.nuts[0].material.color.setHex(0xFF4D4F);
+    var nf = S.ties.filter(gone).length;
+    if (nf >= 3) {
+      S.state = 'burst'; S.pouring = false; $('bPour').textContent = '▶ 타설 시작';
+      // 끊어진 폼타이 근처 바깥쪽 패널이 벌어짐
+      S.panels.forEach(function (p) {
+        var near = S.ties.some(function (tt) { return tt.failed && Math.abs(tt.x - p.x) < 0.9 && tt.y + 0.3 >= p.y - 0.3 && tt.y + 0.3 <= p.y + p.h + 0.6; });
+        if (near) p.target = 0.35 + Math.random() * 0.25;
+      });
+      S.ties.forEach(function (tt) { if (!tt.failed && tt.P >= S.Pa * 0.7) { tt.failed = true; tt.mesh.scale.set(1, 0.45, 1); } });
+      paint();
+    }
+    refreshNow();
+  }
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.25), now = clock.elapsedTime, moved = false;
+    if (S.pouring && S.state === 'ok') {
+      S.time += dt * TIME_SCALE; S.hc = Math.min(S.H, S.R * S.time);
+      if (S.hc >= S.H) { S.hc = S.H; S.pouring = false; $('bPour').textContent = '▶ 타설 시작'; }
+      moved = true;
+    }
+    failStep(now);
+    if (S.state === 'burst') {
+      S.panels.forEach(function (p) { if (p.a < p.target) { p.a = Math.min(p.target, p.a + dt * 1.2); p.g.rotation.x = p.a; p.g.position.z = TW / 2 + 0.007 + Math.sin(p.a) * 0.3; } });
+      S.burst = Math.min(1, S.burst + dt * 0.5);
+      spill.visible = true; spill.scale.set(0.4 + 1.6 * S.burst, 0.05 + 0.25 * S.burst, 0.3 + 1.2 * S.burst);
+      var fx = S.ties.filter(gone).reduce(function (s, t) { return s + t.x; }, 0) / Math.max(1, S.ties.filter(gone).length);
+      spill.position.set(fx, 0.3, TW / 2 + 0.2 + 0.8 * S.burst);
+      S.hc = Math.max(0, S.hc - dt * 0.15); moved = true;
+    }
+    if (moved) { place(); refreshNow(); }
+    controls.update(); renderer.render(scene, camera);
+  }
+
+  function bind() {
+    $('rIn').oninput = function () { S.R = parseFloat(this.value); $('rLbl').textContent = S.R.toFixed(1) + ' m/h'; if (S.state === 'ok' && S.R > 0) S.time = S.hc / S.R; update(); place(); };
+    $('tIn').oninput = function () { S.T = parseFloat(this.value); $('tLbl').textContent = S.T + ' ℃'; update(); place(); };
+    $('cIn').onchange = function () { S.conc = this.value; update(); place(); };
+    var reb = function () { S.pouring = false; $('bPour').textContent = '▶ 타설 시작'; S.hc = 0; S.time = 0; build(); };
+    $('hIn').oninput = function () { S.H = parseFloat(this.value); $('hLbl').textContent = S.H.toFixed(1) + ' m'; reb(); };
+    $('shIn').onchange = function () { S.sh = parseInt(this.value, 10); reb(); };
+    $('svIn').onchange = function () { S.sv = parseInt(this.value, 10); reb(); };
+    $('paIn').oninput = function () { var v = parseFloat(this.value); if (v > 0) { S.Pa = v; update(); } };
+    $('bPour').onclick = function () {
+      if (S.state !== 'ok' || S.hc >= S.H) reb();
+      S.pouring = !S.pouring; this.textContent = S.pouring ? '⏸ 멈추기' : '▶ 타설 시작';
+    };
+    $('bReset').onclick = reb;
+    $('bEx').onclick = function () {
+      S.R = 6; $('rIn').value = 6; $('rLbl').textContent = '6.0 m/h';
+      S.T = 10; $('tIn').value = 10; $('tLbl').textContent = '10 ℃';
+      reb(); S.pouring = true; $('bPour').textContent = '⏸ 멈추기';
+    };
+  }
+  window.GPForm = { S: S, pmaxInfo: pmaxInfo, safeR: safeR, update: update };
+  bind(); init(); build(); animate();
+})();
+</script>
+<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+</body>
+</html>
