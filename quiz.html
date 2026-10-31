@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="가설파트너 안전교육 3D 시뮬레이터 체험 확인 퀴즈 5문항 - 다 풀면 이름·날짜가 들어간 체험 확인서(참고용)를 PDF로 저장할 수 있습니다.">
+<meta name="theme-color" content="#1B1B1B">
+<title>체험 확인 퀴즈 | 가설파트너</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가설파트너">
+<meta property="og:title" content="체험 확인 퀴즈 | 가설파트너">
+<meta property="og:description" content="3D 시뮬레이터로 체험한 내용을 5문항으로 확인하고, 체험 확인서(참고용)를 받으세요.">
+<meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/quiz.html">
+<meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F6F6F6;color:#2B2B2B;font-family:Pretendard,"Malgun Gothic",sans-serif}
+.qz{max-width:760px;margin:0 auto;padding:32px 20px 56px}
+.qz-progress{font-size:13px;font-weight:700;color:#888;margin:0 0 14px}
+.q{background:#fff;border:1px solid #E3E3E3;border-radius:14px;padding:22px;margin:0 0 16px}
+.q-head{display:flex;gap:10px;align-items:baseline;margin:0 0 4px}
+.q-no{flex:none;background:#1B1B1B;color:#F2B705;font-weight:800;font-size:13px;border-radius:8px;padding:3px 9px}
+.q-topic{font-size:13px;color:#888;font-weight:700}
+.q h3{margin:8px 0 14px;font-size:18px;line-height:1.5;color:#1B1B1B}
+.q label{display:flex;gap:10px;align-items:flex-start;border:1px solid #E3E3E3;border-radius:10px;padding:12px 14px;margin:0 0 8px;cursor:pointer;line-height:1.5;font-size:15px}
+.q label:hover{border-color:#F2B705}
+.q input{margin-top:4px;accent-color:#F2B705;flex:none}
+.q label.ok{border-color:#1F9D55;background:#EEF9F2}
+.q label.ng{border-color:#E5484D;background:#FDEEEE}
+.q-exp{display:none;margin:10px 0 0;font-size:14px;line-height:1.7;background:#FAFAFA;border-left:4px solid #F2B705;border-radius:8px;padding:12px 14px}
+.q-exp a{color:#1B1B1B;font-weight:700}
+.q.done .q-exp{display:block}
+.q.done label{cursor:default}
+.qz-actions{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 0}
+.qz-actions button{font:inherit;font-size:15px}
+.result{display:none;background:#1B1B1B;color:#fff;border-radius:14px;padding:24px;margin:20px 0}
+.result b{display:block;font-size:22px;margin:0 0 6px}
+.result b em{font-style:normal;color:#F2B705}
+.result p{margin:0;color:#cfcfcf;line-height:1.6;font-size:15px}
+.certform{display:none;background:#fff;border:1px solid #E3E3E3;border-radius:14px;padding:22px;margin:0 0 16px}
+.certform h3{margin:0 0 12px;font-size:18px;color:#1B1B1B}
+.certform .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.certform label{display:block;font-size:13px;font-weight:700;color:#555}
+.certform input{display:block;width:100%;margin-top:6px;font:inherit;font-size:15px;padding:11px 12px;border:1px solid #E3E3E3;border-radius:10px}
+.certform input:focus{outline:none;border-color:#F2B705}
+.certform small{display:block;color:#888;margin-top:10px;line-height:1.6}
+@media(max-width:600px){.certform .row{grid-template-columns:1fr}.q{padding:18px}.q h3{font-size:17px}}
+
+/* 확인서 (화면 미리보기 + 인쇄) */
+.cert{display:none;background:#fff;border:1px solid #E3E3E3;border-radius:14px;padding:34px 34px 26px;margin:0 0 16px;color:#1B1B1B}
+.cert-top{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #1B1B1B;padding-bottom:14px}
+.cert-logo{width:96px;height:auto;display:block}
+.cert-no{font-size:12px;color:#666;text-align:right;line-height:1.6}
+.cert h2{text-align:center;font-size:28px;letter-spacing:6px;margin:30px 0 4px}
+.cert .sub{text-align:center;color:#666;font-size:13px;margin:0 0 26px}
+.cert table{width:100%;border-collapse:collapse;font-size:14px;margin:0 0 18px}
+.cert th,.cert td{border:1px solid #CFCFCF;padding:10px 12px;text-align:left;vertical-align:top}
+.cert th{background:#1B1B1B;color:#fff;width:24%;font-weight:700}
+.cert ol{margin:0;padding-left:18px;line-height:1.8}
+.cert .stmt{font-size:15px;line-height:1.8;margin:20px 0 26px;text-align:center}
+.cert .sign{display:flex;justify-content:space-between;align-items:flex-end;font-size:14px;margin:0 0 22px}
+.cert .sign b{font-size:18px}
+.cert .legal{font-size:11.5px;color:#666;line-height:1.7;border-top:1px solid #E3E3E3;padding-top:12px;margin:0}
+@media(max-width:600px){.cert{padding:22px 16px}.cert h2{font-size:22px;letter-spacing:3px}.cert th{width:30%}}
+@page{size:A4;margin:16mm}
+@media print{
+  body{background:#fff}
+  body>*:not(.qz){display:none!important}
+  .qz>*:not(#cert){display:none!important}
+  .qz{padding:0;max-width:none}
+  #cert{display:block!important;border:0;padding:0;margin:0}
+  .cert th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="gp-topbar"><div class="gp-topbar-inner"><a href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><nav><a href="https://gaseolpartner.com/pages/introduction">가설 설계 프로그램</a><a href="https://gaseolpartner.com/pages/precio">가설재 견적 비교</a><a href="https://gaseolpartner.com/pages/structureatuntroduction">구조검토</a><a href="https://gaseolpartner.com/pages/calculators">무료 도구</a><a href="https://gaseolpartner.com/pages/support">고객지원</a></nav></div></div>
+<header class="gp-brandbar"><div class="gp-brandbar-inner"><a class="gp-logo" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><div class="gp-brand-links"><a href="index.html">← 시뮬레이터 목록</a><a class="gp-cta" href="https://pf.kakao.com/_xovuVG/chat" target="_blank" rel="noopener">카카오톡 문의</a></div></div></header>
+
+<section class="gp-hero dark">
+  <div class="gp-hero-inner">
+    <span class="gp-label">무료 도구 · 5문항</span>
+    <h1>체험 확인 <em>퀴즈</em></h1>
+    <p>3D 시뮬레이터로 본 내용을 5문항으로 확인해요. 4문항 이상 맞히면 이름·날짜가 들어간 <b>체험 확인서(참고용)</b>를 PDF로 저장할 수 있어요.</p>
+  </div>
+</section>
+
+<main class="qz">
+  <p class="qz-progress" id="prog">0 / 5 문항 풀었어요</p>
+  <div id="qs"></div>
+  <div class="qz-actions"><button type="button" class="gp-btn" id="grade">채점하기</button></div>
+
+  <div class="result" id="result"><b id="rTitle"></b><p id="rText"></p></div>
+
+  <div class="certform" id="certform">
+    <h3>체험 확인서 만들기</h3>
+    <div class="row">
+      <label>이름 (필수)<input id="nm" maxlength="20" autocomplete="name" placeholder="홍길동"></label>
+      <label>소속 · 현장 (선택)<input id="org" maxlength="40" placeholder="○○건설 / ○○현장"></label>
+    </div>
+    <div class="qz-actions" style="margin-top:14px"><button type="button" class="gp-btn" id="mk">확인서 보기</button></div>
+    <small>입력한 이름은 이 화면에서만 쓰이고 어디에도 저장·전송되지 않아요.</small>
+  </div>
+
+  <div class="cert" id="cert">
+    <div class="cert-top"><img class="cert-logo" src="https://gaseolpartner.com/storage/upload_images/nmifMZo9uxaKHd2Wp36g3Sd6Ji1m27rzCWLnsyuk.png" alt="가설파트너" width="96"><div class="cert-no">확인번호 <b id="cNo"></b><br>gaseolpartner.com</div></div>
+    <h2>체험 확인서</h2>
+    <p class="sub">가설 안전 3D 시뮬레이터 체험 · 퀴즈 기록 (참고용)</p>
+    <table>
+      <tr><th>이름</th><td id="cNm"></td></tr>
+      <tr><th>소속 · 현장</th><td id="cOrg"></td></tr>
+      <tr><th>체험·확인일</th><td id="cDate"></td></tr>
+      <tr><th>확인 내용</th><td><ol id="cList"></ol></td></tr>
+      <tr><th>퀴즈 결과</th><td id="cScore"></td></tr>
+    </table>
+    <p class="stmt">위 사람은 가설파트너 3D 시뮬레이터로 가설 구조물의 위험 상황을 체험하고<br>확인 퀴즈를 마쳤음을 기록합니다.</p>
+    <div class="sign"><span id="cDate2"></span><span><b>가설파트너</b> · GASEOL PARTNER</span></div>
+    <p class="legal">※ 이 확인서는 가설파트너 3D 시뮬레이터 체험과 퀴즈 결과를 남기는 참고용 기록입니다. 「산업안전보건법」에 따른 법정 안전보건교육 이수증이 아니며, 법정 교육 시간으로 인정되지 않습니다. 현장 자체 교육 자료로만 활용하세요. 실제 설치·해체는 작업계획서와 구조검토서를 따르세요.</p>
+  </div>
+  <div class="qz-actions" id="certBtns" style="display:none">
+    <button type="button" class="gp-btn" id="pr">PDF로 저장 · 인쇄</button>
+    <a class="gp-btn-line" href="index.html">시뮬레이터 목록으로</a>
+  </div>
+  <p id="prHelp" style="display:none;font-size:13px;color:#888;margin-top:8px">인쇄 창의 '대상(프린터)'에서 <b>PDF로 저장</b>을 고르면 파일로 저장돼요.</p>
+</main>
+
+<footer class="gp-footer"><div class="gp-footer-inner"><div>회사명 : 가설파트너<span class="gp-sep">|</span>주소 : 서울 강남구 가로수길 5<span class="gp-sep">|</span>이메일 : <a href="mailto:fc112@naver.com">fc112@naver.com</a><span class="gp-sep">|</span>전화 : <a href="tel:01079702108">010-7970-2108</a><span class="gp-sep">|</span>사업자등록번호 : 549-20-01841</div><div class="gp-copyline">ⓒ Gaseolpartner. all right reserved. · <a href="https://gaseolpartner.com" target="_blank" rel="noopener">gaseolpartner.com</a></div></div></footer>
+
+<script>
+(function () {
+  'use strict';
+  // 문제 내용은 각 시뮬레이터 화면의 설명·기준 문구와 같게 맞춘다 (바꿀 때는 시뮬레이터 문구도 확인)
+  var Q = [
+    { topic: '비계 해체 순서', sim: 'wind-simulator.html#dismantle',
+      q: '비계를 해체할 때 벽이음은 언제 떼야 할까요?',
+      o: ['해체를 시작하기 전에 전부 먼저 뗀다', '위에서부터 한 단씩 해체하면서, 그 단을 해체할 때 뗀다', '맨 아래 단 벽이음부터 차례로 뗀다', '바람이 없는 날이면 언제 떼도 된다'], a: 1,
+      e: '비계는 위에서부터 한 단씩 해체하고, 벽이음은 그 단을 해체할 때 뗍니다. 벽이음을 먼저 다 떼면 홀로 선 비계는 약한 바람에도 넘어집니다.' },
+    { topic: '이동식 비계', sim: 'wind-simulator.html#mobile',
+      q: '이동식 비계의 높이는 밑변 최소폭의 몇 배 이하로 해야 할까요?',
+      o: ['2배', '4배', '6배', '제한 없음 (아웃트리거만 펴면 된다)'], a: 1,
+      e: '비계 높이 ≤ 밑변 최소폭 × 4 입니다. 작업발판 적재는 250kg 이하, 바퀴는 잠그고 아웃트리거를 펴야 합니다. 밑변이 좁아 위에서 조금만 밀어도 넘어질 수 있어요.' },
+    { topic: '줄걸이 각도', sim: 'rigging-simulator.html',
+      q: '같은 자재를 와이어 2줄로 들 때, 두 줄 사이 끼인각이 120°면 와이어 1줄에 걸리는 힘은?',
+      o: ['자재 무게의 절반', '자재 무게의 약 0.7배', '자재 무게 전체', '각도와 상관없이 항상 절반'], a: 2,
+      e: '1줄 장력 = 무게 ÷ (2 × cos 60°) = 무게 전체입니다. 넓게 벌릴수록 한 줄에 걸리는 힘이 커지므로, 끼인각 120° 이하(수평각 30° 이상)로 씁니다.' },
+    { topic: '동바리 누락', sim: 'support-collapse-simulator.html',
+      q: '콘크리트 타설 전에 동바리 1본이 빠져 있다면 어떻게 될까요?',
+      o: ['빠진 자리는 하중이 없으니 문제없다', '빠진 동바리의 하중이 옆 동바리로 넘어가, 허용하중을 넘으면 꺾이며 연쇄 붕괴할 수 있다', '거푸집만 조금 처지고 동바리에는 영향이 없다', '시스템 동바리라면 몇 개 빠져도 괜찮다'], a: 1,
+      e: '빠진 동바리의 하중은 양옆 동바리가 나눠 받습니다. 허용하중을 넘은 동바리는 휘어 꺾이고, 그 하중이 다시 옆으로 넘어가면서 연쇄 붕괴가 일어납니다.' },
+    { topic: '거푸집 측압', sim: 'formwork-pressure-simulator.html',
+      q: '벽 거푸집에 걸리는 측압(콘크리트가 옆으로 미는 힘)이 커지는 조건은?',
+      o: ['천천히 붓고, 날이 따뜻할 때', '빨리 붓고, 날이 추울 때', '폼타이 간격을 좁게 했을 때', '슬럼프가 낮은 된 콘크리트일 때'], a: 1,
+      e: '빨리 부을수록, 날이 추울수록 측압이 커집니다(콘크리트가 늦게 굳기 때문). 폼타이가 버티는 힘을 넘으면 끊어지면서 거푸집이 터집니다.' }
+  ];
+  var PASS = 4;
+  var box = document.getElementById('qs');
+  var html = '';
+  Q.forEach(function (it, i) {
+    html += '<div class="q" id="q' + i + '"><div class="q-head"><span class="q-no">Q' + (i + 1) + '</span><span class="q-topic">' + it.topic + '</span></div><h3>' + it.q + '</h3>';
+    it.o.forEach(function (t, j) { html += '<label><input type="radio" name="a' + i + '" value="' + j + '"><span>' + t + '</span></label>'; });
+    html += '<div class="q-exp"></div></div>';
+  });
+  box.innerHTML = html;
+
+  function answered() { var n = 0; Q.forEach(function (_, i) { if (document.querySelector('input[name=a' + i + ']:checked')) n++; }); return n; }
+  box.addEventListener('change', function () { document.getElementById('prog').textContent = answered() + ' / ' + Q.length + ' 문항 풀었어요'; });
+
+  var score = 0, graded = false;
+  document.getElementById('grade').addEventListener('click', function () {
+    if (graded) { reset(); return; }
+    var n = answered();
+    if (n < Q.length) { alertBox('아직 ' + (Q.length - n) + '문항이 남았어요.'); return; }
+    score = 0;
+    Q.forEach(function (it, i) {
+      var el = document.getElementById('q' + i), pick = +document.querySelector('input[name=a' + i + ']:checked').value;
+      el.classList.add('done');
+      el.querySelectorAll('input').forEach(function (r) { r.disabled = true; });
+      var labels = el.querySelectorAll('label');
+      labels[it.a].classList.add('ok');
+      if (pick === it.a) score++; else labels[pick].classList.add('ng');
+      el.querySelector('.q-exp').innerHTML = (pick === it.a ? '<b>정답이에요.</b> ' : '<b>정답은 ' + (it.a + 1) + '번이에요.</b> ') + it.e + '<br><a href="' + it.sim + '">▶ 시뮬레이터로 다시 보기</a>';
+    });
+    graded = true;
+    var r = document.getElementById('result');
+    r.style.display = 'block';
+    document.getElementById('rTitle').innerHTML = '5문항 중 <em>' + score + '문항</em> 맞혔어요';
+    if (score >= PASS) {
+      document.getElementById('rText').textContent = '아래에 이름을 넣으면 체험 확인서를 만들 수 있어요.';
+      document.getElementById('certform').style.display = 'block';
+      this.textContent = '다시 풀기';
+    } else {
+      document.getElementById('rText').textContent = PASS + '문항 이상 맞히면 확인서를 받을 수 있어요. 틀린 문제의 시뮬레이터를 다시 보고 도전해 보세요.';
+      this.textContent = '다시 풀기';
+    }
+    r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  function reset() {
+    graded = false; score = 0;
+    Q.forEach(function (_, i) {
+      var el = document.getElementById('q' + i);
+      el.classList.remove('done');
+      el.querySelectorAll('label').forEach(function (l) { l.classList.remove('ok', 'ng'); });
+      el.querySelectorAll('input').forEach(function (r) { r.disabled = false; r.checked = false; });
+    });
+    ['result', 'certform', 'cert', 'certBtns', 'prHelp'].forEach(function (id) { document.getElementById(id).style.display = 'none'; });
+    document.getElementById('grade').textContent = '채점하기';
+    document.getElementById('prog').textContent = '0 / ' + Q.length + ' 문항 풀었어요';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function alertBox(msg) {
+    var r = document.getElementById('result');
+    r.style.display = 'block';
+    document.getElementById('rTitle').textContent = msg;
+    document.getElementById('rText').textContent = '모든 문항을 고른 뒤 채점하기를 눌러 주세요.';
+  }
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  document.getElementById('mk').addEventListener('click', function () {
+    var nm = document.getElementById('nm').value.trim();
+    if (!nm) { document.getElementById('nm').focus(); document.getElementById('nm').style.borderColor = '#E5484D'; return; }
+    var d = new Date(), ds = d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+    var no = 'GP-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+    document.getElementById('cNo').textContent = no;
+    document.getElementById('cNm').textContent = nm;
+    document.getElementById('cOrg').textContent = document.getElementById('org').value.trim() || '-';
+    document.getElementById('cDate').textContent = ds;
+    document.getElementById('cDate2').textContent = ds;
+    document.getElementById('cList').innerHTML = Q.map(function (it) { return '<li>' + esc(it.topic) + '</li>'; }).join('');
+    document.getElementById('cScore').textContent = Q.length + '문항 중 ' + score + '문항 정답';
+    document.getElementById('cert').style.display = 'block';
+    document.getElementById('certBtns').style.display = 'flex';
+    document.getElementById('prHelp').style.display = 'block';
+    document.title = '체험확인서_' + nm + '_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
+    document.getElementById('cert').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.getElementById('nm').addEventListener('input', function () { this.style.borderColor = ''; });
+  document.getElementById('pr').addEventListener('click', function () { window.print(); });
+})();
+</script>
+</body>
+</html>
