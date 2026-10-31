@@ -890,8 +890,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     var c = settleCalc();
     if (ST.run && ST.state === 'ok') {
       var k = Math.min(1, dt * 0.45);
-      ST.sIn += (settleTarget(c.rIn) - ST.sIn) * k;
-      ST.sOut += (settleTarget(c.rOut) - ST.sOut) * k;
+      var vmax = 0.012 * dt; // 가라앉는 속도 제한(초당 12mm): 기울어지는 과정이 눈에 보이게
+      ST.sIn += Math.min(vmax, (settleTarget(c.rIn) - ST.sIn) * k);
+      ST.sOut += Math.min(vmax, (settleTarget(c.rOut) - ST.sOut) * k);
       ST.a = Math.atan2(ST.sOut - ST.sIn, SO.s.width);
       var top = ST.H * Math.sin(ST.a);
       SO.tieList.forEach(function (t) { t.material.color.setHex(top >= 0.2 ? 0xFF6369 : top >= 0.1 ? 0xFF9F1C : 0xF2B705); });
