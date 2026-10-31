@@ -132,7 +132,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <div class="res"><div class="k">동바리 1본 하중 (빠진 동바리 없음)</div><div class="v" id="rP">-</div><div class="s" id="rPS"></div></div>
       <div class="res"><div class="k">이 간격으로 버티는 슬래브 두께</div><div class="v" id="rT">-</div><div class="s" id="rTS"></div></div>
       <div class="res"><div class="k">지금 상태</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
-      <p class="note">계산식은 가설파트너 구조계산 프로그램(시스템 동바리)과 같습니다.<br>설계하중 = 두께×24kN/㎥ + 거푸집 0.4 + 작업하중(두께별 2.5~6.0) kN/㎡<br>동바리 1본 하중 = 설계하중 × 멍에 간격 × 동바리 간격</p>
+      <p class="note">계산식은 가설파트너 간편 구조계산(시스템 동바리)과 같습니다.<br>설계하중 = 두께×24kN/㎥ + 거푸집 0.4 + 작업하중(두께별 2.5~6.0) kN/㎡<br>동바리 1본 하중 = 설계하중 × 멍에 간격 × 동바리 간격</p>
       <p class="note">편타설: 콘크리트를 펴지 않고 한 곳에 몰아 부으면, 타설 앞쪽 1칸에 설계 두께의 2배가 쌓인다고 가정했습니다(교육용). 타설이 끝나면 고르게 펴진 것으로 봅니다.</p>
       <p class="note">교육용 시뮬레이션입니다. 하중이 옆으로 넘어가는 방식은 쉽게 보여 주려고 단순하게 정했습니다(멍에 방향 양옆이 절반씩). 실제 붕괴 여부는 좌굴·접합부·지반 조건 등에 따라 달라지며, 실제 설계·시공은 구조검토서를 따르세요.</p>
     </div>
@@ -530,8 +530,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     S.type = ty; $('tyIn').value = ty;
     if (!keepPa) { S.Pa = ty === 'system' ? SYS_ALLOW : PIPE_ALLOW; $('paIn').value = S.Pa; }
     $('paNote').textContent = ty === 'system'
-      ? '기본값 36.0kN은 가설파트너 구조계산 프로그램의 시스템 동바리 허용하중과 같습니다. 제품이 다르면 그 제품의 허용하중으로 바꾸세요.'
-      : '기본값 13.3kN = 한국가설협회 안전인증 기준(최대사용길이에서 압축강도 40,000N 이상) ÷ 안전율 3. 안전율 3은 구조계산 프로그램의 비계 수직재와 같습니다. 사용하는 제품의 허용하중이 따로 있으면 그 값으로 바꿔 넣으세요.';
+      ? '기본값 36.0kN은 가설파트너 간편 구조계산의 시스템 동바리 허용하중과 같습니다. 제품이 다르면 그 제품의 허용하중으로 바꾸세요.'
+      : '기본값 13.3kN = 한국가설협회 안전인증 기준(최대사용길이에서 압축강도 40,000N 이상) ÷ 안전율 3. 안전율 3은 간편 구조계산의 비계 수직재와 같습니다. 사용하는 제품의 허용하중이 따로 있으면 그 값으로 바꿔 넣으세요.';
     hNote();
   }
   function hNote() {
