@@ -1169,10 +1169,41 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   document.querySelectorAll('.tab').forEach(function (b) { b.onclick = function () { GPMode.set(b.getAttribute('data-tab')); }; });
   window.GPScaf = { ST: ST, DT: DT, MT: MT, settleCalc: settleCalc, disStab: disStab, mobCalc: mobCalc, postLoad: postLoad, scafWeight: scafWeight };
   var h = (location.hash || '').replace('#', '');
+  window.GP_HASH0 = h;   // 쇼츠 조건 바로 열기(#net 등)용 — 아래 GPMode.set 이 주소를 지우기 전에 보관
   if (h && h !== 'wind') GPMode.set(h);
 })();
 </script>
 
+<script>
+/* 쇼츠 영상과 같은 조건으로 열기: 주소 끝 #이름 (예: …html#rebar). 영상 설명란 링크용 — 2026-11 */
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function set(id, v, ev) { var e = $(id); if (!e) return; e.value = String(v); e.dispatchEvent(new Event(ev || 'change')); }
+  function click(id) { var e = $(id); if (e) e.click(); }
+  function toast(t) {
+    var d = document.createElement('div');
+    d.setAttribute('role', 'status');
+    d.style.cssText = 'position:fixed;left:12px;right:12px;top:70px;margin:0 auto;width:max-content;max-width:min(560px,calc(100vw - 24px));z-index:9999;background:#1B1B1B;color:#fff;border:2px solid #F2B705;border-radius:12px;padding:12px 16px;font:600 14px/1.5 Pretendard,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer;word-break:keep-all';
+    d.innerHTML = '🎬 ' + t + ' <span style="color:#8a8f96;font-weight:500">(눌러서 닫기)</span>';
+    d.onclick = function () { d.remove(); };
+    document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 9000);
+  }
+  var P = {
+    net: { msg: '영상과 같은 조건: <b>방음패널(충실률 1.0)</b>. 「▶ 바람 점점 세게」를 눌러 보세요.',
+      run: function (set, click) { GPMode.set('wind'); click('bReset'); set('nIn', '1.0'); } },
+    tiemiss: { msg: '영상과 같은 조건: <b>벽이음 3개 누락</b>. 「▶ 바람 점점 세게」를 눌러 보세요.',
+      run: function (set, click) { GPMode.set('wind'); click('bReset'); set('nIn', '0.3'); click('bMiss'); } }
+  };
+  function go() {
+    var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';
+    var p = P[h]; if (!p) return;
+    try { p.run(set, click); toast(p.msg); } catch (e) { console.error(e); }
+  }
+  if (document.readyState === 'complete') setTimeout(go, 300); else window.addEventListener('load', function () { setTimeout(go, 300); });
+  window.addEventListener('hashchange', go);
+  window.GPPresets = P;
+})();
+</script>
 <script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
 </body>
 </html>

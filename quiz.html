@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="가설파트너 안전교육 3D 시뮬레이터 체험 확인 퀴즈 5문항 - 다 풀면 이름·날짜가 들어간 체험 확인서(참고용)를 PDF로 저장할 수 있습니다.">
+<meta name="description" content="가설파트너 안전교육 3D 시뮬레이터 체험 확인 퀴즈 (14문제 중 무작위 5문항) - 다 풀면 이름·날짜가 들어간 체험 확인서(참고용)를 PDF로 저장할 수 있습니다.">
 <meta name="theme-color" content="#1B1B1B">
 <title>체험 확인 퀴즈 | 가설파트너</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -85,7 +85,7 @@ body{margin:0;background:#F6F6F6;color:#2B2B2B;font-family:Pretendard,"Malgun Go
   <div class="gp-hero-inner">
     <span class="gp-label">무료 도구 · 5문항</span>
     <h1>체험 확인 <em>퀴즈</em></h1>
-    <p>3D 시뮬레이터로 본 내용을 5문항으로 확인해요. 4문항 이상 맞히면 이름·날짜가 들어간 <b>체험 확인서(참고용)</b>를 PDF로 저장할 수 있어요.</p>
+    <p>3D 시뮬레이터로 본 내용을 5문항으로 확인해요(14문제 중 무작위, 다시 풀면 새 문제). 4문항 이상 맞히면 이름·날짜가 들어간 <b>체험 확인서(참고용)</b>를 PDF로 저장할 수 있어요.</p>
   </div>
 </section>
 
@@ -134,7 +134,7 @@ body{margin:0;background:#F6F6F6;color:#2B2B2B;font-family:Pretendard,"Malgun Go
 (function () {
   'use strict';
   // 문제 내용은 각 시뮬레이터 화면의 설명·기준 문구와 같게 맞춘다 (바꿀 때는 시뮬레이터 문구도 확인)
-  var Q = [
+  var BANK = [
     { topic: '비계 해체 순서', sim: 'wind-simulator.html#dismantle',
       q: '비계를 해체할 때 벽이음은 언제 떼야 할까요?',
       o: ['해체를 시작하기 전에 전부 먼저 뗀다', '위에서부터 한 단씩 해체하면서, 그 단을 해체할 때 뗀다', '맨 아래 단 벽이음부터 차례로 뗀다', '바람이 없는 날이면 언제 떼도 된다'], a: 1,
@@ -143,21 +143,66 @@ body{margin:0;background:#F6F6F6;color:#2B2B2B;font-family:Pretendard,"Malgun Go
       q: '이동식 비계의 높이는 밑변 최소폭의 몇 배 이하로 해야 할까요?',
       o: ['2배', '4배', '6배', '제한 없음 (아웃트리거만 펴면 된다)'], a: 1,
       e: '비계 높이 ≤ 밑변 최소폭 × 4 입니다. 작업발판 적재는 250kg 이하, 바퀴는 잠그고 아웃트리거를 펴야 합니다. 밑변이 좁아 위에서 조금만 밀어도 넘어질 수 있어요.' },
-    { topic: '줄걸이 각도', sim: 'rigging-simulator.html',
+    { topic: '줄걸이 각도', sim: 'rigging-simulator.html#angle',
       q: '같은 자재를 와이어 2줄로 들 때, 두 줄 사이 끼인각이 120°면 와이어 1줄에 걸리는 힘은?',
       o: ['자재 무게의 절반', '자재 무게의 약 0.7배', '자재 무게 전체', '각도와 상관없이 항상 절반'], a: 2,
       e: '1줄 장력 = 무게 ÷ (2 × cos 60°) = 무게 전체입니다. 넓게 벌릴수록 한 줄에 걸리는 힘이 커지므로, 끼인각 120° 이하(수평각 30° 이상)로 씁니다.' },
-    { topic: '동바리 누락', sim: 'support-collapse-simulator.html',
+    { topic: '동바리 누락', sim: 'support-collapse-simulator.html#miss',
       q: '콘크리트 타설 전에 동바리 1본이 빠져 있다면 어떻게 될까요?',
       o: ['빠진 자리는 하중이 없으니 문제없다', '빠진 동바리의 하중이 옆 동바리로 넘어가, 허용하중을 넘으면 꺾이며 연쇄 붕괴할 수 있다', '거푸집만 조금 처지고 동바리에는 영향이 없다', '시스템 동바리라면 몇 개 빠져도 괜찮다'], a: 1,
       e: '빠진 동바리의 하중은 양옆 동바리가 나눠 받습니다. 허용하중을 넘은 동바리는 휘어 꺾이고, 그 하중이 다시 옆으로 넘어가면서 연쇄 붕괴가 일어납니다.' },
-    { topic: '거푸집 측압', sim: 'formwork-pressure-simulator.html',
+    { topic: '거푸집 측압', sim: 'formwork-pressure-simulator.html#fast',
       q: '벽 거푸집에 걸리는 측압(콘크리트가 옆으로 미는 힘)이 커지는 조건은?',
       o: ['천천히 붓고, 날이 따뜻할 때', '빨리 붓고, 날이 추울 때', '폼타이 간격을 좁게 했을 때', '슬럼프가 낮은 된 콘크리트일 때'], a: 1,
-      e: '빨리 부을수록, 날이 추울수록 측압이 커집니다(콘크리트가 늦게 굳기 때문). 폼타이가 버티는 힘을 넘으면 끊어지면서 거푸집이 터집니다.' }
+      e: '빨리 부을수록, 날이 추울수록 측압이 커집니다(콘크리트가 늦게 굳기 때문). 폼타이가 버티는 힘을 넘으면 끊어지면서 거푸집이 터집니다.' },
+    { topic: '비계 기초 침하', sim: 'wind-simulator.html#settle',
+      q: '비계 기둥 밑 받침으로 맞는 것은?',
+      o: ['흙 위에 베이스판만 놓는다', '깔목이나 깔판 위에 베이스판을 놓는다', '되메운 흙이면 그냥 세워도 된다', '받침 없이 기둥을 땅에 박는다'], a: 1,
+      e: '베이스판만 무른 땅에 놓으면 땅을 누르는 힘이 땅이 버티는 힘을 크게 넘어 가라앉습니다. 깔목·깔판으로 넓게 받쳐야 합니다.' },
+    { topic: '비계 방음패널', sim: 'wind-simulator.html#net',
+      q: '같은 비계에 메쉬방호망 대신 방음패널을 달면 어떻게 될까요?',
+      o: ['바람을 막아 주니 비계가 더 안전해진다', '바람을 받는 힘이 커져 벽이음에 걸리는 힘이 커진다', '무게가 늘어서 넘어지지 않는다', '아무 차이가 없다'], a: 1,
+      e: '풍압은 (1.2 + 충실률)에 비례합니다. 메쉬방호망(0.3)을 방음패널(1.0)로 바꾸면 약 1.5배가 됩니다. 망·패널을 바꾸면 벽이음 간격도 다시 검토하세요.' },
+    { topic: '비계 벽이음 누락', sim: 'wind-simulator.html#tiemiss',
+      q: '벽이음 12개 중 3개가 빠져 있다면?',
+      o: ['나머지가 버티므로 상관없다', '빠진 자리의 힘이 옆 벽이음으로 몰려 훨씬 약한 바람에도 넘어질 수 있다', '바람이 불 때만 다시 달면 된다', '비계가 가벼워져 더 안전하다'], a: 1,
+      e: '빠진 벽이음의 힘은 옆 벽이음이 받습니다. 시뮬레이터에서는 옆 벽이음이 2.5배를 받아, 초속 26m를 버티던 비계가 17m부터 끊어집니다. 작업 중 뗀 벽이음은 바로 다시 설치하세요.' },
+    { topic: '동바리 자재 적치', sim: 'support-collapse-simulator.html#rebar',
+      q: '슬래브 거푸집 위 한 곳에 철근 다발을 쌓아 둔 채 타설하면?',
+      o: ['콘크리트 무게와 상관없으니 괜찮다', '그 아래 동바리가 받는 힘이 커져 허용하중을 넘을 수 있다', '철근이 슬래브를 받쳐 주어 더 안전하다', '타설만 천천히 하면 상관없다'], a: 1,
+      e: '두께 300mm·파이프서포트 예시에서 1본 11.3kN이던 하중이 철근 다발(+5kN/㎡) 아래에서는 16.8kN이 되어 허용 13.3kN을 넘습니다. 자재는 나눠서 쌓으세요.' },
+    { topic: '동바리 종류', sim: 'support-collapse-simulator.html#pipethick',
+      q: '두꺼운 슬래브(600mm)를 914×1,219mm 간격으로 받칠 때 맞는 것은?',
+      o: ['간격만 같으면 동바리 종류는 상관없다', '1본 하중(약 20kN)이 파이프서포트 허용하중(13.3kN)을 넘으므로 시스템 동바리를 쓰거나 간격을 줄인다', '파이프서포트를 길게 뽑아 쓰면 된다', '콘크리트를 빨리 부으면 된다'], a: 1,
+      e: '같은 간격이라도 동바리 종류마다 버티는 힘이 다릅니다. 시스템 동바리(허용 36kN)는 버티지만 파이프서포트(13.3kN = 40kN ÷ 안전율 3)는 타설 초반에 무너집니다.' },
+    { topic: '동바리 수평재', sim: 'support-collapse-simulator.html#brace',
+      q: '시스템 동바리의 중간 수평재를 빼 버리면?',
+      o: ['동바리 수가 같으니 버티는 힘도 같다', '휘어지는(좌굴) 길이가 길어져 버티는 힘이 크게 줄어든다', '오히려 가벼워져 더 안전하다', '수평재는 장식이라 상관없다'], a: 1,
+      e: '좌굴로 버티는 힘은 길이의 제곱에 반비례합니다. 수평재가 빠져 좌굴 길이가 2배가 되면 버티는 힘은 약 1/4로 줄어듭니다(교육용 단순화).' },
+    { topic: '폼타이 간격', sim: 'formwork-pressure-simulator.html#tiegap',
+      q: '폼타이 간격을 600×600mm에서 900×900mm로 넓히면 폼타이 1개가 받는 힘은?',
+      o: ['똑같다', '1.5배', '약 2.25배', '절반'], a: 2,
+      e: '폼타이 1개가 받는 면적이 0.36㎡에서 0.81㎡로 2.25배가 됩니다. 측압 48.7kN/㎡에서 17.5kN이던 힘이 39.4kN이 됩니다.' },
+    { topic: '고유동 콘크리트', sim: 'formwork-pressure-simulator.html#fluid',
+      q: '고유동(고슬럼프) 콘크리트의 측압은 어떻게 볼까요?',
+      o: ['일반 콘크리트보다 작다', '천천히 부으면 일반 콘크리트와 같다', '물처럼 바닥까지 누른다고 보고 액압(24kN/㎥ × 높이)으로 계산한다', '폼타이와는 상관없다'], a: 2,
+      e: '고유동 콘크리트는 천천히 부어도 측압이 액압까지 커집니다. 높이 3m 벽이면 72kN/㎡로, 일반 콘크리트(48.7kN/㎡)보다 훨씬 큽니다.' },
+    { topic: '4줄 걸이', sim: 'rigging-simulator.html#fourleg',
+      q: '4줄 걸이로 자재를 들 때, 와이어 1줄의 힘은 어떻게 계산하는 것이 안전할까요?',
+      o: ['4줄이 똑같이 나눠 받는다고 본다', '줄 길이 차이로 2줄만 팽팽해질 수 있으니 2줄이 받는다고 본다', '끼인각은 무시한다', '와이어 굵기와는 상관없다'], a: 1,
+      e: '줄 길이가 조금만 달라도 2줄만 팽팽하게 당겨집니다. 8톤·φ10 와이어 예시에서 4줄로 보면 1줄 22.7kN이지만, 2줄이 받으면 45.3kN으로 파단하중(44kN)을 넘습니다.' }
   ];
+  var N = 5;   // 한 번에 푸는 문항 수 — 위 문제 중 무작위로 뽑음 (같은 주제 중복 없음)
+  var Q = [];
+  function pickQ() {
+    var a = BANK.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; }
+    Q = a.slice(0, N);
+  }
   var PASS = 4;
   var box = document.getElementById('qs');
+  function render() {
+  pickQ();
   var html = '';
   Q.forEach(function (it, i) {
     html += '<div class="q" id="q' + i + '"><div class="q-head"><span class="q-no">Q' + (i + 1) + '</span><span class="q-topic">' + it.topic + '</span></div><h3>' + it.q + '</h3>';
@@ -165,6 +210,8 @@ body{margin:0;background:#F6F6F6;color:#2B2B2B;font-family:Pretendard,"Malgun Go
     html += '<div class="q-exp"></div></div>';
   });
   box.innerHTML = html;
+  }
+  render();
 
   function answered() { var n = 0; Q.forEach(function (_, i) { if (document.querySelector('input[name=a' + i + ']:checked')) n++; }); return n; }
   box.addEventListener('change', function () { document.getElementById('prog').textContent = answered() + ' / ' + Q.length + ' 문항 풀었어요'; });
@@ -187,7 +234,7 @@ body{margin:0;background:#F6F6F6;color:#2B2B2B;font-family:Pretendard,"Malgun Go
     graded = true;
     var r = document.getElementById('result');
     r.style.display = 'block';
-    document.getElementById('rTitle').innerHTML = '5문항 중 <em>' + score + '문항</em> 맞혔어요';
+    document.getElementById('rTitle').innerHTML = Q.length + '문항 중 <em>' + score + '문항</em> 맞혔어요';
     if (score >= PASS) {
       document.getElementById('rText').textContent = '아래에 이름을 넣으면 체험 확인서를 만들 수 있어요.';
       document.getElementById('certform').style.display = 'block';
@@ -201,12 +248,7 @@ body{margin:0;background:#F6F6F6;color:#2B2B2B;font-family:Pretendard,"Malgun Go
 
   function reset() {
     graded = false; score = 0;
-    Q.forEach(function (_, i) {
-      var el = document.getElementById('q' + i);
-      el.classList.remove('done');
-      el.querySelectorAll('label').forEach(function (l) { l.classList.remove('ok', 'ng'); });
-      el.querySelectorAll('input').forEach(function (r) { r.disabled = false; r.checked = false; });
-    });
+    render();   // 다시 풀 때는 새로 무작위 5문항
     ['result', 'certform', 'cert', 'certBtns', 'prHelp'].forEach(function (id) { document.getElementById(id).style.display = 'none'; });
     document.getElementById('grade').textContent = '채점하기';
     document.getElementById('prog').textContent = '0 / ' + Q.length + ' 문항 풀었어요';
