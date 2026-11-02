@@ -167,7 +167,7 @@ def page(item, prev, nxt):
 
 def index(items):
     title = '가설파트너 이야기 — 비계·동바리·거푸집, 현장에서 궁금했던 것들'
-    desc = '비계 벽이음, 동바리 수평연결재, 거푸집 측압처럼 현장에서 궁금했던 가설재 이야기 %d편. 짧은 영상과 글로 쉽게 정리했습니다.' % len(items)
+    desc = '비계 벽이음, 동바리 수평연결재, 거푸집 측압처럼 현장에서 궁금했던 가설재 이야기. 짧은 영상과 글로 쉽게 정리했습니다.'  # 편수는 표시하지 않음(사용자 결정)
     ld = json.dumps({'@context': 'https://schema.org', '@type': 'CollectionPage', 'name': title, 'description': desc, 'url': BASE},
                     ensure_ascii=False)
     h = HEAD.format(title=esc(title), desc=esc(desc), url=BASE, ogtype='website',
