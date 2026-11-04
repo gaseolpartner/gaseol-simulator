@@ -9,6 +9,9 @@
   // [영상 파일, 제목, 길이(초), 같은 조건으로 열 시뮬레이터 주소, 유튜브 쇼츠 주소, 유튜브 링크로 바꿀 날짜(한국시간 0시부터)]
   // 예약 공개 영상은 공개 다음 날부터 유튜브로 연결 (그 전에는 시뮬레이터로)
   var NEW = [
+    ['toeboard', '안전난간 발끝막이판', '15', 'guardrail-simulator.html#toeboard', '', ''],
+    ['tiewide', '비계 벽이음 간격', '15', 'wind-simulator.html#tiewide', '', ''],
+    ['midrail', '안전난간 중간난간대', '15', 'guardrail-simulator.html#midrail', '', ''],
     ['pipebrace', '파이프서포트 수평연결재', '15', 'support-collapse-simulator.html#pipebrace', '', ''],
     ['net', '비계 방음패널', '15', 'wind-simulator.html#net', 'https://youtube.com/shorts/E77qaPkVzqo', '2026-11-02'],
     ['rebar', '동바리 자재 적치', '17.5', 'support-collapse-simulator.html#rebar', 'https://youtube.com/shorts/suvS1gqjRRo', '2026-11-02'],
