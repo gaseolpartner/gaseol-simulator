@@ -616,15 +616,17 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     miss: { msg: '영상과 같은 조건: <b>동바리 1본 누락</b> — 타설이 시작됩니다.',
       run: function (set, click) { set('hIn', 3.5, 'input'); set('lgIn', '1'); click('bExample'); } },
     heap: { msg: '영상과 같은 조건: <b>두께 300mm · 파이프서포트 · 편타설</b>. 「▶ 타설 시작」을 눌러 보세요.',
-      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('tyIn', 'pipe'); set('tIn', 300, 'input'); set('xIn', '0'); set('mIn', 'heap'); } },
+      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('aIn', '914'); set('bIn', '1219'); set('tyIn', 'pipe'); set('tIn', 300, 'input'); set('xIn', '0'); set('mIn', 'heap'); } },
     rebar: { msg: '영상과 같은 조건: <b>두께 300mm · 파이프서포트 · 가운데 철근 다발</b>. 「▶ 타설 시작」을 눌러 보세요.',
-      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('tyIn', 'pipe'); set('tIn', 300, 'input'); set('mIn', 'even'); set('xIn', '5'); } },
+      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('aIn', '914'); set('bIn', '1219'); set('tyIn', 'pipe'); set('tIn', 300, 'input'); set('mIn', 'even'); set('xIn', '5'); } },
     pipethick: { msg: '영상과 같은 조건: <b>두께 600mm · 파이프서포트</b>. 「▶ 타설 시작」을 눌러 보세요. (동바리 종류를 시스템 동바리로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('tyIn', 'pipe'); set('tIn', 600, 'input'); set('mIn', 'even'); set('xIn', '0'); } },
+      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('aIn', '914'); set('bIn', '1219'); set('tyIn', 'pipe'); set('tIn', 600, 'input'); set('mIn', 'even'); set('xIn', '0'); } },
     brace: { msg: '영상과 같은 조건: <b>시스템 동바리 · 중간 수평재 누락</b>. 「▶ 타설 시작」을 눌러 보세요.',
-      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('tyIn', 'system'); set('hIn', 3.5, 'input'); set('tIn', 250, 'input'); set('mIn', 'even'); set('xIn', '0'); set('lgIn', '0'); } },
+      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('aIn', '914'); set('bIn', '1219'); set('tyIn', 'system'); set('hIn', 3.5, 'input'); set('tIn', 250, 'input'); set('mIn', 'even'); set('xIn', '0'); set('lgIn', '0'); } },
     pipebrace: { msg: '영상과 같은 조건: <b>파이프서포트 높이 4.5m · 수평연결재 없음</b>. 「▶ 타설 시작」을 눌러 보세요. (수평연결재를 「설치」로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('tyIn', 'pipe'); set('hIn', 4.5, 'input'); set('tIn', 200, 'input'); set('mIn', 'even'); set('xIn', '0'); set('lgIn', '0'); } }
+      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('aIn', '914'); set('bIn', '1219'); set('tyIn', 'pipe'); set('hIn', 4.5, 'input'); set('tIn', 200, 'input'); set('mIn', 'even'); set('xIn', '0'); set('lgIn', '0'); } },
+    gapwide: { msg: '영상과 같은 조건: <b>두께 300mm · 파이프서포트 · 간격 914×1,524mm</b>. 「▶ 타설 시작」을 눌러 보세요. (동바리 간격을 1,219로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('tyIn', 'pipe'); set('tIn', 300, 'input'); set('mIn', 'even'); set('xIn', '0'); set('aIn', '914'); set('bIn', '1524'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';

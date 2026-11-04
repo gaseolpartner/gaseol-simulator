@@ -306,7 +306,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
           var lim = S.rail > 0 ? Math.min(0.75, Math.asin(Math.min(1, (RAILZ - m.z) / Math.max(0.3, S.rail * 1.0)))) + 0.15 : 9;
           m.wr += 3.2 * dt; m.rx += m.wr * dt;
           if (m.rx >= lim) { m.rx = lim; m.wr = 0; setState('caught'); }
-          else if (m.rx > 1.0) { m.z += 1.2 * dt; if (m.z > EDGE - 0.1) { setState('fall'); m.vy = 0; m.vz = 1.4; } }
+          else if (m.z + MAN_C * Math.sin(Math.min(m.rx, Math.PI / 2)) > EDGE) { setState('fall'); m.vy = 0; m.vz = 1.4; }   // 무게중심이 슬래브 끝을 넘으면 떨어짐
+          else if (m.rx > 1.0) { m.z += 1.2 * dt; }
         }
       }
     } else if (S.mode === 'drop') {
@@ -386,7 +387,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     midrail: { msg: '영상과 같은 조건: <b>높이 6m · 상부난간대 90cm · 중간난간대 없음</b>. 「▶ 미끄러져 넘어짐」을 눌러 보세요. (중간난간대를 「설치」로 바꿔 비교해 보세요)',
       run: function (set, click) { click('bReset'); set('midIn', '0'); } },
     toeboard: { msg: '영상과 같은 조건: <b>높이 6m · 자재 3kg · 발끝막이판 없음</b>. 「▶ 발에 차인 자재」를 눌러 보세요. (발끝막이판을 「설치」로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('toeIn', '0'); } }
+      run: function (set, click) { click('bReset'); set('toeIn', '0'); } },
+    railgone: { msg: '영상과 같은 조건: <b>높이 6m · 상부난간대 없음(떼고 복구 안 함)</b>. 「▶ 걸려 앞으로 넘어짐」을 눌러 보세요. (상부난간대를 90cm로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('railIn', '0'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';

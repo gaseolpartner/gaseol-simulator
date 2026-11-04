@@ -9,6 +9,9 @@
   // [영상 파일, 제목, 길이(초), 같은 조건으로 열 시뮬레이터 주소, 유튜브 쇼츠 주소, 유튜브 링크로 바꿀 날짜(한국시간 0시부터)]
   // 예약 공개 영상은 공개 다음 날부터 유튜브로 연결 (그 전에는 시뮬레이터로)
   var NEW = [
+    ['cold', '추운 날 거푸집 측압', '15', 'formwork-pressure-simulator.html#cold', '', ''],
+    ['gapwide', '동바리 간격', '15', 'support-collapse-simulator.html#gapwide', '', ''],
+    ['railgone', '안전난간 미복구', '15', 'guardrail-simulator.html#railgone', '', ''],
     ['toeboard', '안전난간 발끝막이판', '15', 'guardrail-simulator.html#toeboard', '', ''],
     ['tiewide', '비계 벽이음 간격', '15', 'wind-simulator.html#tiewide', '', ''],
     ['midrail', '안전난간 중간난간대', '15', 'guardrail-simulator.html#midrail', '', ''],
