@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>갱폼 인양 시뮬레이터 | 가설파트너</title>
+<meta name="description" content="갱폼 인양 순서(크레인 훅에 매단 뒤 고정볼트 해체, 작업자 하차 뒤 인양)를 3D로 직접 해 보는 안전교육 시뮬레이터. 매달기 전 볼트를 먼저 풀면 갱폼이 탈락하는 장면과 작업계획서 확인 항목.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="gp-sim-quality.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pretendard,'Malgun Gothic',sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+#app{position:fixed;left:0;right:0;bottom:0;top:40px;display:flex}
+#view{position:relative;flex:1;min-width:0;background:#15171A;overflow:hidden}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+#panel{width:370px;flex:none;overflow-y:auto;background:#222222;border-left:1px solid #3A3A3A;padding:18px 18px 32px}
+#panel h1{font-size:20px;margin:0 0 6px;color:#FFFFFF;font-weight:800}
+#panel .lead{margin:0 0 16px;color:#BBBBBB;font-size:13.5px;line-height:1.6}
+.sec{border-top:1px solid #3A3A3A;padding-top:14px;margin-top:14px}
+.sec h2{font-size:14px;margin:0 0 10px;color:#F2B705;font-weight:800;letter-spacing:-.2px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.row label{font-size:13.5px;color:#DDDDDD;flex:1}
+.row select,.row input[type=number]{width:170px;background:#1B1B1B;color:#FFFFFF;border:1px solid #444444;border-radius:8px;padding:7px 8px;font:inherit;font-size:13.5px}
+.slider{margin:6px 0 10px}
+.slider .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:#DDDDDD}
+.slider .top b{color:#FFFFFF;font-size:16px}
+.slider input[type=range]{width:100%;accent-color:#F2B705;margin:6px 0 0}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#F2B705;color:#1B1B1B;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.btn:hover{background:#D9A300}
+.btn.line{background:transparent;color:#FFFFFF;border:1px solid #555555}
+.btn.line:hover{border-color:#F2B705;color:#F2B705}
+.note{font-size:12.5px;color:#999999;line-height:1.6;margin:6px 0 0}
+.res{background:#1B1B1B;border:1px solid #3A3A3A;border-radius:12px;padding:12px 14px;margin:8px 0}
+.res .k{font-size:12.5px;color:#AAAAAA}
+.res .v{font-size:18px;font-weight:800;color:#FFFFFF;margin-top:2px}
+.res .s{font-size:12.5px;color:#BBBBBB;margin-top:3px;line-height:1.5}
+.ok{color:#4CC38A !important}.warn{color:#F2B705 !important}.ng{color:#FF6369 !important}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.badge.ok{background:rgba(76,195,138,.15)}.badge.ng{background:rgba(255,99,105,.15)}.badge.warn{background:rgba(242,183,5,.15)}
+.links a{display:block;color:#F2B705;text-decoration:none;font-size:13.5px;margin:6px 0}
+.links a:hover{text-decoration:underline}
+#hud{position:absolute;left:14px;top:12px;right:14px;pointer-events:none;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.hcard{background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;min-width:220px}
+.hcard .t{font-size:12px;color:#BBBBBB}
+.hcard .n{font-size:22px;font-weight:800;color:#FFFFFF}
+.gauge{height:10px;border-radius:6px;background:#333333;overflow:hidden;margin-top:6px}
+.gauge i{display:block;height:100%;width:0;background:#4CC38A;transition:width .15s,background .15s}
+#banner{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #FF6369;color:#FFFFFF;border-radius:12px;padding:12px 18px;font-weight:800;font-size:16px;display:none;text-align:center;max-width:92%;pointer-events:none}
+#banner.okb{border-color:#4CC38A}
+#hint{position:absolute;right:14px;bottom:14px;font-size:12px;color:#999999;background:rgba(0,0,0,.5);padding:6px 10px;border-radius:8px;pointer-events:none}
+@media(max-width:800px){
+  #app{flex-direction:column}
+  #view{flex:none;height:50%}
+  #panel{width:auto;flex:1;border-left:0;border-top:1px solid #3A3A3A;padding:14px 16px 28px}
+  .hcard{min-width:0;padding:8px 10px}.hcard .n{font-size:18px}
+  .hcard{flex:1}.hcard .t{font-size:11px}
+  #hint{display:none}
+  #banner{font-size:14px;bottom:10px}
+  .row select{width:150px}
+}
+</style>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가설파트너">
+<meta property="og:title" content="갱폼 인양 시뮬레이터 | 가설파트너">
+<meta property="og:description" content="갱폼 인양 순서(크레인 훅에 매단 뒤 고정볼트 해체, 작업자 하차 뒤 인양)를 3D로 직접 해 보는 안전교육 시뮬레이터. 매달기 전 볼트를 먼저 풀면 갱폼이 탈락하는 장면과 작업계획서 확인 항목.">
+<meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/gangform-lift-simulator.html">
+<meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+
+</head>
+<body>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">갱폼 인양 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
+
+<div id="app">
+  <div id="view">
+    <div id="hud">
+      <div class="hcard"><div class="t">크레인 훅 · 고정볼트</div><div class="n" id="hHook">훅 안 걸림</div><div class="t" id="hBolt">고정볼트 4 / 4개 체결</div></div>
+      <div class="hcard"><div class="t">작업자 위치 · 지금 단계</div><div class="n" id="hMan">케이지 위</div><div class="t" id="hStep">대기 중</div></div>
+    </div>
+    <div id="banner"></div>
+    <div id="hint">마우스 끌기: 돌리기 · 휠: 확대</div>
+  </div>
+  <aside id="panel">
+    <h1>갱폼 인양 시뮬레이터</h1>
+    <p class="lead">갱폼은 크레인에 <b>매단 뒤에</b> 고정볼트를 풀고, 작업자가 내린 뒤에 들어 올립니다. 순서를 바꾸면 무슨 일이 생기는지 직접 눌러 보세요.</p>
+
+    <div class="sec">
+      <h2>① 순서대로 눌러 보기</h2>
+      <div class="btns">
+        <button class="btn line" id="bHook" type="button">1. 크레인 훅 걸기 (매달기)</button>
+        <button class="btn line" id="bBolt" type="button">2. 고정볼트 풀기</button>
+        <button class="btn line" id="bExit" type="button">3. 작업자 건물 안으로</button>
+        <button class="btn line" id="bLift" type="button">4. 한 층 인양</button>
+      </div>
+      <div class="btns">
+        <button class="btn" id="bRight" type="button">▶ 올바른 순서 자동</button>
+        <button class="btn line" id="bWrong" type="button">위험 예시: 볼트 먼저 풀기</button>
+        <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
+      </div>
+      <p class="note">어떤 순서로 눌러도 됩니다. 훅을 걸기 전에 고정볼트를 모두 풀면 갱폼이 바깥으로 넘어갑니다.</p>
+    </div>
+
+    <div class="sec">
+      <h2>② 조건</h2>
+      <div class="slider"><div class="top"><span>작업 층 (층고 2.9m)</span><b id="fLbl">5층</b></div><input type="range" id="fIn" min="3" max="10" step="1" value="5"></div>
+      <div class="row"><label for="pplIn">고정볼트 풀 때 작업자</label><select id="pplIn"><option value="1" selected>케이지에 탐 (볼트 풀기)</option><option value="0">타지 않음 (건물 안에서)</option></select></div>
+    </div>
+
+    <div class="sec">
+      <h2>③ 지금 상태</h2>
+      <div class="res"><div class="k">결과</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
+      <div class="res"><div class="k">한 순서</div><div class="v" id="rLog" style="font-size:14px;line-height:1.6">-</div></div>
+    </div>
+
+    <div class="sec">
+      <h2>④ 작업계획서 확인 (중량물 취급 · 갱폼 인양)</h2>
+      <p class="note" style="margin-top:0">갱폼 인양은 중량물 취급 작업으로 작업 전에 사전조사와 작업계획서를 작성하고 그 내용을 근로자에게 알려야 합니다(산업안전보건기준에 관한 규칙 제38조). 아래는 작업계획서에 담을 내용의 예시입니다.</p>
+      <div id="plan"></div>
+      <div class="res"><div class="k">확인한 항목</div><div class="v" id="rPlan">0 / 8</div><div class="s" id="rPlanS"></div></div>
+    </div>
+
+    <div class="sec">
+      <h2>기준</h2>
+      <p class="note">산업안전보건기준에 관한 규칙 제337조 제2항 — 갱폼의 조립·이동·양중·해체 작업 시<br>1. 조립등의 범위와 작업절차를 미리 근로자에게 주지<br>2. 구조물 안에서 갱폼 작업발판으로 안전하게 드나드는 이동통로 설치<br>3. 지지·고정철물의 이상 유무를 수시 점검, 이상이 있으면 교체<br>4. 갱폼을 인양장비에 <b>매단 후에</b> 작업하고, 매달기 전에 지지·고정철물을 미리 해체하지 않을 것<br>5. 인양 시 작업발판용 케이지에 근로자가 탑승한 상태에서 인양하지 않을 것</p>
+      <p class="note">교육용 단순화: 고정볼트가 모두 풀리고 훅이 걸려 있지 않으면 바깥쪽에 매달린 작업발판 무게로 갱폼이 바깥으로 넘어간다고 그렸습니다. 실제 갱폼의 무게·볼트 수·인양 방법은 제작도와 작업계획서를 따르세요.</p>
+    </div>
+
+    <div class="sec links">
+      <h2>더 알아보기</h2>
+      <a href="quiz.html">✅ 체험 확인 퀴즈 5문항 · 확인서 받기 →</a>
+      <a href="갱폼_시뮬레이터_v1.0.html">갱폼 설치 시뮬레이터 →</a>
+      <a href="rigging-simulator.html">줄걸이 각도 시뮬레이터 →</a>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var G = 9.81, FH = 2.9, NB = 4, W = 6;
+  var PLAN = ['작업지휘자 지정 · 신호방법(신호수) 정하기', '갱폼 규격·중량과 크레인 정격하중 확인', '줄걸이: 달기구 허용하중·안전계수 확인', '인양 순서: 훅에 매단 뒤 고정볼트 해체 (제337조 ②4)',
+    '인양 중 케이지 탑승 금지 (제337조 ②5)', '지지·고정철물 수시 점검 (제337조 ②3)', '건물 안 ↔ 작업발판 이동통로 (제337조 ②2)', '작업구간 출입금지 · 강풍 시 작업중지 기준'];
+  var S = { F: 5, ppl: true, hook: 0, bolts: NB, manIn: false, lifted: 0, state: 'idle', log: [], q: [], busy: null, t: 0,
+    tilt: 0, w: 0, fy: 0, fz: 0, vy: 0, vz: 0, plan: {} };
+
+  // ---------- 3D ----------
+  var scene, camera, renderer, controls, clock, bldg, form, man, legL, legR, armL, armR, hook, slings = [], bolts = [], M = {};
+  var UP = new THREE.Vector3(0, 1, 0), _d = new THREE.Vector3();
+  function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
+  function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6, metalness: 0.2 }, o || {})); }
+  function box(w, h, d, m, x, y, z) { var o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); return o; }
+  function rodM(m, r) { return new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 8), m); }
+  function placeRod(o, a, b) { _d.subVectors(b, a); var L = _d.length() || 1e-4; o.position.copy(a).addScaledVector(_d, 0.5); o.scale.set(1, L, 1); o.quaternion.setFromUnitVectors(UP, _d.multiplyScalar(1 / L)); }
+  function rod(a, b, r, m) { var o = rodM(m, r); placeRod(o, a, b); return o; }
+  function slabY() { return S.F * FH; }
+  function init() {
+    var view = $('view');
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setClearColor(0x15171A); view.insertBefore(renderer.domElement, view.firstChild);
+    scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x15171A, 60, 140);
+    camera = new THREE.PerspectiveCamera(45, 1, 0.05, 400);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 4; controls.maxDistance = 90;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x30343a, 0.85));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.75); dl.position.set(14, 24, 16); scene.add(dl);
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 240), new THREE.MeshStandardMaterial({ color: 0x2A2D31, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    var gh = new THREE.GridHelper(60, 60, 0x3A3E44, 0x30343A); gh.position.y = 0.005; scene.add(gh);
+    M = { conc: mat(0x8E949B, { roughness: 0.9, metalness: 0 }), slab: mat(0xA3A9B0, { roughness: 0.9, metalness: 0 }), panel: mat(0x2F6FB0, { metalness: 0.3 }),
+      waler: mat(0x5C636B, { metalness: 0.6 }), deck: mat(0x9AA1A9, { metalness: 0.4 }), rail: mat(0xF2B705, { metalness: 0.4 }), bolt: mat(0xF2B705, { metalness: 0.3, emissive: 0x3a2a00 }),
+      hook: mat(0xF2B705, { metalness: 0.3 }), wire: mat(0x222222, { metalness: 0.5 }), sling: mat(0xC9CED6, { metalness: 0.7 }),
+      vest: mat(0xFF7A1A, { metalness: 0 }), pants: mat(0x2F3A4A, { metalness: 0 }), boot: mat(0x1A1A1A, { metalness: 0 }), skin: mat(0xE0B990, { metalness: 0 }), helm: mat(0xFFFFFF, { metalness: 0.1 }) };
+    hook = new THREE.Group();
+    hook.add(box(0.45, 0.6, 0.3, M.hook, 0, 0.3, 0));
+    var hk = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.045, 10, 24, Math.PI * 1.4), mat(0x555A60)); hk.position.y = -0.12; hk.rotation.z = Math.PI * 0.8; hook.add(hk);
+    var cab = rodM(M.wire, 0.025); cab.position.y = 30.6; cab.scale.y = 60; hook.add(cab);
+    scene.add(hook);
+    for (var i = 0; i < 2; i++) { var s = rodM(M.sling, 0.022); scene.add(s); slings.push(s); }
+    clock = new THREE.Clock();
+    build(); resize(); window.addEventListener('resize', resize);
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(view);
+  }
+  function person() {
+    var g = new THREE.Group();
+    legL = new THREE.Group(); legR = new THREE.Group(); armL = new THREE.Group(); armR = new THREE.Group();
+    legL.position.set(-0.11, 0.86, 0); legR.position.set(0.11, 0.86, 0);
+    [legL, legR].forEach(function (l) { l.add(box(0.15, 0.84, 0.17, M.pants, 0, -0.42, 0)); l.add(box(0.15, 0.08, 0.28, M.boot, 0, -0.82, 0.05)); g.add(l); });
+    g.add(box(0.42, 0.58, 0.24, M.vest, 0, 1.15, 0));
+    armL.position.set(-0.27, 1.4, 0); armR.position.set(0.27, 1.4, 0);
+    [armL, armR].forEach(function (a) { a.add(box(0.11, 0.6, 0.12, M.vest, 0, -0.3, 0)); g.add(a); });
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.115, 16, 12), M.skin); head.position.set(0, 1.56, 0); g.add(head);
+    var hm = new THREE.Mesh(new THREE.SphereGeometry(0.135, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M.helm); hm.position.set(0, 1.6, 0); g.add(hm);
+    return g;
+  }
+  function build() {
+    [bldg, form].forEach(function (o) { if (o) { o.parent && o.parent.remove(o); o.traverse(function (c) { if (c.geometry) c.geometry.dispose(); }); } });
+    var Y = slabY(), k;
+    bldg = new THREE.Group(); scene.add(bldg);
+    bldg.add(box(12, Y, 9, M.conc, 0, Y / 2, -4.5));                                   // 다 친 층
+    for (k = 1; k <= S.F; k++) bldg.add(box(12.02, 0.06, 0.02, M.slab, 0, k * FH - 0.03, 0.005));
+    bldg.add(box(12, 0.22, 9, M.slab, 0, Y + 0.11, -4.5));                             // 작업 층 슬래브
+    bldg.add(box(4.6, FH, 0.25, M.conc, 0.7, Y + FH / 2, -0.125));                     // 지금 친 벽 (왼쪽은 출입 통로)
+    // 갱폼 (피벗 = 맨 아래 안쪽 모서리)
+    form = new THREE.Group(); scene.add(form);
+    var y0 = Y - FH, top = Y + FH + 1.1, g = new THREE.Group(); g.position.set(0, -y0, 0); form.add(g);
+    g.add(box(W, FH + 0.6, 0.05, M.panel, 0, Y + FH / 2 + 0.3 - 0.3, 0.03));         // 거푸집 판
+    for (k = -2; k <= 2; k++) g.add(box(0.12, top - y0, 0.14, M.waler, k * 1.4, (top + y0) / 2, 0.14));
+    [Y + 0.6, Y + 1.6, Y + 2.6].forEach(function (y) { g.add(box(W, 0.1, 0.1, M.waler, 0, y, 0.26)); });
+    var decks = [Y + FH + 0.2, Y, Y - 1.45, y0 + 0.05];
+    decks.forEach(function (y) {
+      g.add(box(W, 0.06, 0.85, M.deck, 0, y, 0.75));
+      g.add(rod(V3(-W / 2, y + 1.0, 1.17), V3(W / 2, y + 1.0, 1.17), 0.022, M.rail));
+      g.add(rod(V3(-W / 2, y + 0.5, 1.17), V3(W / 2, y + 0.5, 1.17), 0.022, M.rail));
+      for (var x = -W / 2; x <= W / 2 + 0.01; x += 1.5) g.add(rod(V3(x, y, 1.17), V3(x, y + 1.0, 1.17), 0.024, M.rail));
+    });
+    [-1.8, 1.8].forEach(function (x) { g.add(box(0.12, 0.35, 0.12, M.hook, x, top - 0.6, 0.14)); });   // 인양고리
+    bolts = [];
+    for (k = 0; k < NB; k++) { var b = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5, 10), M.bolt); b.rotation.x = Math.PI / 2; b.position.set(-2.1 + k * 1.4, Y - 0.35, 0.05); g.add(b); bolts.push(b); }
+    form.userData.g = g; form.userData.top = top; form.userData.y0 = y0;
+    man = person(); g.add(man);
+    frame(); syncBolts(); place();
+  }
+  function syncBolts() { bolts.forEach(function (b, i) { b.visible = i < S.bolts; }); }
+  function resize() {
+    var v = $('view'), w = v.clientWidth, h = v.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); frame();
+  }
+  function frame() {
+    if (!camera) return;
+    var Y = slabY(), H = Y + FH + 7, d = H * (camera.aspect < 0.8 ? 1.3 : 1.7) / Math.min(1, camera.aspect * 1.2);   // 땅부터 크레인 훅까지 보이게 (세로 화면은 위·아래 띠 몫까지 넉넉히)
+    controls.target.set(0, H * 0.38, 3); camera.position.set(d * 0.7, H * 0.38 + d * 0.3, 3 + d * 0.62); controls.update();
+  }
+  function manHome() { man.position.set(0.9, slabY(), 0.75); man.rotation.set(0, Math.PI, 0); }
+  function place() {
+    var top = form.userData.top, Y = slabY(), y0 = form.userData.y0;
+    form.position.set(0, y0 + S.lifted + S.fy, S.fz); form.rotation.x = S.tilt;
+    if (!S.manIn && man.parent !== form.userData.g) { form.userData.g.add(man); }
+    var hy = S.hook > 0 ? top + 2.6 + (1 - S.hook) * 9 + S.lifted : top + 11;
+    hook.position.set(0, hy, 0.14);
+    form.updateMatrixWorld();
+    slings.forEach(function (s, i) {
+      s.visible = S.hook >= 1 && S.state !== 'fall' && S.state !== 'fell';
+      if (!s.visible) return;
+      var lug = form.userData.g.localToWorld(V3(i ? 1.8 : -1.8, top - 0.45, 0.14));
+      placeRod(s, lug, V3(0, hook.position.y - 0.2, 0.14));
+    });
+  }
+
+  // ---------- 순서·움직임 ----------
+  var NAME = { hook: '훅 걸기', bolt: '고정볼트 풀기', exit: '작업자 건물 안으로', lift: '한 층 인양' };
+  function act(a) {
+    if (S.state === 'fall' || S.state === 'fell') return;
+    if (S.busy) { S.q.push(a); return; }
+    if (a === 'hook' && S.hook >= 1) return;
+    if (a === 'bolt' && S.bolts === 0) return;
+    if (a === 'exit' && S.manIn) return;
+    if (a === 'lift') {
+      if (S.hook < 1) { note('훅을 먼저 걸어야 인양할 수 있습니다.'); return; }
+      if (S.bolts > 0) { note('고정볼트가 남아 있어 들 수 없습니다. 볼트를 먼저 푸세요.'); return; }
+      if (S.lifted > 0) return;
+    }
+    S.busy = a; S.t = 0; S.log.push(NAME[a]); S.state = 'run'; refresh();
+  }
+  function note(t) { S.msg = t; refresh(); }
+  function walk(t, amp) { var s = Math.sin(t * 7) * amp; legL.rotation.x = s; legR.rotation.x = -s; armL.rotation.x = -s * 0.8; armR.rotation.x = s * 0.8; }
+  function still() { legL.rotation.x = legR.rotation.x = armL.rotation.x = armR.rotation.x = 0; }
+  function finish() {
+    var a = S.busy; S.busy = null;
+    if (a === 'bolt' && S.hook < 1) { S.state = 'tip'; S.w = 0.15; refresh(); return; }
+    S.state = (S.lifted > 0 && a === 'lift') ? 'done' : 'idle';
+    if (S.q.length) act(S.q.shift()); else refresh();
+  }
+  function step(dt) {
+    var a = S.busy;
+    if (a) {
+      S.t += dt;
+      if (a === 'hook') { S.hook = Math.min(1, S.t / 1.2); if (S.t >= 1.2) finish(); }
+      else if (a === 'bolt') {
+        armR.rotation.x = -1.3 + Math.sin(S.t * 18) * 0.2; armL.rotation.x = -1.1;
+        var n = NB - Math.floor(S.t / 0.35); if (n < S.bolts) { S.bolts = Math.max(0, n); syncBolts(); refresh(); }
+        if (S.bolts === 0) { still(); finish(); }
+      } else if (a === 'exit') {
+        var p = Math.min(1, S.t / 1.4); walk(S.t, 0.45);
+        if (p < 0.6) { man.position.x = 0.9 - (p / 0.6) * 2.8; man.rotation.y = -Math.PI / 2; }
+        else { man.position.x = -1.9; man.position.z = 0.75 - ((p - 0.6) / 0.4) * 2.2; man.rotation.y = Math.PI; }
+        if (p >= 1) { still(); S.manIn = true; var wp = man.getWorldPosition(V3()); scene.attach(man); man.position.copy(wp); finish(); }
+      } else if (a === 'lift') {
+        S.lifted = Math.min(FH, S.t / 2.2 * FH); if (S.t >= 2.2) { S.lifted = FH; finish(); }
+      }
+    }
+    if (S.state === 'tip') {
+      if (S.tilt < 0.42) { S.w += (1.2 + S.tilt * 6) * dt; S.tilt += S.w * dt; armL.rotation.x = armR.rotation.x = -2.6; }
+      else { S.state = 'fall'; S.vy = 0; S.vz = 0.6; refresh(); }
+    }
+    if (S.state === 'fall') {
+      S.vy -= G * dt; S.fy += S.vy * dt; S.fz += S.vz * dt; S.tilt = Math.min(Math.PI / 2, S.tilt + S.w * dt);
+      if (form.userData.y0 + S.fy <= 0.05) { S.fy = 0.05 - form.userData.y0; S.tilt = Math.PI / 2 - 0.02; S.state = 'fell'; refresh(); }
+    }
+  }
+  function refresh() {
+    $('hHook').textContent = S.hook >= 1 ? '훅 걸림 (매달림)' : S.hook > 0 ? '훅 거는 중' : '훅 안 걸림';
+    $('hHook').className = 'n ' + (S.hook >= 1 ? 'ok' : '');
+    $('hBolt').textContent = '고정볼트 ' + S.bolts + ' / ' + NB + '개 체결';
+    $('hMan').textContent = S.manIn ? '건물 안' : S.ppl ? '케이지 위' : '건물 안';
+    var stepTxt = S.busy ? NAME[S.busy] + ' 중' : S.state === 'done' ? '인양 완료' : S.state === 'fell' ? '갱폼 추락' : S.state === 'tip' || S.state === 'fall' ? '갱폼이 넘어감' : '대기 중';
+    $('hStep').textContent = stepTxt;
+    $('rLog').textContent = S.log.length ? S.log.map(function (x, i) { return (i + 1) + '. ' + x; }).join('  →  ') : '-';
+    var txt, cls, sub = S.msg || '', b = $('banner');
+    var riding = !S.manIn && S.ppl;
+    if (S.state === 'tip' || S.state === 'fall' || S.state === 'fell') { txt = '갱폼 탈락 · 추락'; cls = 'ng'; sub = '훅에 매달기 전에 고정볼트를 모두 풀어 갱폼이 바깥으로 넘어갔습니다' + (riding ? ' — 케이지의 작업자도 함께 떨어집니다.' : '.') + ' (제337조 ②4 위반)'; }
+    else if (S.bolts < NB && S.hook < 1) { txt = '위험: 매달기 전 볼트 해체'; cls = 'ng'; sub = '훅을 걸기 전에 고정볼트를 풀고 있습니다. 모두 풀리면 넘어갑니다.'; }
+    else if (S.busy === 'lift' && riding || S.state === 'done' && S.log.indexOf('작업자 건물 안으로') < 0 && S.ppl) { txt = '위험: 케이지 탑승 인양'; cls = 'ng'; sub = '작업자가 케이지에 탄 채 인양했습니다 (제337조 ②5 위반).'; }
+    else if (S.state === 'done') { txt = '안전하게 인양'; cls = 'ok'; sub = '매단 뒤 볼트 해체 → 작업자 하차 → 인양. 새 위치에서 다시 고정볼트를 체결한 뒤 훅을 풉니다.'; }
+    else if (S.busy) { txt = NAME[S.busy] + ' 중'; cls = 'warn'; }
+    else { txt = '대기 중'; cls = 'ok'; if (!sub) sub = '①의 버튼을 순서대로 눌러 보세요.'; }
+    $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub; S.msg = '';
+    if (S.state === 'fell') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 갱폼 추락 — 매달기 전에 고정볼트 해체'; }
+    else if (S.state === 'tip' || S.state === 'fall') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 갱폼이 바깥으로 넘어갑니다'; }
+    else if (S.state === 'done' && cls === 'ok') { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ 안전하게 한 층 인양'; }
+    else if (cls === 'ng') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ ' + txt; }
+    else b.style.display = 'none';
+  }
+  function planUI() {
+    $('plan').innerHTML = PLAN.map(function (t, i) { return '<label class="row" style="justify-content:flex-start;gap:8px;margin:6px 0;font-size:13px;color:#DDD"><input type="checkbox" data-i="' + i + '" style="accent-color:#F2B705;width:16px;height:16px;flex:none"> ' + t + '</label>'; }).join('');
+    $('plan').onchange = function (e) { var i = e.target.getAttribute('data-i'); if (i === null) return; S.plan[i] = e.target.checked; planCount(); };
+    planCount();
+  }
+  function planCount() {
+    var n = Object.keys(S.plan).filter(function (k) { return S.plan[k]; }).length;
+    $('rPlan').textContent = n + ' / ' + PLAN.length; $('rPlan').className = 'v ' + (n === PLAN.length ? 'ok' : 'warn');
+    $('rPlanS').textContent = n === PLAN.length ? '작업 전 TBM 등에서 작업자 모두에게 알리세요.' : '빠진 항목이 있으면 작업계획서를 보완하세요.';
+  }
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.1), n = Math.ceil(dt / 0.01), i;
+    for (i = 0; i < n; i++) step(dt / n);
+    place(); controls.update(); renderer.render(scene, camera);
+  }
+  function reset() {
+    S.hook = 0; S.bolts = NB; S.manIn = false; S.lifted = 0; S.state = 'idle'; S.log = []; S.q = []; S.busy = null; S.t = 0;
+    S.tilt = 0; S.w = 0; S.fy = 0; S.fz = 0; S.vy = 0; S.vz = 0; S.msg = '';
+    build(); still();
+    if (S.ppl) manHome(); else { scene.attach(man); man.position.set(-1.9, slabY() + 0.22, -1.6); man.rotation.set(0, Math.PI, 0); S.manIn = true; }
+    refresh();
+  }
+  function bind() {
+    $('bHook').onclick = function () { act('hook'); };
+    $('bBolt').onclick = function () { act('bolt'); };
+    $('bExit').onclick = function () { act('exit'); };
+    $('bLift').onclick = function () { act('lift'); };
+    $('bRight').onclick = function () { reset(); act('hook'); act('bolt'); if (S.ppl) act('exit'); act('lift'); };
+    $('bWrong').onclick = function () { reset(); act('bolt'); };
+    $('bReset').onclick = function () { $('fIn').value = 5; $('pplIn').value = '1'; S.F = 5; S.ppl = true; $('fLbl').textContent = '5층'; reset(); };
+    $('fIn').oninput = function () { S.F = parseInt(this.value, 10); $('fLbl').textContent = S.F + '층'; reset(); };
+    $('pplIn').onchange = function () { S.ppl = this.value === '1'; reset(); };
+  }
+  window.GPGang = { S: S, act: act, reset: reset, cam: function () { return [camera.aspect, camera.position.toArray(), controls.target.toArray()]; } };
+  bind(); init(); planUI(); reset(); animate();
+})();
+</script>
+<script>
+/* 쇼츠 영상과 같은 조건으로 열기: 주소 끝 #이름 (예: …html#prerelease). 영상 설명란 링크용 — 2026-11 */
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function set(id, v, ev) { var e = $(id); if (!e) return; e.value = String(v); e.dispatchEvent(new Event(ev || 'change')); }
+  function click(id) { var e = $(id); if (e) e.click(); }
+  function toast(t) {
+    var d = document.createElement('div');
+    d.setAttribute('role', 'status');
+    d.style.cssText = 'position:fixed;left:12px;right:12px;top:70px;margin:0 auto;width:max-content;max-width:min(560px,calc(100vw - 24px));z-index:9999;background:#1B1B1B;color:#fff;border:2px solid #F2B705;border-radius:12px;padding:12px 16px;font:600 14px/1.5 Pretendard,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer;word-break:keep-all';
+    d.innerHTML = '🎬 ' + t + ' <span style="color:#8a8f96;font-weight:500">(눌러서 닫기)</span>';
+    d.onclick = function () { d.remove(); };
+    document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 9000);
+  }
+  var P = {
+    prerelease: { msg: '영상과 같은 조건: <b>5층 · 작업자가 케이지에서 고정볼트를 먼저 풂</b>. 「2. 고정볼트 풀기」를 눌러 보세요. (「▶ 올바른 순서 자동」과 비교해 보세요)',
+      run: function (set, click) { click('bReset'); } }
+  };
+  function go() {
+    var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';
+    var p = P[h]; if (!p) return;
+    try { p.run(set, click); toast(p.msg); } catch (e) { console.error(e); }
+  }
+  if (document.readyState === 'complete') setTimeout(go, 300); else window.addEventListener('load', function () { setTimeout(go, 300); });
+  window.addEventListener('hashchange', go);
+  window.GPPresets = P;
+})();
+</script>
+<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+</body>
+</html>
