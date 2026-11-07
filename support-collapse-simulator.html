@@ -626,7 +626,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     pipebrace: { msg: '영상과 같은 조건: <b>파이프서포트 높이 4.5m · 수평연결재 없음</b>. 「▶ 타설 시작」을 눌러 보세요. (수평연결재를 「설치」로 바꿔 비교해 보세요)',
       run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('aIn', '914'); set('bIn', '1219'); set('tyIn', 'pipe'); set('hIn', 4.5, 'input'); set('tIn', 200, 'input'); set('mIn', 'even'); set('xIn', '0'); set('lgIn', '0'); } },
     gapwide: { msg: '영상과 같은 조건: <b>두께 300mm · 파이프서포트 · 간격 914×1,524mm</b>. 「▶ 타설 시작」을 눌러 보세요. (동바리 간격을 1,219로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('tyIn', 'pipe'); set('tIn', 300, 'input'); set('mIn', 'even'); set('xIn', '0'); set('aIn', '914'); set('bIn', '1524'); } }
+      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('tyIn', 'pipe'); set('tIn', 300, 'input'); set('mIn', 'even'); set('xIn', '0'); set('aIn', '914'); set('bIn', '1524'); } },
+    slabthick: { msg: '영상과 같은 조건: <b>두께 400mm · 파이프서포트 · 간격 914×1,219mm</b>. 「▶ 타설 시작」을 눌러 보세요. (두께를 300mm로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('hIn', 3.5, 'input'); set('lgIn', '1'); set('tyIn', 'pipe'); set('tIn', 400, 'input'); set('mIn', 'even'); set('xIn', '0'); set('aIn', '914'); set('bIn', '1219'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';
