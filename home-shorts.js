@@ -44,6 +44,7 @@
         '<figcaption><a href="' + esc(link) + '" target="_blank" rel="noopener">▶ ' + esc(v[1]) + ' (' + v[2] + '초)' + tail + '</a></figcaption></figure>';
     }).join('');
     box.insertAdjacentHTML('afterbegin', html);
+    fold(box);
     document.querySelectorAll('.gx-risk a.gx-a').forEach(function (a) {
       Object.keys(CARD).forEach(function (k) { if (a.href === S + k) a.href = S + k + CARD[k]; });
     });
@@ -54,6 +55,54 @@
       box.querySelectorAll('figure video').forEach(function (v, i) { if (i < NEW.length) io.observe(v); });
     }
     return true;
+  }
+  // ---------- 영상 접기 (11-07) ----------
+  // 영상이 늘어도 페이지가 길어지지 않게: 분류 버튼 + 처음엔 PC 8개 / 휴대폰 4개만, 나머지는 [영상 더 보기]
+  // 분류는 영상이 여는 시뮬레이터 파일로 자동으로 정함 → 새 영상은 NEW 목록에만 넣으면 됨
+  var CAT = [['all', '전체'], ['sc', '비계'], ['sp', '동바리'], ['fw', '거푸집·갱폼'], ['etc', '인양·안전시설']];
+  var BYSIM = { 'wind-simulator': 'sc', 'scaffold': 'sc', 'support-collapse-simulator': 'sp', 'formwork-pressure-simulator': 'fw', 'gangform-lift-simulator': 'fw', 'rigging-simulator': 'etc', 'guardrail-simulator': 'etc' };
+  var BYFILE = { settle: 'sc', dismantle: 'sc', mobile: 'sc', heap: 'sp', formwork: 'fw', rigging: 'etc' }; // 처음부터 있던 6개
+  function catOf(f) {
+    var v = f.querySelector('video'), m = v && (v.getAttribute('src') || '').match(/videos\/([\w-]+)\.mp4/);
+    var sim = null; NEW.forEach(function (x) { if (m && x[0] === m[1]) sim = x[3]; });
+    if (!sim) { var a = f.querySelector('a'); sim = a ? a.getAttribute('href') : ''; }
+    for (var k in BYSIM) if (sim && sim.indexOf(k) > -1) return BYSIM[k];
+    return (m && BYFILE[m[1]]) || 'etc';
+  }
+  function fold(box) {
+    if (box.getAttribute('data-gp-fold')) return;
+    var figs = [].slice.call(box.querySelectorAll(':scope > figure'));
+    if (figs.length <= 8) return;
+    box.setAttribute('data-gp-fold', '1');
+    figs.forEach(function (f) { f.setAttribute('data-cat', catOf(f)); });
+    var st = document.createElement('style');
+    st.textContent = '.gpsf{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 0}.gpsf button{font:inherit;font-size:14.5px;font-weight:700;padding:9px 16px;border-radius:999px;border:1.5px solid #d6d6d2;background:#fff;color:#333;cursor:pointer}.gpsf button em{font-style:normal;color:#999;font-weight:600;margin-left:4px;font-size:13px}.gpsf button.on{background:#1B1B1B;border-color:#1B1B1B;color:#F2B705}.gpsf button.on em{color:#ccc}' +
+      '.gx-risk .gx-shv figure.gpsf-x{display:none}.gpsm{display:flex;justify-content:center;margin-top:18px}.gpsm button{font:inherit;font-size:15.5px;font-weight:800;padding:13px 26px;border-radius:12px;border:2px solid #1B1B1B;background:#fff;color:#1B1B1B;cursor:pointer}.gpsm button:hover{background:#FFF6D6}.gpsm[hidden]{display:none}' +
+      '@media(max-width:760px){.gpsf{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.gpsf button{flex:none;padding:8px 13px;font-size:13.5px}}';
+    document.head.appendChild(st);
+    var bar = document.createElement('div'); bar.className = 'gpsf'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', '영상 분류');
+    CAT.forEach(function (c) {
+      var n = c[0] === 'all' ? figs.length : figs.filter(function (f) { return f.getAttribute('data-cat') === c[0]; }).length;
+      if (!n) return;
+      var b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-c', c[0]); b.innerHTML = c[1] + '<em>' + n + '</em>';
+      bar.appendChild(b);
+    });
+    var more = document.createElement('div'); more.className = 'gpsm'; more.innerHTML = '<button type="button"></button>';
+    box.parentNode.insertBefore(bar, box); box.parentNode.insertBefore(more, box.nextSibling);
+    var cur = 'all', open = false;
+    function cap() { return window.matchMedia('(max-width:760px)').matches ? 4 : 8; }
+    function draw() {
+      var list = figs.filter(function (f) { return cur === 'all' || f.getAttribute('data-cat') === cur; }), c = cap();
+      figs.forEach(function (f) { f.classList.add('gpsf-x'); var v = f.querySelector('video'); if (v) v.pause(); });
+      list.forEach(function (f, i) { if (open || i < c) f.classList.remove('gpsf-x'); });
+      [].forEach.call(bar.children, function (b) { var on = b.getAttribute('data-c') === cur; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+      more.hidden = list.length <= c;
+      more.firstChild.textContent = open ? '영상 접기 ↑' : '영상 더 보기 (' + (list.length - c) + '개 더) ↓';
+    }
+    bar.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; cur = b.getAttribute('data-c'); open = false; draw(); });
+    more.firstChild.addEventListener('click', function () { var was = open; open = !open; draw(); if (was) bar.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
+    window.addEventListener('resize', function () { if (!open) draw(); });
+    draw();
   }
   if (/[?&]m=edit/.test(location.search)) return;   // 디자인 편집 화면에서는 동작 안 함
   var n = 0; (function retry() { if (run() || ++n > 40) return; setTimeout(retry, 250); })();
