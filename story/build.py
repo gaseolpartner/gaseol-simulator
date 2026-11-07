@@ -40,7 +40,7 @@ def topic_links(item):
         links.append(('우리 현장, 구조검토 대상일까?', HOME + '/pages/structureatuntroduction#gpck', '높이·종류만 넣으면 법정 대상인지 바로 확인'))
     if re.search('비계|동바리|서포트', t):
         links.append(('간편 구조계산 (무료)', 'https://gaseolpartner.github.io/structure-calc/', '시스템 비계·동바리 참고용 계산'))
-        links.append(('물량·견적 계산기 (무료)', 'https://gaseolpartner.github.io/calculators/', '면적만 넣으면 자재 수량'))
+        links.append(('가수량·견적서 작성 (무료)', 'https://gaseolpartner.github.io/calculators/', '면적·물량만 넣으면 자재 수량과 견적서'))
     if re.search('풍하중|바람|태풍|붕괴|무너|넘어', t):
         links.append(('3D 위험 체험 시뮬레이터', 'https://gaseolpartner.github.io/gaseol-simulator/', '바람·과하중에 비계·동바리가 어떻게 무너지는지'))
     links.append(('가설 설계 프로그램 CATS', HOME + '/pages/introduction', '선만 그으면 비계·동바리 배치부터 수량까지'))
