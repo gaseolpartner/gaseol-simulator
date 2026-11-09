@@ -18,7 +18,7 @@
     ['toeboard', '안전난간 발끝막이판', '15', 'guardrail-simulator.html#toeboard', 'https://youtube.com/shorts/-nvy2i64W5k', '2026-11-08'],
     ['tiewide', '비계 벽이음 간격', '15', 'wind-simulator.html#tiewide', 'https://youtube.com/shorts/zmjLghHZzAI', '2026-11-08'],
     ['midrail', '안전난간 중간난간대', '15', 'guardrail-simulator.html#midrail', 'https://youtube.com/shorts/L9cIFpj2Sfg', '2026-11-07'],
-    ['pipebrace', '파이프서포트 수평연결재', '15', 'support-collapse-simulator.html#pipebrace', '', ''],
+    ['pipebrace', '파이프서포트 수평연결재', '15', 'support-collapse-simulator.html#pipebrace', 'https://youtube.com/shorts/QSigMg4IFu4', '2026-11-09'],
     ['net', '비계 방음패널', '15', 'wind-simulator.html#net', 'https://youtube.com/shorts/E77qaPkVzqo', '2026-11-02'],
     ['rebar', '동바리 자재 적치', '17.5', 'support-collapse-simulator.html#rebar', 'https://youtube.com/shorts/suvS1gqjRRo', '2026-11-02'],
     ['tiegap', '폼타이 간격', '15', 'formwork-pressure-simulator.html#tiegap', 'https://youtube.com/shorts/v7Un9qVjPII', '2026-11-04'],
