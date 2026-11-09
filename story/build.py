@@ -115,7 +115,7 @@ h1.st-h{{font-size:28px;line-height:1.4;margin:0 0 20px;color:#1B1B1B;word-break
 <header class="gp-brandbar"><div class="gp-brandbar-inner"><a class="gp-logo" href="index.html" aria-label="가설파트너 이야기"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><div class="gp-brand-links"><a href="index.html">이야기 목록</a><a class="gp-cta" href="''' + KAKAO + '''" target="_blank" rel="noopener">카카오톡 문의</a></div></div></header>
 '''
 
-FOOT = '''<footer class="gp-footer"><div class="gp-footer-inner"><div>회사명 : 가설파트너<span class="gp-sep">|</span>주소 : 서울 강남구 가로수길 5<span class="gp-sep">|</span>이메일 : <a href="mailto:fc112@naver.com">fc112@naver.com</a><span class="gp-sep">|</span>전화 : <a href="tel:01079702108">010-7970-2108</a><span class="gp-sep">|</span>사업자등록번호 : 549-20-01841</div><div class="gp-copyline">ⓒ Gaseolpartner. all right reserved. · <a href="https://gaseolpartner.com" target="_blank" rel="noopener">gaseolpartner.com</a></div></div></footer>
+FOOT = '''<footer class="gp-footer"><div class="gp-footer-inner"><div>회사명 : 가설파트너<span class="gp-sep">|</span>주소 : 서울 강남구 가로수길 5<span class="gp-sep">|</span>이메일 : <a href="mailto:fc112@naver.com">fc112@naver.com</a><span class="gp-sep">|</span>전화 : <a href="tel:01079702108">010-7970-2108</a><span class="gp-sep">|</span>사업자등록번호 : 549-20-01841</div><div class="gp-copyline">ⓒ Gaseolpartner. all right reserved. · <a href="https://gaseolpartner.com" target="_blank" rel="noopener">gaseolpartner.com</a> · <a href="https://gaseolpartner.github.io/calculators/legal.html">이용 안내 · 저작권</a></div><div class="gp-copyline">계산·시뮬레이션 결과는 참고용입니다. 실제 시공·안전 판단은 도면과 현장 조건으로 확인하세요.</div></div></footer>
 '''
 
 VIDEO_JS = '''<script>
