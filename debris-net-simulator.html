@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>낙하물방지망 시뮬레이터 | 가설파트너</title>
+<meta name="description" content="낙하물방지망의 내민 길이(벽면에서 2m 이상)와 설치 간격(높이 10m 이내마다)이 왜 필요한지 3D로 보는 안전교육 시뮬레이터. 튕겨 나온 물건을 망이 받는지, 벗어나는지 체험.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="gp-sim-quality.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pretendard,'Malgun Gothic',sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+#app{position:fixed;left:0;right:0;bottom:0;top:40px;display:flex}
+#view{position:relative;flex:1;min-width:0;background:#15171A;overflow:hidden}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+#panel{width:370px;flex:none;overflow-y:auto;background:#222222;border-left:1px solid #3A3A3A;padding:18px 18px 32px}
+#panel h1{font-size:20px;margin:0 0 6px;color:#FFFFFF;font-weight:800}
+#panel .lead{margin:0 0 16px;color:#BBBBBB;font-size:13.5px;line-height:1.6}
+.sec{border-top:1px solid #3A3A3A;padding-top:14px;margin-top:14px}
+.sec h2{font-size:14px;margin:0 0 10px;color:#F2B705;font-weight:800;letter-spacing:-.2px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.row label{font-size:13.5px;color:#DDDDDD;flex:1}
+.row select,.row input[type=number]{width:170px;background:#1B1B1B;color:#FFFFFF;border:1px solid #444444;border-radius:8px;padding:7px 8px;font:inherit;font-size:13.5px}
+.slider{margin:6px 0 10px}
+.slider .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:#DDDDDD}
+.slider .top b{color:#FFFFFF;font-size:16px}
+.slider input[type=range]{width:100%;accent-color:#F2B705;margin:6px 0 0}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#F2B705;color:#1B1B1B;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.btn:hover{background:#D9A300}
+.btn.line{background:transparent;color:#FFFFFF;border:1px solid #555555}
+.btn.line:hover{border-color:#F2B705;color:#F2B705}
+.note{font-size:12.5px;color:#999999;line-height:1.6;margin:6px 0 0}
+.res{background:#1B1B1B;border:1px solid #3A3A3A;border-radius:12px;padding:12px 14px;margin:8px 0}
+.res .k{font-size:12.5px;color:#AAAAAA}
+.res .v{font-size:18px;font-weight:800;color:#FFFFFF;margin-top:2px}
+.res .s{font-size:12.5px;color:#BBBBBB;margin-top:3px;line-height:1.5}
+.ok{color:#4CC38A !important}.warn{color:#F2B705 !important}.ng{color:#FF6369 !important}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.badge.ok{background:rgba(76,195,138,.15)}.badge.ng{background:rgba(255,99,105,.15)}.badge.warn{background:rgba(242,183,5,.15)}
+.links a{display:block;color:#F2B705;text-decoration:none;font-size:13.5px;margin:6px 0}
+.links a:hover{text-decoration:underline}
+#hud{position:absolute;left:14px;top:12px;right:14px;pointer-events:none;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.hcard{background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;min-width:220px}
+.hcard .t{font-size:12px;color:#BBBBBB}
+.hcard .n{font-size:22px;font-weight:800;color:#FFFFFF}
+#banner{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #FF6369;color:#FFFFFF;border-radius:12px;padding:12px 18px;font-weight:800;font-size:16px;display:none;text-align:center;width:max-content;max-width:92%;pointer-events:none}
+#banner.okb{border-color:#4CC38A}
+#hint{position:absolute;right:14px;bottom:14px;font-size:12px;color:#999999;background:rgba(0,0,0,.5);padding:6px 10px;border-radius:8px;pointer-events:none}
+@media(max-width:800px){
+  #app{flex-direction:column}
+  #view{flex:none;height:50%}
+  #panel{width:auto;flex:1;border-left:0;border-top:1px solid #3A3A3A;padding:14px 16px 28px}
+  .hcard{min-width:0;padding:8px 10px}.hcard .n{font-size:18px}
+  .hcard{flex:1}.hcard .t{font-size:11px}
+  #hint{display:none}
+  #banner{font-size:14px;bottom:10px}
+  .row select{width:150px}
+}
+</style>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가설파트너">
+<meta property="og:title" content="낙하물방지망 시뮬레이터 | 가설파트너">
+<meta property="og:description" content="낙하물방지망의 내민 길이(벽면에서 2m 이상)와 설치 간격(높이 10m 이내마다)이 왜 필요한지 3D로 보는 안전교육 시뮬레이터. 튕겨 나온 물건을 망이 받는지, 벗어나는지 체험.">
+<meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/debris-net-simulator.html">
+<meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+
+</head>
+<body>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">낙하물방지망 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
+
+<div id="app">
+  <div id="view">
+    <div id="hud">
+      <div class="hcard"><div class="t">벽면에서 날아간 거리</div><div class="n" id="hX">1.71 m</div><div class="t" id="hX2">10m 떨어지는 동안 · 1.43초</div></div>
+      <div class="hcard"><div class="t" id="hTipT">망 끝까지 거리 (내민 2.0m)</div><div class="n" id="hTip">1.81 m</div><div class="t" id="hRes">망이 받습니다</div></div>
+    </div>
+    <div id="banner"></div>
+    <div id="hint">마우스 끌기: 돌리기 · 휠: 확대</div>
+  </div>
+  <aside id="panel">
+    <h1>낙하물방지망 시뮬레이터</h1>
+    <p class="lead">위에서 떨어진 물건은 벽에 부딪혀 바깥으로 튕겨 나옵니다. 망을 얼마나 내밀고, 몇 m마다 달아야 받아 낼 수 있는지 직접 확인해 보세요.</p>
+
+    <div class="sec">
+      <h2>① 해 보기</h2>
+      <div class="btns">
+        <button class="btn" id="bDrop" type="button">▶ 물건 떨어뜨리기</button>
+        <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
+      </div>
+      <p class="note">물건은 건물 맨 위(높이 30m)에서 튕겨 나와, 바로 아래 망까지 설치 간격만큼 떨어집니다(가장 불리한 경우). 잘 보이도록 물건은 실제보다 크게 그렸습니다.</p>
+    </div>
+
+    <div class="sec">
+      <h2>② 조건</h2>
+      <div class="row"><label for="reachIn">내민 길이 (벽면에서)</label><select id="reachIn">
+        <option value="1.0">1.0m</option><option value="1.5">1.5m</option><option value="2.0" selected>2.0m</option><option value="3.0">3.0m</option></select></div>
+      <div class="row"><label for="gapIn">설치 간격 (높이)</label><select id="gapIn">
+        <option value="10" selected>10m마다</option><option value="20">20m마다 (한 단 건너뜀)</option></select></div>
+      <div class="row"><label for="angIn">망 각도 (수평면에서)</label><select id="angIn">
+        <option value="20">20도</option><option value="25" selected>25도</option><option value="30">30도</option></select></div>
+      <div class="row"><label for="objIn">떨어지는 물건 (가정)</label><select id="objIn">
+        <option value="bolt">볼트 0.1kg</option><option value="clamp" selected>강관 클램프 1kg</option><option value="brick">벽돌 2kg</option></select></div>
+      <div class="slider"><div class="top"><span>벽에서 튕겨 나오는 속도 (가정)</span><b id="vLbl">1.2 m/s</b></div><input type="range" id="vIn" min="0.5" max="3" step="0.1" value="1.2"></div>
+    </div>
+
+    <div class="sec">
+      <h2>③ 결과</h2>
+      <div class="res"><div class="k" id="rTk">망까지 떨어지는 시간 (높이 10m)</div><div class="v" id="rT">-</div><div class="s">시간 = √(2 × 떨어지는 높이 ÷ 9.81)</div></div>
+      <div class="res"><div class="k">그동안 벽면에서 날아간 거리 (속도 × 시간)</div><div class="v" id="rX">-</div><div class="s" id="rXS"></div></div>
+      <div class="res"><div class="k">망 끝까지 수평 거리 (내민 길이 × cos 각도)</div><div class="v" id="rTip">-</div><div class="s" id="rTipS"></div></div>
+      <div class="res"><div class="k">기준 확인</div><div class="s" id="rStd"></div></div>
+      <div class="res"><div class="k">망을 벗어나 땅까지 떨어지면 (높이 30m)</div><div class="v" id="rG">-</div><div class="s" id="rGS"></div></div>
+      <div class="res"><div class="k">지금 상태</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
+    </div>
+
+    <div class="sec">
+      <h2>기준</h2>
+      <p class="note">산업안전보건기준에 관한 규칙 제14조(낙하물에 의한 위험의 방지) 제3항 — 낙하물 방지망 또는 방호선반을 설치하는 경우: ① 높이 10미터 이내마다 설치하고, 내민 길이는 벽면으로부터 2미터 이상으로 할 것 ② 수평면과의 각도는 20도 이상 30도 이하를 유지할 것.</p>
+      <p class="note">같은 조 제2항 — 물체가 떨어지거나 날아올 위험이 있으면 낙하물 방지망·수직보호망·방호선반 설치, 출입금지구역 설정, 보호구 착용 등 필요한 조치를 해야 합니다.</p>
+      <p class="note">교육용 단순화: 건물 높이 30m, 물건 무게(볼트 0.1kg·클램프 1kg·벽돌 2kg), 튕겨 나오는 속도(0.5~3.0m/s), 아래 사람 위치(벽면에서 4.5m)는 모두 가정한 예시 값입니다. 물건은 맨 위에서 벽면 위치를 수평으로 떠난다고 보았고 공기저항·바람·회전은 무시했습니다(시간 = √(2×높이÷9.81), 날아간 거리 = 속도×시간, 땅에 닿는 속도 = √(2×9.81×30), 에너지 = 무게×9.81×30). 떨어지는 높이는 망 끝 높이까지(= 설치 간격)로 보았고, 망 안쪽이 끝보다 낮아 조금 더 떨어지는 것은 무시했습니다. 화면에서는 외벽에 붙은 비계의 바깥면을 벽면 위치로 보고 내민 길이를 쟀습니다. 망의 강도·처짐·그물코 크기는 다루지 않습니다.</p>
+      <p class="note">교육용 시뮬레이션입니다. 실제 설치는 안전인증 제품과 작업계획서를 따르세요.</p>
+    </div>
+
+    <div class="sec links">
+      <h2>더 알아보기</h2>
+      <a href="quiz.html">✅ 체험 확인 퀴즈 5문항 · 확인서 받기 →</a>
+      <a href="guardrail-simulator.html">안전난간 추락 시뮬레이터 →</a>
+      <a href="wind-simulator.html">비계 바람 시뮬레이터 →</a>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var G = 9.81, HB = 30, WALLX = -1.0, MANX = 4.5, PRE = 0.4, ZB = 5, ZN = 4, DOT = 0.07, NU = 8, NZ = 10;
+  var OBJ = { bolt: { kg: 0.1, name: '볼트', r: 0.3 }, clamp: { kg: 1, name: '강관 클램프', r: 0.3 }, brick: { kg: 2, name: '벽돌', r: 0.24 } };
+  var S = { reach: 2, gap: 10, ang: 25, obj: 'clamp', v: 1.2, state: 'idle', t: 0, ts: 0, sag: 0, nDot: 0, p: { x: 0, y: HB, r: 0 } };
+
+  function rad() { return S.ang * Math.PI / 180; }
+  function kg() { return OBJ[S.obj].kg; }
+  function tFall() { return Math.sqrt(2 * S.gap / G); }            // 망 높이까지 떨어지는 시간(초)
+  function xFly() { return S.v * tFall(); }                        // 그동안 벽면에서 날아간 거리(m)
+  function tipX() { return S.reach * Math.cos(rad()); }            // 망 끝의 수평 거리(m)
+  function caught() { return xFly() <= tipX() + 1e-9; }
+  function netY() { return HB - S.gap; }                           // 받는 망의 끝 높이(m)
+  function tGround() { return Math.sqrt(2 * HB / G); }
+  function xGround() { return S.v * tGround(); }
+  function vGround() { return Math.sqrt(2 * G * HB); }
+  function energy() { return kg() * G * HB; }
+  function surfY(x) { return netY() - (tipX() - x) * Math.tan(rad()); }   // 받는 망 윗면 높이
+  function tCatch() { // 기울어진 망 윗면에 닿는 시각 (화면용)
+    var b = S.v * Math.tan(rad());
+    return (-b + Math.sqrt(b * b + 2 * G * (S.gap + S.reach * Math.sin(rad())))) / G;
+  }
+
+  // ---------- 3D ----------
+  var scene, camera, renderer, controls, clock, world, thing, halo, ring, dots = [], nets = [], M = {};
+  var UP = new THREE.Vector3(0, 1, 0), _d = new THREE.Vector3();
+  function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
+  function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6, metalness: 0.2 }, o || {})); }
+  function rod(a, b, r, m) {
+    _d.subVectors(b, a); var L = _d.length() || 1e-4;
+    var o = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 10), m);
+    o.position.copy(a).addScaledVector(_d, 0.5); o.scale.set(1, L, 1); o.quaternion.setFromUnitVectors(UP, _d.clone().multiplyScalar(1 / L)); return o;
+  }
+  function box(w, h, d, m, x, y, z) { var o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); return o; }
+  function label(txt, x, y, z, h, col) {
+    var c = document.createElement('canvas'); c.width = 512; c.height = 96;
+    var g = c.getContext('2d'); g.font = '800 58px Pretendard, "Malgun Gothic", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,.75)'; g.strokeText(txt, 256, 50); g.fillStyle = col || '#C9CED6'; g.fillText(txt, 256, 50);
+    var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false }));
+    sp.scale.set(h * 512 / 96, h, 1); sp.position.set(x, y, z); sp.renderOrder = 5; return sp;
+  }
+  function person(helm) {
+    var g = new THREE.Group(), b = new THREE.Group(); g.add(b);
+    var lL = new THREE.Group(), lR = new THREE.Group(), aL = new THREE.Group(), aR = new THREE.Group();
+    lL.position.set(-0.11, 0.86, 0); lR.position.set(0.11, 0.86, 0);
+    lL.add(box(0.15, 0.84, 0.17, M.pants, 0, -0.42, 0)); lR.add(box(0.15, 0.84, 0.17, M.pants, 0, -0.42, 0));
+    lL.add(box(0.15, 0.08, 0.28, M.boot, 0, -0.82, 0.05)); lR.add(box(0.15, 0.08, 0.28, M.boot, 0, -0.82, 0.05));
+    b.add(lL); b.add(lR);
+    b.add(box(0.42, 0.58, 0.24, M.vest, 0, 1.15, 0));
+    aL.position.set(-0.27, 1.40, 0); aR.position.set(0.27, 1.40, 0);
+    aL.add(box(0.11, 0.6, 0.12, M.vest, 0, -0.3, 0)); aR.add(box(0.11, 0.6, 0.12, M.vest, 0, -0.3, 0));
+    b.add(aL); b.add(aR);
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.115, 16, 12), M.skin); head.position.set(0, 1.56, 0); b.add(head);
+    var hm = new THREE.Mesh(new THREE.SphereGeometry(0.135, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), helm); hm.position.set(0, 1.6, 0); b.add(hm);
+    return g;
+  }
+  function init() {
+    var view = $('view'), i;
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setClearColor(0x15171A); view.insertBefore(renderer.domElement, view.firstChild);
+    scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x15171A, 160, 420);
+    camera = new THREE.PerspectiveCamera(30, 1, 0.5, 600);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 6; controls.maxDistance = 220;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x30343a, 0.85));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.75); dl.position.set(14, 30, 22); scene.add(dl);
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color: 0x2A2D31, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    var gh = new THREE.GridHelper(60, 60, 0x3A3E44, 0x30343A); gh.position.y = 0.01; scene.add(gh);
+    M = { conc: mat(0x8E949B, { roughness: 0.9, metalness: 0 }), slab: mat(0xA3A9B0, { roughness: 0.9, metalness: 0 }), win: mat(0x2B3644, { roughness: 0.4, metalness: 0.3 }),
+      pipe: mat(0xB9C0C8, { metalness: 0.5, roughness: 0.4 }), deck: mat(0x5A6068, { metalness: 0.3 }), tip: mat(0xF2B705, { metalness: 0.3, emissive: 0x4A3800 }),
+      net: new THREE.MeshStandardMaterial({ color: 0x2FA36B, roughness: 0.9, metalness: 0, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false }),
+      netW: new THREE.MeshBasicMaterial({ color: 0x9FE8C4, wireframe: true, transparent: true, opacity: 0.75 }),
+      thing: mat(0xFF5A1F, { metalness: 0.1, roughness: 0.5, emissive: 0xC8380A }), halo: new THREE.MeshBasicMaterial({ color: 0xFF7A2A, transparent: true, opacity: 0.28, depthWrite: false }),
+      dot: new THREE.MeshBasicMaterial({ color: 0xFF8A3A }), guide: new THREE.MeshBasicMaterial({ color: 0xF2B705, transparent: true, opacity: 0.55 }), ring: new THREE.MeshBasicMaterial({ color: 0xFF6369, side: THREE.DoubleSide }),
+      vest: mat(0xFF7A1A, { metalness: 0 }), pants: mat(0x2F3A4A, { metalness: 0 }), boot: mat(0x1A1A1A, { metalness: 0 }), skin: mat(0xE0B990, { metalness: 0 }),
+      helm: mat(0xFFFFFF, { metalness: 0.1 }) };
+    var man = person(M.helm); man.position.set(MANX, 0, -1.5); man.rotation.y = -0.5; scene.add(man);
+    thing = new THREE.Group(); scene.add(thing);
+    halo = new THREE.Mesh(new THREE.SphereGeometry(0.62, 16, 12), M.halo); scene.add(halo);
+    ring = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.62, 28), M.ring); ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring);
+    var dg = new THREE.SphereGeometry(0.15, 10, 8);
+    for (i = 0; i < 60; i++) { var d = new THREE.Mesh(dg, M.dot); d.visible = false; scene.add(d); dots.push(d); }
+    // 바닥 눈금 (벽면에서 수평 거리)
+    var tickM = new THREE.MeshBasicMaterial({ color: 0x8A9099 });
+    for (i = 0; i <= 8; i++) { var tk = box(0.05, 0.02, i % 2 ? 0.5 : 1.0, tickM, i, 0.03, ZB + 1.2); scene.add(tk); }
+    scene.add(box(8, 0.02, 0.05, tickM, 4, 0.03, ZB + 1.2));
+    scene.add(label('벽면 0', 0, -1.0, ZB + 1.2, 1.0)); scene.add(label('2m', 2, -1.0, ZB + 1.2, 1.0, '#F2B705'));
+    scene.add(label('4m', 4, -1.0, ZB + 1.2, 1.0)); scene.add(label('6m', 6, -1.0, ZB + 1.2, 1.0)); scene.add(label('8m', 8, -1.0, ZB + 1.2, 1.0));
+    clock = new THREE.Clock();
+    makeThing(); build(); resize(); window.addEventListener('resize', resize);
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(view);
+  }
+  function makeThing() { // 잘 보이도록 실제보다 훨씬 크게 그림
+    while (thing.children.length) { var c = thing.children[0]; thing.remove(c); if (c.geometry) c.geometry.dispose(); }
+    var o;
+    if (S.obj === 'bolt') {
+      o = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.8, 12), M.thing); thing.add(o);
+      o = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.2, 6), M.thing); o.position.y = 0.4; thing.add(o);
+    } else if (S.obj === 'brick') {
+      thing.add(box(0.95, 0.46, 0.6, M.thing, 0, 0, 0));
+    } else {
+      thing.add(box(0.7, 0.5, 0.4, M.thing, 0, 0, 0));
+      o = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.8, 10), M.thing); o.rotation.z = Math.PI / 2; o.position.y = 0.22; thing.add(o);
+    }
+  }
+  function netGeom(yTip) {
+    var a = rad(), R = S.reach, y0 = yTip - R * Math.sin(a), pos = [], idx = [], i, j;
+    for (i = 0; i <= NU; i++) for (j = 0; j <= NZ; j++) { var u = R * i / NU; pos.push(u * Math.cos(a), y0 + u * Math.sin(a), -ZN + 2 * ZN * j / NZ); }
+    for (i = 0; i < NU; i++) for (j = 0; j < NZ; j++) { var p = i * (NZ + 1) + j; idx.push(p, p + 1, p + NZ + 1, p + 1, p + NZ + 2, p + NZ + 1); }
+    var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+    g.userData.base = pos.slice(); return g;
+  }
+  function build() {
+    if (world) { scene.remove(world); world.traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.map) { o.material.map.dispose(); o.material.dispose(); } }); }
+    world = new THREE.Group(); scene.add(world); nets = [];
+    var i, k, z, y, W = 10, a = rad(), R = S.reach;
+    // 건물 (10층, 높이 30m)
+    world.add(box(W, HB, 2 * ZB, M.conc, WALLX - W / 2, HB / 2, 0));
+    for (k = 1; k <= 10; k++) {
+      world.add(box(W + 0.06, 0.18, 2 * ZB + 0.06, M.slab, WALLX - W / 2, k * 3 - 0.09, 0));
+      for (i = 0; i < 3; i++) world.add(box(1.7, 1.4, 0.06, M.win, WALLX - 2 - i * 3, k * 3 - 1.5, ZB));
+    }
+    // 외부 비계 (벽에 붙여 세움 · 바깥 기둥 줄이 벽면 위치 0)
+    var XI = WALLX + 0.12, XO = -0.03, HT = HB + 1.2;
+    for (z = -5.4; z <= 5.41; z += 1.8) { world.add(rod(V3(XI, 0, z), V3(XI, HT, z), 0.03, M.pipe)); world.add(rod(V3(XO, 0, z), V3(XO, HT, z), 0.03, M.pipe)); }
+    for (y = 0.4; y <= HT; y += 1.9) {
+      world.add(rod(V3(XI, y, -5.4), V3(XI, y, 5.4), 0.025, M.pipe)); world.add(rod(V3(XO, y, -5.4), V3(XO, y, 5.4), 0.025, M.pipe));
+      for (z = -5.4; z <= 5.41; z += 1.8) world.add(rod(V3(XI, y, z), V3(XO, y, z), 0.022, M.pipe));
+      world.add(box(XO - XI - 0.1, 0.05, 10.8, M.deck, (XI + XO) / 2, y + 0.05, 0));
+    }
+    // 낙하물방지망: 설치 간격마다 (끝 높이 기준)
+    for (y = HB - S.gap; y > 0.5; y -= S.gap) {
+      var g = netGeom(y), y0 = y - R * Math.sin(a), tx = R * Math.cos(a);
+      world.add(new THREE.Mesh(g, M.net)); world.add(new THREE.Mesh(g, M.netW));
+      world.add(rod(V3(tx, y, -ZN), V3(tx, y, ZN), 0.08, M.tip));
+      world.add(rod(V3(0, y0, -ZN), V3(0, y0, ZN), 0.03, M.pipe));
+      [-ZN, -ZN / 3, ZN / 3, ZN].forEach(function (zz) {
+        world.add(rod(V3(0, y0, zz), V3(tx, y, zz), 0.03, M.pipe));
+        world.add(rod(V3(tx, y, zz), V3(0, y + 1.6, zz), 0.012, M.pipe));
+      });
+      nets.push({ g: g, y: y });
+    }
+    world.add(rod(V3(tipX(), 0.02, 0), V3(tipX(), netY(), 0), 0.035, M.guide));
+    world.add(label('망 끝 ' + fmt(tipX(), 2) + 'm', tipX() + 3.4, netY() + 0.9, ZN, 1.25, '#F2B705'));
+    world.add(label('30m', WALLX - 11.6, 30, ZB, 1.2)); world.add(label('20m', WALLX - 11.6, 20, ZB, 1.2)); world.add(label('10m', WALLX - 11.6, 10, ZB, 1.2));
+    frame();
+  }
+  function sagNet() { // 물건을 받은 망이 살짝 처짐
+    var n = nets[0]; if (!n) return;
+    var b = n.g.userData.base, p = n.g.attributes.position, a = rad(), u0 = S.p.x / Math.cos(a), i, cnt = p.count;
+    for (i = 0; i < cnt; i++) {
+      var u = b[i * 3] / Math.cos(a), z = b[i * 3 + 2], w = Math.exp(-((u - u0) * (u - u0) + z * z) / 0.9) * Math.min(1, u / 0.25);
+      p.setY(i, b[i * 3 + 1] - S.sag * w);
+    }
+    p.needsUpdate = true;
+  }
+  function resize() {
+    var v = $('view'), w = v.clientWidth, h = v.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); frame();
+  }
+  function frame() { // 세로로 긴 화면(쇼츠)은 위·아래 띠에 가려지는 만큼 더 물러남. 맨 위(30m)와 땅이 가려지지 않게 맞춤
+    if (!camera) return;
+    var h = $('view').clientHeight || 600, tall = camera.aspect < 0.8, top = tall ? 240 : 100, bot = tall ? 262 : 72;
+    var ext = Math.max(31.5 * h / Math.max(120, h - top - bot), 17 / camera.aspect), d = ext / 2 / Math.tan(camera.fov * Math.PI / 360);
+    var tx = tall ? 0.6 : 1.5, ty = (h / 2 - bot) * ext / h - 0.6;
+    controls.target.set(tx, ty, 0); camera.position.set(tx + d * 0.07, ty + d * 0.06, d * 0.995); controls.update();
+  }
+
+  // ---------- 화면 ----------
+  function fmt(n, d) { return n.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function badge(ok) { return ' <span class="badge ' + (ok ? 'ok">OK' : 'ng">NG') + '</span>'; }
+  function update() {
+    var c = caught(), x = xFly(), tp = tipX();
+    $('vLbl').textContent = fmt(S.v, 1) + ' m/s';
+    $('hX').textContent = fmt(x, 2) + ' m'; $('hX').className = 'n ' + (c ? '' : 'ng');
+    $('hX2').textContent = S.gap + 'm 떨어지는 동안 · ' + fmt(tFall(), 2) + '초';
+    $('hTipT').textContent = '망 끝까지 거리 (내민 ' + fmt(S.reach, 1) + 'm)'; $('hTip').textContent = fmt(tp, 2) + ' m';
+    $('rTk').textContent = '망까지 떨어지는 시간 (높이 ' + S.gap + 'm)'; $('rT').textContent = fmt(tFall(), 2) + '초';
+    $('rX').innerHTML = fmt(x, 2) + 'm' + badge(c);
+    $('rXS').textContent = fmt(S.v, 1) + 'm/s × ' + fmt(tFall(), 2) + '초 → ' + (c ? '망 끝(' + fmt(tp, 2) + 'm) 안쪽에 떨어집니다' : '망 끝(' + fmt(tp, 2) + 'm)보다 ' + fmt(x - tp, 2) + 'm 더 날아갑니다');
+    $('rTip').textContent = fmt(tp, 2) + 'm';
+    $('rTipS').textContent = fmt(S.reach, 1) + 'm × cos ' + S.ang + '도';
+    $('rStd').innerHTML = '내민 길이 ' + fmt(S.reach, 1) + 'm (벽면에서 2m 이상)' + badge(S.reach >= 2) + '<br>설치 간격 ' + S.gap + 'm (높이 10m 이내마다)' + badge(S.gap <= 10) + '<br>망 각도 ' + S.ang + '도 (20도 이상 30도 이하)' + badge(S.ang >= 20 && S.ang <= 30);
+    $('rG').textContent = fmt(vGround(), 1) + 'm/s (시속 약 ' + fmt(vGround() * 3.6, 0) + 'km)';
+    $('rGS').textContent = OBJ[S.obj].name + ' ' + kg() + 'kg: 에너지 ' + fmt(energy(), 0) + 'J (무게 × 9.81 × 30m) · 벽면에서 ' + fmt(xGround(), 2) + 'm 지점';
+    refreshNow();
+  }
+  function refreshNow() {
+    var txt, cls, sub = '', b = $('banner'), st = S.state, c = caught(), hr = $('hRes');
+    if (st === 'caught') { txt = '망이 받았습니다'; cls = 'ok'; sub = '날아간 거리 ' + fmt(xFly(), 2) + 'm ≤ 망 끝 ' + fmt(tipX(), 2) + 'm'; }
+    else if (st === 'ground') { txt = '망을 벗어나 땅에 떨어짐'; cls = 'ng'; sub = '날아간 거리 ' + fmt(xFly(), 2) + 'm > 망 끝 ' + fmt(tipX(), 2) + 'm. 땅에 닿는 속도 ' + fmt(vGround(), 1) + 'm/s · ' + fmt(energy(), 0) + 'J'; }
+    else if (st === 'miss') { txt = '망을 벗어남'; cls = 'ng'; sub = '망 끝 바깥을 지나 계속 떨어집니다.'; }
+    else if (st === 'run') { txt = '떨어지는 중'; cls = 'warn'; }
+    else { txt = '대기 중'; cls = 'ok'; sub = '①에서 「▶ 물건 떨어뜨리기」를 눌러 보세요. 지금 조건이면 ' + (c ? '망이 받습니다.' : '망을 벗어납니다.'); }
+    $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub;
+    if (st === 'caught') { hr.textContent = '✔ 망이 받았습니다'; hr.className = 't ok'; }
+    else if (st === 'ground' || st === 'miss') { hr.textContent = '⚠ 망을 벗어남'; hr.className = 't ng'; }
+    else { hr.textContent = c ? '망이 받습니다' : '망을 벗어납니다'; hr.className = 't ' + (c ? 'ok' : 'ng'); }
+    if (st === 'ground') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 망을 벗어나 땅으로 — ' + fmt(vGround(), 1) + 'm/s (시속 ' + fmt(vGround() * 3.6, 0) + 'km)'; }
+    else if (st === 'caught') { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ 망이 받았습니다 — ' + fmt(xFly(), 2) + 'm ≤ 망 끝 ' + fmt(tipX(), 2) + 'm'; }
+    else b.style.display = 'none';
+  }
+  function setState(s) { S.state = s; refreshNow(); }
+
+  // ---------- 움직임 ----------
+  function step(dt) {
+    var p = S.p, st = S.state, tf;
+    if (st === 'caught') { // 망이 출렁이다 멈춤
+      if (S.ts >= 2.5) return;
+      S.ts = Math.min(2.5, S.ts + dt); S.sag = S.sagA * (1 - Math.exp(-4.5 * S.ts) * Math.cos(11 * S.ts)); return;
+    }
+    if (st !== 'run' && st !== 'miss') return;
+    S.t += dt; tf = S.t - PRE; if (tf < 0) return;
+    if (caught()) {
+      var tc = tCatch(); if (tf >= tc) { tf = tc; S.ts = 0; S.sagA = 0.3 * Math.min(1, 0.4 + (tipX() - S.v * tc) / 0.5); setState('caught'); }
+    } else {
+      if (st === 'run' && tf >= tFall()) setState('miss');
+      if (tf >= tGround()) { tf = tGround(); setState('ground'); }
+    }
+    p.x = S.v * tf; p.y = HB - 0.5 * G * tf * tf; p.r = tf * 4;
+    while (S.nDot < dots.length && S.nDot * DOT <= tf) { // 지나간 자리(점선)
+      var td = S.nDot * DOT, d = dots[S.nDot]; d.position.set(S.v * td, HB - 0.5 * G * td * td, 0); d.visible = true; S.nDot++;
+    }
+  }
+  function place() {
+    var p = S.p, st = S.state, r = OBJ[S.obj].r, y = p.y, show = st !== 'idle';
+    if (st === 'caught') { y = surfY(p.x) - S.sag + r; sagNet(); }
+    else if (st === 'ground') y = r;
+    else if (st === 'run' && S.t < PRE) y = HB + r;
+    thing.visible = halo.visible = show;
+    thing.position.set(p.x, y, 0); thing.rotation.set(0, 0.5, st === 'caught' ? -rad() : st === 'ground' ? 0 : -p.r);
+    halo.position.copy(thing.position);
+    var pulse = st === 'run' && S.t < PRE ? 1 + 0.5 * Math.sin(S.t / PRE * Math.PI) : 1; halo.scale.set(pulse, pulse, pulse);
+    ring.visible = st === 'ground'; if (ring.visible) ring.position.set(p.x, 0.04, 0);
+  }
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.1), n = Math.ceil(dt / 0.01), i;
+    for (i = 0; i < n; i++) step(dt / n);
+    place(); controls.update(); renderer.render(scene, camera);
+  }
+  function reset() {
+    S.state = 'idle'; S.t = 0; S.ts = 0; S.sag = 0; S.sagA = 0; S.nDot = 0; S.p.x = 0; S.p.y = HB; S.p.r = 0;
+    dots.forEach(function (d) { d.visible = false; });
+    if (nets[0]) sagNet();
+    update();
+  }
+  function drop() { reset(); setState('run'); }
+  function bind() {
+    $('reachIn').onchange = function () { S.reach = parseFloat(this.value); build(); reset(); };
+    $('gapIn').onchange = function () { S.gap = parseFloat(this.value); build(); reset(); };
+    $('angIn').onchange = function () { S.ang = parseFloat(this.value); build(); reset(); };
+    $('objIn').onchange = function () { S.obj = this.value; makeThing(); reset(); };
+    $('vIn').oninput = function () { S.v = parseFloat(this.value); reset(); };
+    $('bDrop').onclick = drop;
+    $('bReset').onclick = function () {
+      $('reachIn').value = '2.0'; $('gapIn').value = '10'; $('angIn').value = '25'; $('objIn').value = 'clamp'; $('vIn').value = 1.2;
+      S.reach = 2; S.gap = 10; S.ang = 25; S.obj = 'clamp'; S.v = 1.2; makeThing(); build(); reset();
+    };
+  }
+  window.GPNet = { S: S, tFall: tFall, xFly: xFly, tipX: tipX, caught: caught, netY: netY, tGround: tGround, xGround: xGround, vGround: vGround, energy: energy, kg: kg, update: update };
+  bind(); init(); update(); animate();
+})();
+</script>
+<script>
+/* 쇼츠 영상과 같은 조건으로 열기: 주소 끝 #이름 (예: …html#netreach). 영상 설명란 링크용 — 2026-11 */
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function set(id, v, ev) { var e = $(id); if (!e) return; e.value = String(v); e.dispatchEvent(new Event(ev || 'change')); }
+  function click(id) { var e = $(id); if (e) e.click(); }
+  function toast(t) {
+    var d = document.createElement('div');
+    d.setAttribute('role', 'status');
+    d.style.cssText = 'position:fixed;left:12px;right:12px;top:70px;margin:0 auto;width:max-content;max-width:min(560px,calc(100vw - 24px));z-index:9999;background:#1B1B1B;color:#fff;border:2px solid #F2B705;border-radius:12px;padding:12px 16px;font:600 14px/1.5 Pretendard,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer;word-break:keep-all';
+    d.innerHTML = '🎬 ' + t + ' <span style="color:#8a8f96;font-weight:500">(눌러서 닫기)</span>';
+    d.onclick = function () { d.remove(); };
+    document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 9000);
+  }
+  var P = {
+    netreach: { msg: '영상과 같은 조건: <b>설치 간격 10m · 내민 길이 1.0m · 클램프 1kg · 튕겨 나오는 속도 1.2m/s(가정)</b>. 「▶ 물건 떨어뜨리기」를 눌러 보세요. (내민 길이를 2.0m로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('reachIn', '1.0'); } },
+    netgap: { msg: '영상과 같은 조건: <b>내민 길이 2.0m · 설치 간격 20m마다 · 클램프 1kg · 튕겨 나오는 속도 1.2m/s(가정)</b>. 「▶ 물건 떨어뜨리기」를 눌러 보세요. (설치 간격을 10m마다로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('gapIn', '20'); } }
+  };
+  function go() {
+    var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';
+    var p = P[h]; if (!p) return;
+    try { p.run(set, click); toast(p.msg); } catch (e) { console.error(e); }
+  }
+  if (document.readyState === 'complete') setTimeout(go, 300); else window.addEventListener('load', function () { setTimeout(go, 300); });
+  window.addEventListener('hashchange', go);
+  window.GPPresets = P;
+})();
+</script>
+<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+</body>
+</html>

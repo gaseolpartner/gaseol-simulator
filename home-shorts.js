@@ -9,6 +9,12 @@
   // [영상 파일, 제목, 길이(초), 같은 조건으로 열 시뮬레이터 주소, 유튜브 쇼츠 주소, 유튜브 링크로 바꿀 날짜(한국시간 0시부터)]
   // 예약 공개 영상은 공개 다음 날부터 유튜브로 연결 (그 전에는 시뮬레이터로)
   var NEW = [
+    ['netgap', '낙하물방지망 설치 간격', '17', 'debris-net-simulator.html#netgap', '', ''],
+    ['plankgap', '작업발판 틈', '15.5', 'plank-simulator.html#plankgap', '', ''],
+    ['cageride', '갱폼 케이지 탑승 인양', '17', 'gangform-lift-simulator.html#cageride', '', ''],
+    ['netreach', '낙하물방지망 내민 길이', '17', 'debris-net-simulator.html#netreach', '', ''],
+    ['coverfix', '개구부 덮개 미고정', '15', 'opening-cover-simulator.html#coverfix', '', ''],
+    ['plankfix', '작업발판 미고정', '15', 'plank-simulator.html#plankfix', '', ''],
     ['slabthick', '동바리 슬래브 두께', '15', 'support-collapse-simulator.html#slabthick', 'https://youtube.com/shorts/xIZv0WIUbA8', '2026-11-14'],
     ['height', '비계 설치 높이', '18', 'wind-simulator.html#height', 'https://youtube.com/shorts/ntX9fPLLo-c', '2026-11-13'],
     ['prerelease', '갱폼 고정볼트 선해체', '16', 'gangform-lift-simulator.html#prerelease', 'https://youtube.com/shorts/on-UgdPScKE', '2026-11-12'],
@@ -60,7 +66,7 @@
   // 영상이 늘어도 페이지가 길어지지 않게: 분류 버튼 + 처음엔 PC 8개 / 휴대폰 4개만, 나머지는 [영상 더 보기]
   // 분류는 영상이 여는 시뮬레이터 파일로 자동으로 정함 → 새 영상은 NEW 목록에만 넣으면 됨
   var CAT = [['all', '전체'], ['sc', '비계'], ['sp', '동바리'], ['fw', '거푸집·갱폼'], ['etc', '인양·안전시설']];
-  var BYSIM = { 'wind-simulator': 'sc', 'scaffold': 'sc', 'support-collapse-simulator': 'sp', 'formwork-pressure-simulator': 'fw', 'gangform-lift-simulator': 'fw', 'rigging-simulator': 'etc', 'guardrail-simulator': 'etc' };
+  var BYSIM = { 'wind-simulator': 'sc', 'scaffold': 'sc', 'support-collapse-simulator': 'sp', 'formwork-pressure-simulator': 'fw', 'gangform-lift-simulator': 'fw', 'rigging-simulator': 'etc', 'guardrail-simulator': 'etc', 'plank-simulator': 'sc', 'opening-cover-simulator': 'etc', 'debris-net-simulator': 'etc' };
   var BYFILE = { settle: 'sc', dismantle: 'sc', mobile: 'sc', heap: 'sp', formwork: 'fw', rigging: 'etc' }; // 처음부터 있던 6개
   function catOf(f) {
     var v = f.querySelector('video'), m = v && (v.getAttribute('src') || '').match(/videos\/([\w-]+)\.mp4/);
