@@ -422,7 +422,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     fluid: { msg: '영상과 같은 조건: <b>고유동 콘크리트</b>, 시간당 2m. 「▶ 타설 시작」을 눌러 보세요.',
       run: function (set, click) { set('rIn', 2, 'input'); set('tIn', 20, 'input'); set('shIn', '600'); set('svIn', '600'); set('cIn', 'fluid'); } },
     cold: { msg: '영상과 같은 조건: <b>기온 10℃</b>, 시간당 2m, 폼타이 600×600. 「▶ 타설 시작」을 눌러 보세요. (온도를 20℃로 바꿔 비교해 보세요)',
-      run: function (set, click) { set('cIn', 'std'); set('rIn', 2, 'input'); set('shIn', '600'); set('svIn', '600'); set('tIn', 10, 'input'); } }
+      run: function (set, click) { set('cIn', 'std'); set('rIn', 2, 'input'); set('shIn', '600'); set('svIn', '600'); set('tIn', 10, 'input'); } },
+    rate: { msg: '영상과 같은 조건: <b>기온 20℃ · 시간당 4m</b>, 벽 높이 3m, 폼타이 600×600. 「▶ 타설 시작」을 눌러 보세요. (타설 속도를 2m/h로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('cIn', 'std'); set('shIn', '600'); set('svIn', '600'); set('tIn', 20, 'input'); set('rIn', 4, 'input'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';

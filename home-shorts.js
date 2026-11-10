@@ -9,6 +9,9 @@
   // [영상 파일, 제목, 길이(초), 같은 조건으로 열 시뮬레이터 주소, 유튜브 쇼츠 주소, 유튜브 링크로 바꿀 날짜(한국시간 0시부터)]
   // 예약 공개 영상은 공개 다음 날부터 유튜브로 연결 (그 전에는 시뮬레이터로)
   var NEW = [
+    ['rate', '거푸집 타설 속도', '15', 'formwork-pressure-simulator.html#rate', '', ''],
+    ['netangle', '낙하물방지망 각도', '17', 'debris-net-simulator.html#netangle', '', ''],
+    ['nocover', '개구부 덮개 치워 둠', '15', 'opening-cover-simulator.html#nocover', '', ''],
     ['netgap', '낙하물방지망 설치 간격', '17', 'debris-net-simulator.html#netgap', '', ''],
     ['plankgap', '작업발판 틈', '15.5', 'plank-simulator.html#plankgap', '', ''],
     ['cageride', '갱폼 케이지 탑승 인양', '17', 'gangform-lift-simulator.html#cageride', '', ''],
