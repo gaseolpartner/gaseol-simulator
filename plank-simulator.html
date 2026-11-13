@@ -481,7 +481,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     plankfix: { msg: '영상과 같은 조건: <b>높이 4m · 내민 길이 50cm · 발판 고정 안 함</b>. 「▶ 발판 끝으로 걸어가기」를 눌러 보세요. (발판 고정을 「고정함」으로 바꿔 비교해 보세요)',
       run: function (set, click) { click('bReset'); set('expIn', 'fix'); set('ovIn', '50'); set('fixIn', '0'); } },
     plankgap: { msg: '영상과 같은 조건: <b>높이 4m · 발판 틈 10cm · 강관 클램프(폭 6cm)</b>. 「▶ 공구 떨어뜨리기」를 눌러 보세요. (틈을 3cm로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('expIn', 'gap'); set('toolIn', 'clamp'); set('gapIn', '10'); } }
+      run: function (set, click) { click('bReset'); set('expIn', 'gap'); set('toolIn', 'clamp'); set('gapIn', '10'); } },
+    boltgap: { msg: '영상과 같은 조건: <b>높이 10m · 발판 틈 3cm(기준 안) · 볼트(지름 2cm)</b>. 「▶ 공구 떨어뜨리기」를 눌러 보세요. (물건을 망치로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('expIn', 'gap'); set('gapIn', '3'); set('hIn', 10, 'input'); set('toolIn', 'bolt'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';

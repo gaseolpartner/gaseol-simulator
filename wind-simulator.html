@@ -1196,7 +1196,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     tiewide: { msg: '영상과 같은 조건: <b>벽이음 가로 간격 5,486mm</b>(기본 3,658mm의 1.5배). 「▶ 바람 점점 세게」를 눌러 보세요.',
       run: function (set, click) { GPMode.set('wind'); click('bReset'); set('nIn', '0.3'); set('shIn', '5486'); } },
     height: { msg: '영상과 같은 조건: <b>설치 높이 40m</b>(벽이음 간격은 기본 3,658×3,800mm 그대로). 「▶ 바람 점점 세게」를 눌러 보세요. (높이를 14m로 바꿔 비교해 보세요)',
-      run: function (set, click) { GPMode.set('wind'); click('bReset'); set('nIn', '0.3'); set('shIn', '3658'); set('hIn', 40, 'input'); } }
+      run: function (set, click) { GPMode.set('wind'); click('bReset'); set('nIn', '0.3'); set('shIn', '3658'); set('hIn', 40, 'input'); } },
+    work: { msg: '영상과 같은 조건: <b>높이 14m · 깔목 · 바깥줄 되메운 흙 · 돌붙임 공사(3.5kN/㎡)</b>. 「▶ 작업 진행」을 눌러 보세요. (작업 하중을 경작업 1.0으로, 받침을 깔판으로 바꿔 비교해 보세요)',
+      run: function (set, click) { GPMode.set('settle'); set('sType', 'system'); set('sHIn', 14, 'input'); set('sBase', 'block'); set('sGin', '300'); set('sGout', '50'); set('sWork', '3.5'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';

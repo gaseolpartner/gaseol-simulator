@@ -101,14 +101,17 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
         <button class="btn line" id="bBolt" type="button">2. 고정볼트 풀기</button>
         <button class="btn line" id="bExit" type="button">3. 작업자 건물 안으로</button>
         <button class="btn line" id="bLift" type="button">4. 한 층 인양</button>
+        <button class="btn line" id="bFix" type="button">5. 고정볼트 다시 체결</button>
+        <button class="btn line" id="bUnhook" type="button">6. 훅 풀기</button>
       </div>
       <div class="btns">
         <button class="btn" id="bRight" type="button">▶ 올바른 순서 자동</button>
         <button class="btn line" id="bWrong" type="button">위험 예시: 볼트 먼저 풀기</button>
         <button class="btn line" id="bRide" type="button">위험 예시: 케이지에 탄 채 인양</button>
+        <button class="btn line" id="bLoose" type="button">위험 예시: 체결 전에 훅 풀기</button>
         <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
       </div>
-      <p class="note">어떤 순서로 눌러도 됩니다. 훅을 걸기 전에 고정볼트를 모두 풀면 갱폼이 바깥으로 넘어갑니다.</p>
+      <p class="note">어떤 순서로 눌러도 됩니다. 훅을 걸기 전에 고정볼트를 모두 풀면 갱폼이 바깥으로 넘어갑니다. 인양한 뒤에도 고정볼트를 다시 체결하기 전에 훅을 풀면 넘어갑니다.</p>
     </div>
 
     <div class="sec">
@@ -133,7 +136,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     <div class="sec">
       <h2>기준</h2>
       <p class="note">산업안전보건기준에 관한 규칙 제331조의3 제2항 — 갱폼의 조립·이동·양중·해체 작업 시<br>1. 조립등의 범위와 작업절차를 미리 근로자에게 주지<br>2. 구조물 안에서 갱폼 작업발판으로 안전하게 드나드는 이동통로 설치<br>3. 지지·고정철물의 이상 유무를 수시 점검, 이상이 있으면 교체<br>4. 갱폼을 인양장비에 <b>매단 후에</b> 작업하고, 매달기 전에 지지·고정철물을 미리 해체하지 않을 것<br>5. 인양 시 작업발판용 케이지에 근로자가 탑승한 상태에서 인양하지 않을 것</p>
-      <p class="note">교육용 단순화: 고정볼트가 모두 풀리고 훅이 걸려 있지 않으면 바깥쪽에 매달린 작업발판 무게로 갱폼이 바깥으로 넘어간다고 그렸습니다. 작업자가 케이지에 탄 채 인양하면 줄에 매달린 갱폼이 앞뒤로 흔들리고(가정: 가장 크게 약 9° 기울어짐), 인양을 시작하고 약 1.2초 뒤 작업자가 중심을 잃어 난간 밖으로 떨어진다고 그렸습니다. 흔들리는 크기와 시간은 보여 주기 위한 가정입니다. 떨어지는 속도는 작업 층 높이(층수 × 층고 2.9m)로 √(2 × 9.81 × 높이)를 구한 값이며 공기저항은 넣지 않았습니다. 실제 갱폼의 무게·볼트 수·인양 방법은 제작도와 작업계획서를 따르세요.</p>
+      <p class="note">교육용 단순화: 고정볼트가 모두 풀리고 훅이 걸려 있지 않으면(매달기 전이든, 인양한 뒤 다시 체결하기 전이든) 바깥쪽에 매달린 작업발판 무게로 갱폼이 바깥으로 넘어간다고 그렸습니다. 작업자가 케이지에 탄 채 인양하면 줄에 매달린 갱폼이 앞뒤로 흔들리고(가정: 가장 크게 약 9° 기울어짐), 인양을 시작하고 약 1.2초 뒤 작업자가 중심을 잃어 난간 밖으로 떨어진다고 그렸습니다. 흔들리는 크기와 시간은 보여 주기 위한 가정입니다. 떨어지는 속도는 작업 층 높이(층수 × 층고 2.9m)로 √(2 × 9.81 × 높이)를 구한 값이며 공기저항은 넣지 않았습니다. 실제 갱폼의 무게·볼트 수·인양 방법은 제작도와 작업계획서를 따르세요.</p>
     </div>
 
     <div class="sec links">
@@ -251,7 +254,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     var top = form.userData.top, Y = slabY(), y0 = form.userData.y0;
     form.position.set(0, y0 + S.lifted + S.fy, S.fz); form.rotation.x = S.tilt;
     if (!S.manIn && man.parent !== form.userData.g && S.state !== 'manfall' && S.state !== 'manfell') { form.userData.g.add(man); }
-    var hy = S.hook > 0 ? top + 2.6 + (1 - S.hook) * 9 + S.lifted : top + 11;
+    var hy = S.hook > 0 ? top + 2.6 + (1 - S.hook) * 9 + S.lifted : top + 11 + (S.lifted > 0 ? 0.6 + S.lifted : 0);
     if (S.sway) {   // 훅(매단 점)을 중심으로 진자처럼 흔들림
       var py = hy - 0.2, pz = 0.14, dy = y0 + S.lifted - py, dz = -pz, cs = Math.cos(S.sway), sn = Math.sin(S.sway);
       form.position.set(0, py + dy * cs - dz * sn, pz + dy * sn + dz * cs); form.rotation.x = S.sway;
@@ -267,13 +270,15 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   }
 
   // ---------- 순서·움직임 ----------
-  var NAME = { hook: '훅 걸기', bolt: '고정볼트 풀기', exit: '작업자 건물 안으로', lift: '한 층 인양' };
+  var NAME = { hook: '훅 걸기', bolt: '고정볼트 풀기', exit: '작업자 건물 안으로', lift: '한 층 인양', fix: '고정볼트 다시 체결', unhook: '훅 풀기' };
   function act(a) {
     if (S.state === 'fall' || S.state === 'fell' || S.state === 'manfall' || S.state === 'manfell') return;
     if (S.busy) { S.q.push(a); return; }
     if (a === 'hook' && S.hook >= 1) return;
     if (a === 'bolt' && S.bolts === 0) return;
     if (a === 'exit' && S.manIn) return;
+    if (a === 'fix') { if (S.lifted <= 0) { note('인양한 뒤 새 위치에서 체결합니다.'); return; } if (S.bolts >= NB) return; }
+    if (a === 'unhook' && S.hook < 1) return;
     if (a === 'lift') {
       if (S.hook < 1) { note('훅을 먼저 걸어야 인양할 수 있습니다.'); return; }
       if (S.bolts > 0) { note('고정볼트가 남아 있어 들 수 없습니다. 볼트를 먼저 푸세요.'); return; }
@@ -289,7 +294,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function finish() {
     var a = S.busy; S.busy = null;
     if (a === 'bolt' && S.hook < 1) { S.state = 'tip'; S.w = 0.15; refresh(); return; }
-    S.state = (S.lifted > 0 && a === 'lift') ? 'done' : 'idle';
+    if (a === 'unhook' && S.bolts === 0) { S.q = []; S.state = 'tip'; S.w = 0.15; refresh(); return; }   // 체결 전에 훅을 풂 (2026-11-13)
+    S.state = (S.lifted > 0 && a === 'lift') ? 'done' : (S.lifted > 0 && a === 'fix') ? 'fixed' : (S.lifted > 0 && a === 'unhook') ? 'set' : 'idle';
     if (S.q.length) act(S.q.shift()); else refresh();
   }
   function step(dt) {
@@ -308,6 +314,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
         if (p >= 1) { still(); S.manIn = true; var wp = man.getWorldPosition(V3()); scene.attach(man); man.position.copy(wp); finish(); }
       } else if (a === 'lift') {
         S.lifted = Math.min(FH, S.t / 2.2 * FH); if (S.t >= 2.2) { S.lifted = FH; finish(); }
+      } else if (a === 'fix') {
+        var nf = Math.min(NB, Math.floor(S.t / 0.35) + 1); if (nf > S.bolts) { S.bolts = nf; syncBolts(); refresh(); }
+        if (S.bolts >= NB && S.t >= NB * 0.35) finish();
+      } else if (a === 'unhook') {
+        S.hook = Math.max(0, 1 - S.t / 1.2); if (S.t >= 1.2) { S.hook = 0; finish(); }
       }
     }
     if (S.state === 'ride' || S.state === 'manfall' || S.state === 'manfell') rideStep(dt);
@@ -317,7 +328,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     }
     if (S.state === 'fall') {
       S.vy -= G * dt; S.fy += S.vy * dt; S.fz += S.vz * dt; S.tilt = Math.min(Math.PI / 2, S.tilt + S.w * dt);
-      if (form.userData.y0 + S.fy <= 0.05) { S.fy = 0.05 - form.userData.y0; S.tilt = Math.PI / 2 - 0.02; S.state = 'fell'; refresh(); }
+      if (form.userData.y0 + S.lifted + S.fy <= 0.05) { S.fy = 0.05 - form.userData.y0 - S.lifted; S.tilt = Math.PI / 2 - 0.02; S.state = 'fell'; refresh(); }
     }
   }
   // 탄 채 인양(교육용 단순화): 매달린 갱폼이 벽 바깥쪽으로 흔들리고, 케이지 위 작업자가 난간 밖으로 떨어진다. 갱폼은 훅에 매달린 채 남는다.
@@ -355,29 +366,34 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     }
   }
   function refresh() {
-    $('hHook').textContent = S.hook >= 1 ? '훅 걸림 (매달림)' : S.hook > 0 ? '훅 거는 중' : '훅 안 걸림';
+    $('hHook').textContent = S.hook >= 1 ? '훅 걸림 (매달림)' : S.hook > 0 ? (S.busy === 'unhook' ? '훅 푸는 중' : '훅 거는 중') : '훅 안 걸림';
     $('hHook').className = 'n ' + (S.hook >= 1 ? 'ok' : '');
     $('hBolt').textContent = '고정볼트 ' + S.bolts + ' / ' + NB + '개 체결';
     var mf = S.state === 'manfall' || S.state === 'manfell', rd = S.state === 'ride' || mf;
     $('hMan').textContent = S.state === 'manfell' ? '바닥으로 추락' : S.state === 'manfall' ? '케이지 밖으로 추락' : S.manIn ? '건물 안' : S.ppl ? '케이지 위' : '건물 안';
     $('hMan').className = rd ? 'n ng' : 'n';
-    var stepTxt = S.state === 'manfell' ? '작업자 추락' : S.state === 'manfall' ? '작업자 추락 중' : S.state === 'ride' ? '탄 채 인양 중' : S.busy ? NAME[S.busy] + ' 중' : S.state === 'done' ? '인양 완료' : S.state === 'fell' ? '갱폼 추락' : S.state === 'tip' || S.state === 'fall' ? '갱폼이 넘어감' : '대기 중';
+    var stepTxt = S.state === 'manfell' ? '작업자 추락' : S.state === 'manfall' ? '작업자 추락 중' : S.state === 'ride' ? '탄 채 인양 중' : S.busy ? NAME[S.busy] + ' 중' : S.state === 'done' ? '인양 완료' : S.state === 'fixed' ? '체결 완료' : S.state === 'set' ? '고정 완료' : S.state === 'fell' ? '갱폼 추락' : S.state === 'tip' || S.state === 'fall' ? '갱폼이 넘어감' : '대기 중';
     $('hStep').textContent = stepTxt;
     $('rLog').textContent = S.log.length ? S.log.map(function (x, i) { return (i + 1) + '. ' + x; }).join('  →  ') : '-';
     var txt, cls, sub = S.msg || '', b = $('banner');
     var riding = !S.manIn && S.ppl;
-    if (S.state === 'tip' || S.state === 'fall' || S.state === 'fell') { txt = '갱폼 탈락 · 추락'; cls = 'ng'; sub = '훅에 매달기 전에 고정볼트를 모두 풀어 갱폼이 바깥으로 넘어갔습니다' + (riding ? ' — 케이지의 작업자도 함께 떨어집니다.' : '.') + ' (제331조의3 ②4 위반)'; }
+    if ((S.state === 'tip' || S.state === 'fall' || S.state === 'fell') && S.lifted > 0) { txt = '갱폼 탈락 · 추락'; cls = 'ng'; sub = '새 위치에서 고정볼트를 다시 체결하기 전에 훅을 풀어 갱폼이 바깥으로 넘어갔습니다. 훅은 고정볼트를 모두 체결하고 확인한 뒤에 풉니다.'; }
+    else if (S.state === 'tip' || S.state === 'fall' || S.state === 'fell') { txt = '갱폼 탈락 · 추락'; cls = 'ng'; sub = '훅에 매달기 전에 고정볼트를 모두 풀어 갱폼이 바깥으로 넘어갔습니다' + (riding ? ' — 케이지의 작업자도 함께 떨어집니다.' : '.') + ' (제331조의3 ②4 위반)'; }
+    else if (S.bolts < NB && S.hook < 1 && S.lifted > 0) { txt = '위험: 체결 전 훅 해제'; cls = 'ng'; sub = '고정볼트를 다시 체결하기 전에 훅을 풀고 있습니다.'; }
     else if (S.bolts < NB && S.hook < 1) { txt = '위험: 매달기 전 볼트 해체'; cls = 'ng'; sub = '훅을 걸기 전에 고정볼트를 풀고 있습니다. 모두 풀리면 넘어갑니다.'; }
     else if (mf) { var c = calc(S.F); txt = '작업자 추락'; cls = 'ng'; sub = '작업자가 케이지에 탄 채 인양해, 흔들리는 갱폼에서 중심을 잃고 케이지 밖으로 떨어졌습니다 (제331조의3 ②5 위반). 작업 층 높이 ' + c.h.toFixed(1) + 'm에서 떨어지면 바닥에 닿을 때 약 ' + c.v.toFixed(1) + 'm/s(약 ' + Math.round(c.kmh) + 'km/h)입니다 — 공기저항 무시.'; }
     else if (S.state === 'ride') { txt = '위험: 케이지 탑승 인양'; cls = 'ng'; sub = '작업자가 케이지에 탄 채 인양하고 있습니다. 줄에 매달린 갱폼이 흔들립니다 (제331조의3 ②5 위반).'; }
+    else if (S.state === 'set') { txt = '고정 완료 (안전)'; cls = 'ok'; sub = '인양 → 고정볼트 ' + NB + '개 다시 체결 → 훅 해제. 훅을 풀어도 갱폼이 벽에 고정되어 있습니다.'; }
+    else if (S.state === 'fixed') { txt = '고정볼트 체결 완료'; cls = 'ok'; sub = '고정볼트 ' + NB + '개를 모두 체결했습니다. 이제 훅을 풀어도 됩니다.'; }
     else if (S.state === 'done') { txt = '안전하게 인양'; cls = 'ok'; sub = '매단 뒤 볼트 해체 → 작업자 하차 → 인양. 새 위치에서 다시 고정볼트를 체결한 뒤 훅을 풉니다.'; }
     else if (S.busy) { txt = NAME[S.busy] + ' 중'; cls = 'warn'; }
     else { txt = '대기 중'; cls = 'ok'; if (!sub) sub = '①의 버튼을 순서대로 눌러 보세요.'; }
     $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub; S.msg = '';
     if (mf) { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 케이지 탑승 인양 — 작업자 추락'; }
     else if (S.state === 'ride') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 탄 채 인양 — 갱폼이 흔들립니다'; }
-    else if (S.state === 'fell') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 갱폼 추락 — 매달기 전에 고정볼트 해체'; }
+    else if (S.state === 'fell') { b.className = ''; b.style.display = 'block'; b.textContent = S.lifted > 0 ? '⚠ 갱폼 추락 — 체결 전에 훅 해제' : '⚠ 갱폼 추락 — 매달기 전에 고정볼트 해체'; }
     else if (S.state === 'tip' || S.state === 'fall') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 갱폼이 바깥으로 넘어갑니다'; }
+    else if (S.state === 'set' && cls === 'ok') { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ 체결 확인 후 훅 해제 — 고정 완료'; }
     else if (S.state === 'done' && cls === 'ok') { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ 안전하게 한 층 인양'; }
     else if (cls === 'ng') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ ' + txt; }
     else b.style.display = 'none';
@@ -410,14 +426,17 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     $('bBolt').onclick = function () { act('bolt'); };
     $('bExit').onclick = function () { act('exit'); };
     $('bLift').onclick = function () { act('lift'); };
+    $('bFix').onclick = function () { act('fix'); };
+    $('bUnhook').onclick = function () { act('unhook'); };
     $('bRight').onclick = function () { reset(); act('hook'); act('bolt'); if (S.ppl) act('exit'); act('lift'); };
     $('bWrong').onclick = function () { reset(); act('bolt'); };
     $('bRide').onclick = function () { reset(); act('hook'); act('bolt'); act('lift'); };
+    $('bLoose').onclick = function () { reset(); act('hook'); act('bolt'); if (S.ppl) act('exit'); act('lift'); act('unhook'); };
     $('bReset').onclick = function () { $('fIn').value = 5; $('pplIn').value = '1'; S.F = 5; S.ppl = true; $('fLbl').textContent = '5층'; reset(); };
     $('fIn').oninput = function () { S.F = parseInt(this.value, 10); $('fLbl').textContent = S.F + '층'; reset(); };
     $('pplIn').onchange = function () { S.ppl = this.value === '1'; reset(); };
   }
-  window.GPGang = { S: S, act: act, reset: reset, calc: calc, cam: function () { return [camera.aspect, camera.position.toArray(), controls.target.toArray()]; } };
+  window.GPGang = { S: S, act: act, reset: reset, calc: calc, sync: function () { syncBolts(); refresh(); }, cam: function () { return [camera.aspect, camera.position.toArray(), controls.target.toArray()]; } };
   bind(); init(); planUI(); reset(); animate();
 })();
 </script>
@@ -439,6 +458,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     prerelease: { msg: '영상과 같은 조건: <b>5층 · 작업자가 케이지에서 고정볼트를 먼저 풂</b>. 「2. 고정볼트 풀기」를 눌러 보세요. (「▶ 올바른 순서 자동」과 비교해 보세요)',
       run: function (set, click) { click('bReset'); } },
     cageride: { msg: '영상과 같은 조건: <b>5층 · 작업자가 케이지에 탄 채 인양</b>. 「위험 예시: 케이지에 탄 채 인양」을 눌러 보세요. (「▶ 올바른 순서 자동」과 비교해 보세요)',
+      run: function (set, click) { click('bReset'); } },
+    unhook: { msg: '영상과 같은 조건: <b>5층 · 한 층 인양한 뒤 고정볼트를 다시 체결하기 전에 훅을 풂</b>. 「위험 예시: 체결 전에 훅 풀기」를 눌러 보세요. (①의 1~6을 차례로 눌러 비교해 보세요)',
       run: function (set, click) { click('bReset'); } }
   };
   function go() {
