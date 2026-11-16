@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>말비계 시뮬레이터 | 가설파트너</title>
+<meta name="description" content="말비계 양쪽 끝에 올라서면 왜 넘어지는지, 보조부재·미끄럼 방지장치가 없으면 다리가 어떻게 벌어지는지 3D로 보는 안전교육 시뮬레이터. 산업안전보건기준에 관한 규칙 제67조(말비계).">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="gp-sim-quality.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pretendard,'Malgun Gothic',sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+#app{position:fixed;left:0;right:0;bottom:0;top:40px;display:flex}
+#view{position:relative;flex:1;min-width:0;background:#15171A;overflow:hidden}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+#panel{width:370px;flex:none;overflow-y:auto;background:#222222;border-left:1px solid #3A3A3A;padding:18px 18px 32px}
+#panel h1{font-size:20px;margin:0 0 6px;color:#FFFFFF;font-weight:800}
+#panel .lead{margin:0 0 16px;color:#BBBBBB;font-size:13.5px;line-height:1.6}
+.sec{border-top:1px solid #3A3A3A;padding-top:14px;margin-top:14px}
+.sec h2{font-size:14px;margin:0 0 10px;color:#F2B705;font-weight:800;letter-spacing:-.2px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.row label{font-size:13.5px;color:#DDDDDD;flex:1}
+.row select,.row input[type=number]{width:170px;background:#1B1B1B;color:#FFFFFF;border:1px solid #444444;border-radius:8px;padding:7px 8px;font:inherit;font-size:13.5px}
+.row.wide select{width:100%}
+.slider{margin:6px 0 10px}
+.slider .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:#DDDDDD}
+.slider .top b{color:#FFFFFF;font-size:16px}
+.slider input[type=range]{width:100%;accent-color:#F2B705;margin:6px 0 0}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#F2B705;color:#1B1B1B;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.btn:hover{background:#D9A300}
+.btn.line{background:transparent;color:#FFFFFF;border:1px solid #555555}
+.btn.line:hover{border-color:#F2B705;color:#F2B705}
+.note{font-size:12.5px;color:#999999;line-height:1.6;margin:6px 0 0}
+.res{background:#1B1B1B;border:1px solid #3A3A3A;border-radius:12px;padding:12px 14px;margin:8px 0}
+.res .k{font-size:12.5px;color:#AAAAAA}
+.res .v{font-size:18px;font-weight:800;color:#FFFFFF;margin-top:2px}
+.res .s{font-size:12.5px;color:#BBBBBB;margin-top:3px;line-height:1.5}
+.ok{color:#4CC38A !important}.warn{color:#F2B705 !important}.ng{color:#FF6369 !important}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.badge.ok{background:rgba(76,195,138,.15)}.badge.ng{background:rgba(255,99,105,.15)}.badge.warn{background:rgba(242,183,5,.15)}
+.links a{display:block;color:#F2B705;text-decoration:none;font-size:13.5px;margin:6px 0}
+.links a:hover{text-decoration:underline}
+#hud{position:absolute;left:14px;top:12px;right:14px;pointer-events:none;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.hcard{background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;min-width:220px}
+.hcard .t{font-size:12px;color:#BBBBBB}
+.hcard .n{font-size:22px;font-weight:800;color:#FFFFFF}
+.gauge{height:10px;border-radius:6px;background:#333333;overflow:hidden;margin-top:6px}
+.gauge i{display:block;height:100%;width:0;background:#4CC38A;transition:width .15s,background .15s}
+#zoom{position:absolute;right:14px;top:44%;width:min(34%,170px);aspect-ratio:1/1;border:2px solid #F2B705;border-radius:10px;pointer-events:none}
+#zoom span{position:absolute;left:0;top:0;background:#F2B705;color:#1B1B1B;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:7px 0 8px 0}
+#banner{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #FF6369;color:#FFFFFF;border-radius:12px;padding:12px 18px;font-weight:800;font-size:16px;display:none;text-align:center;max-width:92%;pointer-events:none}
+#banner.okb{border-color:#4CC38A}
+#hint{position:absolute;right:14px;bottom:14px;font-size:12px;color:#999999;background:rgba(0,0,0,.5);padding:6px 10px;border-radius:8px;pointer-events:none}
+@media(max-width:800px){
+  #app{flex-direction:column}
+  #view{flex:none;height:50%}
+  #panel{width:auto;flex:1;border-left:0;border-top:1px solid #3A3A3A;padding:14px 16px 28px}
+  .hcard{min-width:0;padding:8px 10px}.hcard .n{font-size:18px}
+  .hcard{flex:1}.hcard .t{font-size:11px}
+  #hint{display:none}
+  #banner{font-size:14px;bottom:10px}
+  .row select{width:150px}
+}
+</style>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가설파트너">
+<meta property="og:title" content="말비계 시뮬레이터 | 가설파트너">
+<meta property="og:description" content="말비계 양쪽 끝에 올라서면 왜 넘어지는지, 보조부재·미끄럼 방지장치가 없으면 다리가 어떻게 벌어지는지 3D로 보는 안전교육 시뮬레이터. 산업안전보건기준에 관한 규칙 제67조(말비계).">
+<meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/horse-scaffold-simulator.html">
+<meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+
+</head>
+<body>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">말비계 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
+
+<div id="app">
+  <div id="view">
+    <div id="hud">
+      <div class="hcard"><div class="t">말비계 (높이 <span id="hH">1.8</span>m)</div><div class="n" id="hA">지주 안쪽에서 작업</div><div class="t" id="hA2">보조부재 있음 · 미끄럼 방지 있음</div></div>
+      <div class="hcard"><div class="t" id="hBt">넘기려는 힘 / 버티는 힘</div><div class="n" id="hB">0 / 147 N·m</div><div class="gauge"><i id="hG"></i></div></div>
+    </div>
+    <div id="banner"></div>
+    <div id="hint">마우스 끌기: 돌리기 · 휠: 확대</div>
+  </div>
+  <aside id="panel">
+    <h1>말비계 시뮬레이터</h1>
+    <p class="lead">말비계는 다리 아래에 미끄럼 방지장치를 하고, 양쪽 끝에 올라서서 작업하지 않으며, 다리는 수평면과 75도 이하로 벌리고 보조부재로 다리 사이를 고정해야 합니다. 지키지 않으면 어떻게 되는지 직접 확인해 보세요.</p>
+
+    <div class="sec">
+      <h2>체험 선택</h2>
+      <div class="row wide"><select id="expIn" aria-label="체험 선택">
+        <option value="end" selected>① 올라서는 위치 — 끝에 서면 넘어질까?</option>
+        <option value="spread">② 보조부재·미끄럼 방지 — 다리가 벌어질까?</option></select></div>
+    </div>
+
+    <div class="sec">
+      <h2>① 해 보기</h2>
+      <div class="btns">
+        <button class="btn" id="bWalk" type="button">▶ 작업 위치로 걸어가기</button>
+        <button class="btn" id="bWork" type="button" hidden>▶ 올라서서 작업하기</button>
+        <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
+      </div>
+      <p class="note" id="tryNote">작업자가 발판 가운데에서 고른 작업 위치까지 걸어갑니다.</p>
+    </div>
+
+    <div class="sec">
+      <h2>② 조건</h2>
+      <div id="cEnd">
+        <div class="row"><label for="posIn">작업 위치</label><select id="posIn">
+          <option value="in" selected>지주 안쪽 (끝에서 45cm)</option><option value="end">발판 끝 (끝에서 5cm)</option></select></div>
+        <p class="note">발판 길이 1.8m, 지주 사이 1.2m(양쪽으로 30cm씩 내민 발판), 말비계와 발판 무게 25kg, 작업자 75kg은 가정한 값입니다.</p>
+      </div>
+      <div id="cSpread" hidden>
+        <div class="row"><label for="brIn">보조부재 (다리 사이 고정)</label><select id="brIn">
+          <option value="1" selected>설치함</option><option value="0">설치 안 함</option></select></div>
+        <div class="row"><label for="slIn">다리 아래 미끄럼 방지장치</label><select id="slIn">
+          <option value="1" selected>있음 (고무 받침)</option><option value="0">없음 (매끄러운 바닥)</option></select></div>
+        <div class="row"><label for="angIn">다리 기울기 (수평면과)</label><select id="angIn">
+          <option value="75" selected>75도</option><option value="70">70도</option><option value="60">60도</option></select></div>
+        <p class="note">마찰계수는 고무 받침 0.5, 매끄러운 바닥 0.2로 가정했습니다. 작업자는 발판 가운데에 섭니다.</p>
+      </div>
+      <div class="row"><label for="hIn">말비계 높이 (발판 윗면)</label><select id="hIn">
+        <option value="1.2">1.2m</option><option value="1.8" selected>1.8m</option><option value="2.5">2.5m</option></select></div>
+      <div class="row"><label for="pwIn">작업발판 폭</label><select id="pwIn">
+        <option value="40" selected>40cm</option><option value="30">30cm</option></select></div>
+    </div>
+
+    <div class="sec">
+      <h2>③ 결과</h2>
+      <div class="res"><div class="k">기준 확인 (제67조)</div><div class="s" id="rChk"></div></div>
+      <div id="rEndBox">
+        <div class="res"><div class="k">작업자가 선 곳 (넘어지는 축 = 바깥 지주 발)</div><div class="v" id="rMom">-</div><div class="s" id="rMomS"></div></div>
+      </div>
+      <div id="rSpBox" hidden>
+        <div class="res"><div class="k">다리 1개가 바깥으로 벌어지려는 힘</div><div class="v" id="rT">-</div><div class="s" id="rTS"></div></div>
+      </div>
+      <div class="res"><div class="k">이 높이에서 떨어지면</div><div class="v" id="rV">-</div><div class="s">공기저항을 무시한 값</div></div>
+      <div class="res"><div class="k">지금 상태</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
+    </div>
+
+    <div class="sec">
+      <h2>기준</h2>
+      <p class="note">기준: 산업안전보건기준에 관한 규칙 제67조(말비계) — 말비계를 조립하여 사용하는 경우 ① 지주부재의 하단에는 미끄럼 방지장치를 하고, 근로자가 양측 끝부분에 올라서서 작업하지 않도록 할 것(제1호) ② 지주부재와 수평면의 기울기를 75도 이하로 하고, 지주부재와 지주부재 사이를 고정시키는 보조부재를 설치할 것(제2호) ③ 말비계의 높이가 2미터를 초과하는 경우에는 작업발판의 폭을 40센티미터 이상으로 할 것(제3호).</p>
+      <p class="note">교육용 단순화: 작업자 75kg, 말비계와 발판 25kg, 발판 길이 1.8m·지주 사이 1.2m, 마찰계수(고무 받침 0.5·매끄러운 바닥 0.2)는 모두 가정한 예시 값입니다. ① 넘어짐은 바깥 지주의 발을 축으로 보고 넘기려는 힘 = 75 × 9.81 × (작업자 위치 − 지주 위치), 버티는 힘 = 25 × 9.81 × 0.6m(말비계 가운데까지 거리)를 비교했습니다. ② 다리 벌어짐은 지주 1개가 받는 힘 = (75 + 25) × 9.81 ÷ 4, 바깥으로 벌어지려는 힘 = 그 힘 ÷ tan(기울기), 잡아 주는 힘 = 마찰계수 × 그 힘으로 비교했고, 보조부재를 설치하면 보조부재가 벌어지는 힘을 잡는다고 보았습니다. 실제로는 몸의 흔들림·작업 반력이 더해져 더 쉽게 넘어지거나 미끄러질 수 있습니다. 떨어지는 속도는 발판 높이를 기준으로 공기저항을 무시한 값(√(2×9.81×높이))입니다. 발판이 잘 보이도록 일부 부재는 단순하게 그렸습니다.</p>
+      <p class="note">교육용 시뮬레이션입니다. 실제 사용은 안전인증 제품의 사용설명서와 작업계획서를 따르세요.</p>
+    </div>
+
+    <div class="sec links">
+      <h2>더 알아보기</h2>
+      <a href="quiz.html">✅ 체험 확인 퀴즈 5문항 · 확인서 받기 →</a>
+      <a href="plank-simulator.html">작업발판 시뮬레이터 →</a>
+      <a href="guardrail-simulator.html">안전난간 추락 시뮬레이터 →</a>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var G = 9.81, LP = 1.8, FX = 0.6, OV = 0.3, MAN_KG = 75, WS = 25, PT = 0.04, TW = 0.15, MU_PAD = 0.5, MU_BARE = 0.2;
+  var POS = { in: { x: 0.45, name: '지주 안쪽', sub: '끝에서 45cm' }, end: { x: 0.85, name: '발판 끝', sub: '끝에서 5cm' } };
+  var S = { mode: 'end', H: 1.8, pos: 'in', brace: true, pad: true, ang: 75, pw: 40, state: 'idle', t: 0,
+    man: { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, rx: 0, rz: 0, air: false }, tip: { a: 0, w: 0 }, sp: { th: 75 * Math.PI / 180, w: 0 } };
+
+  // ---------- 계산 (교육용 단순화) ----------
+  function calcEnd() { // ① 바깥 지주 발을 축으로 한 넘어짐
+    var x = POS[S.pos].x, arm = Math.max(0, x - FX);
+    var Mo = MAN_KG * G * arm, Mr = WS * G * FX;
+    return { x: x, arm: arm, Mo: Mo, Mr: Mr, tips: MAN_KG * Math.round(arm * 100) > WS * Math.round(FX * 100) };
+  }
+  function calcSpread() { // ② 다리 벌어짐: 지주 1개
+    var th = S.ang * Math.PI / 180, V = (MAN_KG + WS) * G / 4, T = V / Math.tan(th), mu = S.pad ? MU_PAD : MU_BARE, Fr = mu * V;
+    return { V: V, T: T, mu: mu, Fr: Fr, slips: !S.brace && T > Fr };
+  }
+  function fallV() { return Math.sqrt(2 * G * S.H); }
+  function legLen() { return (S.H - PT) / Math.sin(S.ang * Math.PI / 180); }
+
+  // ---------- 3D ----------
+  var scene, camera, renderer, controls, clock, pivot, rig, plankG, legs = [], braces = [], tops = [], pads = [], man, body, legL, legR, armL, armR, M = {};
+  var UP = new THREE.Vector3(0, 1, 0), _d = new THREE.Vector3();
+  function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
+  function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6, metalness: 0.2 }, o || {})); }
+  function rodMesh(r, m) { return new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 10), m); }
+  function setRod(o, a, b) {
+    _d.subVectors(b, a); var L = _d.length() || 1e-4;
+    o.position.copy(a).addScaledVector(_d, 0.5); o.scale.set(1, L, 1); o.quaternion.setFromUnitVectors(UP, _d.clone().multiplyScalar(1 / L)); return o;
+  }
+  function box(w, h, d, m, x, y, z) { var o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); return o; }
+  function person() {
+    var g = new THREE.Group(), b = new THREE.Group(); g.add(b);
+    var lL = new THREE.Group(), lR = new THREE.Group(), aL = new THREE.Group(), aR = new THREE.Group();
+    lL.position.set(-0.11, 0.86, 0); lR.position.set(0.11, 0.86, 0);
+    lL.add(box(0.15, 0.84, 0.17, M.pants, 0, -0.42, 0)); lR.add(box(0.15, 0.84, 0.17, M.pants, 0, -0.42, 0));
+    lL.add(box(0.15, 0.08, 0.28, M.boot, 0, -0.82, 0.05)); lR.add(box(0.15, 0.08, 0.28, M.boot, 0, -0.82, 0.05));
+    b.add(lL); b.add(lR);
+    b.add(box(0.42, 0.58, 0.24, M.vest, 0, 1.15, 0));
+    aL.position.set(-0.27, 1.40, 0); aR.position.set(0.27, 1.40, 0);
+    aL.add(box(0.11, 0.6, 0.12, M.vest, 0, -0.3, 0)); aR.add(box(0.11, 0.6, 0.12, M.vest, 0, -0.3, 0));
+    b.add(aL); b.add(aR);
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.115, 16, 12), M.skin); head.position.set(0, 1.56, 0); b.add(head);
+    var hm = new THREE.Mesh(new THREE.SphereGeometry(0.135, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M.helm); hm.position.set(0, 1.6, 0); b.add(hm);
+    return { g: g, b: b, lL: lL, lR: lR, aL: aL, aR: aR };
+  }
+  function init() {
+    var view = $('view');
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setClearColor(0x15171A); view.insertBefore(renderer.domElement, view.firstChild);
+    scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x15171A, 30, 90);
+    camera = new THREE.PerspectiveCamera(45, 1, 0.05, 200);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 2; controls.maxDistance = 40;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x30343a, 0.85));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.75); dl.position.set(8, 14, 10); scene.add(dl);
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0x2A2D31, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    var gh = new THREE.GridHelper(30, 30, 0x3A3E44, 0x30343A); gh.position.y = 0.005; scene.add(gh);
+    M = { leg: mat(0xF2B705, { metalness: 0.3 }), brace: mat(0x4CC38A, { metalness: 0.3 }), top: mat(0xC9A227, { metalness: 0.4 }),
+      plank: mat(0xB9C0C9, { metalness: 0.45, roughness: 0.5 }), plankE: mat(0x7E8791, { metalness: 0.4 }), pad: mat(0x111111, { metalness: 0, roughness: 0.9 }),
+      bare: mat(0x8E959C, { metalness: 0.6 }), endM: mat(0xFF6369, { metalness: 0.1, transparent: true, opacity: 0.55 }),
+      vest: mat(0xFF7A1A, { metalness: 0 }), pants: mat(0x2F3A4A, { metalness: 0 }), boot: mat(0x1A1A1A, { metalness: 0 }), skin: mat(0xE0B990, { metalness: 0 }),
+      helm: mat(0xF2B705, { metalness: 0.1 }) };
+    var p = person(); man = p.g; body = p.b; legL = p.lL; legR = p.lR; armL = p.aL; armR = p.aR; scene.add(man);
+    clock = new THREE.Clock();
+    build(); resize(); window.addEventListener('resize', resize);
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(view);
+  }
+  function build() {
+    if (pivot) { scene.remove(pivot); pivot.traverse(function (o) { if (o.geometry) o.geometry.dispose(); }); }
+    pivot = new THREE.Group(); pivot.position.set(FX, 0, 0); scene.add(pivot);   // ① 넘어질 때 도는 축 (바깥 지주 발)
+    rig = new THREE.Group(); rig.position.set(-FX, 0, 0); pivot.add(rig);
+    legs = []; braces = []; tops = []; pads = [];
+    var pw = S.pw / 100, i;
+    plankG = new THREE.Group(); rig.add(plankG);
+    plankG.add(box(LP, PT, pw, M.plank, 0, -PT / 2, 0));
+    plankG.add(box(0.03, PT + 0.004, pw + 0.004, M.plankE, LP / 2 - 0.015, -PT / 2, 0));
+    plankG.add(box(0.03, PT + 0.004, pw + 0.004, M.plankE, -LP / 2 + 0.015, -PT / 2, 0));
+    for (var x = -LP / 2 + 0.2; x < LP / 2 - 0.1; x += 0.2) plankG.add(box(0.012, 0.004, pw - 0.06, M.plankE, x, 0.001, 0));
+    [-1, 1].forEach(function (s) {   // 양쪽 끝 30cm — 올라서면 안 되는 곳 표시
+      var o = box(OV - 0.03, 0.006, pw - 0.02, M.endM, s * (LP / 2 - OV / 2 - 0.015), 0.004, 0); o.visible = S.mode === 'end'; plankG.add(o);
+    });
+    [-FX, FX].forEach(function (fx) {
+      [-1, 1].forEach(function (s) {
+        var l = rodMesh(0.024, M.leg); rig.add(l); legs.push({ o: l, x: fx, s: s });
+        var pd = box(0.12, 0.03, 0.09, S.pad ? M.pad : M.bare, fx, 0.015, 0); rig.add(pd); pads.push({ o: pd, x: fx, s: s });
+      });
+      var tb = rodMesh(0.024, M.top); rig.add(tb); tops.push({ o: tb, x: fx });
+      if (S.brace) { var br = rodMesh(0.018, M.brace); rig.add(br); braces.push({ o: br, x: fx }); }
+    });
+    var lt = rodMesh(0.018, M.top); rig.add(lt); tops.push({ o: lt, x: null });   // 지주 사이 연결재(발판 아래)
+    S.sp.th = S.ang * Math.PI / 180; S.sp.w = 0;
+    pose(); frame();
+  }
+  function pose() { // 다리 기울기(th)에 맞춰 부재 위치 갱신 — ②에서 다리가 벌어질 때도 씀
+    var th = S.sp.th, L = legLen(), yTop = L * Math.sin(th), zf = TW + L * Math.cos(th);
+    plankG.position.set(0, yTop + PT, 0);
+    legs.forEach(function (l) { setRod(l.o, V3(l.x, yTop, l.s * TW), V3(l.x, 0.03, l.s * zf)); });
+    pads.forEach(function (p) { p.o.position.set(p.x, 0.015, p.s * zf); });
+    tops.forEach(function (t) {
+      if (t.x === null) setRod(t.o, V3(-FX, yTop - 0.03, 0), V3(FX, yTop - 0.03, 0));
+      else setRod(t.o, V3(t.x, yTop, -TW - 0.03), V3(t.x, yTop, TW + 0.03));
+    });
+    braces.forEach(function (b) { var yb = yTop * 0.35, zb = TW + (yTop - yb) / Math.tan(th); setRod(b.o, V3(b.x, yb, -zb), V3(b.x, yb, zb)); });
+    return yTop + PT;
+  }
+  function resize() {
+    var v = $('view'), w = v.clientWidth, h = v.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); frame();
+  }
+  function frame() {
+    if (!camera) return;
+    var H = S.H, a = camera.aspect, tall = a < 0.8, sp = S.mode === 'spread';
+    var vh = $('view').clientHeight || 600;
+    var needV = (H + 2.4) * (tall ? 1.9 : 1.2 + 200 / vh), needW = sp ? 4.2 : 6.8;
+    var d = Math.max(needV / 0.828, needW / (0.828 * a)), ty = (H + (tall ? 1.6 : 1.4)) / 2;
+    if (sp) { controls.target.set(0, ty, 0.3); camera.position.set(d * 0.95, ty + d * 0.28, 0.3 + d * 0.22); }
+    else { controls.target.set(1.5, ty, 0); camera.position.set(1.5 + d * 0.22, ty + d * 0.28, d * 0.95); }
+    controls.update();
+  }
+
+  // ---------- 화면 ----------
+  function fmt(n, d) { return n.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function num(n) { return fmt(n, 1).replace(/\.0$/, ''); }
+  function badge(ok) { return ' <span class="badge ' + (ok ? 'ok">OK' : 'ng">NG') + '</span>'; }
+  function chkLine(t, ok) { return t + badge(ok); }
+  function update() {
+    var e = calcEnd(), c = calcSpread(), sp = S.mode === 'spread', gi = $('hG'), r, pwOk = S.H <= 2 || S.pw >= 40;
+    $('hH').textContent = num(S.H);
+    $('cEnd').hidden = $('rEndBox').hidden = $('bWalk').hidden = sp; $('cSpread').hidden = $('rSpBox').hidden = $('bWork').hidden = !sp;
+    $('tryNote').textContent = sp ? '작업자가 발판 가운데에 올라서서 작업합니다. 체중이 다리를 바깥으로 벌리려고 합니다.' : '작업자가 발판 가운데에서 고른 작업 위치까지 걸어갑니다.';
+    $('rChk').innerHTML = [
+      chkLine('미끄럼 방지장치: ' + (S.pad ? '있음' : '없음'), S.pad),
+      chkLine('양측 끝부분에 올라서기: ' + (!sp && S.pos === 'end' ? '올라섬' : '안 함'), sp || S.pos !== 'end'),
+      chkLine('다리 기울기 ' + S.ang + '도 (75도 이하)', S.ang <= 75),
+      chkLine('보조부재: ' + (S.brace ? '설치' : '없음'), S.brace),
+      chkLine('발판 폭 ' + S.pw + 'cm (높이 2m 초과면 40cm 이상)', pwOk)].join('<br>');
+    if (!sp) {
+      $('hA').textContent = POS[S.pos].name + '에서 작업'; $('hA2').textContent = POS[S.pos].sub + ' · 작업자 75kg · 말비계 25kg';
+      $('hBt').textContent = '넘기려는 힘 / 버티는 힘'; $('hB').textContent = fmt(e.Mo, 0) + ' / ' + fmt(e.Mr, 0) + ' N·m';
+      r = e.Mo / e.Mr; gi.style.width = Math.min(100, r * 50) + '%'; gi.style.background = e.tips ? '#FF6369' : (r > 0.7 ? '#F2B705' : '#4CC38A');
+      $('rMom').innerHTML = POS[S.pos].name + ' (' + POS[S.pos].sub + ') — 넘기려는 힘 ' + fmt(e.Mo, 0) + ' N·m'; $('rMom').className = 'v ' + (e.tips ? 'ng' : '');
+      $('rMomS').textContent = e.arm > 0 ? '지주 바깥으로 ' + fmt(e.arm * 100, 0) + 'cm 나와 섰습니다. 버티는 힘 ' + fmt(e.Mr, 0) + ' N·m (말비계 25kg × 지주까지 0.6m) → ' + (e.tips ? '버티는 힘보다 커서 말비계가 넘어집니다.' : '버팁니다.')
+        : '지주 안쪽에 서 있어 말비계를 넘기려는 힘이 생기지 않습니다.';
+    } else {
+      $('hA').textContent = S.brace ? '보조부재 있음' : '보조부재 없음'; $('hA2').textContent = '미끄럼 방지 ' + (S.pad ? '있음' : '없음') + ' · 다리 ' + S.ang + '도';
+      $('hBt').textContent = '벌어지려는 힘 / 잡아 주는 힘 (다리 1개)';
+      $('hB').textContent = fmt(c.T, 0) + ' / ' + (S.brace ? '보조부재' : fmt(c.Fr, 0) + ' N');
+      r = S.brace ? 0.3 : c.T / c.Fr; gi.style.width = Math.min(100, r * 50) + '%'; gi.style.background = c.slips ? '#FF6369' : (r > 0.7 ? '#F2B705' : '#4CC38A');
+      $('rT').innerHTML = fmt(c.T, 0) + ' N'; $('rT').className = 'v ' + (c.slips ? 'ng' : '');
+      $('rTS').textContent = '지주 1개가 받는 힘 ' + fmt(c.V, 0) + ' N ÷ tan ' + S.ang + '° → ' + (S.brace ? '보조부재가 다리 사이를 잡아 벌어지지 않습니다.' :
+        '잡아 주는 마찰 ' + fmt(c.Fr, 0) + ' N (마찰계수 ' + num(c.mu) + ') → ' + (c.slips ? '마찰보다 커서 다리가 바깥으로 미끄러집니다.' : '이 조건에서는 마찰이 버팁니다.'));
+    }
+    $('rV').textContent = fmt(fallV(), 1) + ' m/s (시속 약 ' + fmt(fallV() * 3.6, 0) + 'km)';
+    refreshNow();
+  }
+  function refreshNow() {
+    var txt, cls, sub = '', b = $('banner'), st = S.state, e = calcEnd(), c = calcSpread();
+    if (st === 'tip' || st === 'fell') { txt = '말비계가 넘어져 추락'; cls = 'ng'; sub = '발판 끝에 서자 바깥 지주 발을 축으로 말비계가 넘어졌습니다. 넘기려는 힘 ' + fmt(e.Mo, 0) + ' > 버티는 힘 ' + fmt(e.Mr, 0) + ' N·m'; }
+    else if (st === 'spread' || st === 'down') { txt = '다리가 벌어져 주저앉음'; cls = 'ng'; sub = '벌어지려는 힘 ' + fmt(c.T, 0) + 'N이 마찰 ' + fmt(c.Fr, 0) + 'N보다 커서 다리가 미끄러졌습니다.'; }
+    else if (st === 'held') { txt = S.mode === 'spread' ? '다리가 버텼습니다' : '말비계가 버텼습니다'; cls = 'ok'; sub = S.mode === 'spread' ? (S.brace ? '보조부재가 다리 사이를 잡아 줍니다.' : '마찰이 버텼지만 보조부재가 없으면 기준에 어긋납니다.') : '지주 안쪽에 서면 말비계를 넘기려는 힘이 생기지 않습니다.'; if (S.mode === 'spread' && !S.brace) cls = 'warn'; }
+    else if (st === 'walk' || st === 'work') { txt = '진행 중'; cls = 'warn'; }
+    else { txt = '대기 중'; cls = 'ok'; sub = '①에서 버튼을 눌러 보세요.'; }
+    $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub;
+    if (st === 'fell') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 말비계 전도 — 높이 ' + num(S.H) + 'm · ' + fmt(fallV(), 1) + 'm/s'; }
+    else if (st === 'down') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 다리가 벌어져 주저앉음 — 높이 ' + num(S.H) + 'm'; }
+    else if (st === 'held' && cls === 'warn') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 이번에는 버텼지만 — 보조부재 없음'; }
+    else if (st === 'held') { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ ' + txt; }
+    else b.style.display = 'none';
+  }
+  function setState(s) { S.state = s; refreshNow(); }
+
+  // ---------- 움직임 ----------
+  function walk(t, amp) { var s = Math.sin(t * 8) * amp; legL.rotation.x = s; legR.rotation.x = -s; armL.rotation.x = -s * 0.8; armR.rotation.x = s * 0.8; }
+  function still() { legL.rotation.x = legR.rotation.x = armL.rotation.x = armR.rotation.x = 0; }
+  function step(dt) {
+    var m = S.man, tp = S.tip, H = S.H, e, k, yTop, wx, wy;
+    if (S.mode === 'end') {
+      if (S.state === 'walk') {
+        S.t += dt; e = calcEnd(); m.x += 1.0 * dt; walk(S.t, 0.45);
+        if (m.x >= e.x) { m.x = e.x; still(); armR.rotation.x = -2.4; if (e.tips) { tp.w = 0.15; setState('tip'); } else setState('held'); }
+      }
+      if (S.state === 'tip' || (S.state === 'fell' && tp.a < tp.max)) { // 바깥 지주 발을 축으로 넘어짐
+        tp.max = Math.atan2(H, OV) - 0.03;
+        if (tp.a < tp.max) {
+          k = 9.81 / Math.max(1.2, H * 0.9);
+          tp.w += (k * Math.sin(tp.a + 0.25) + 0.6) * dt; tp.a = Math.min(tp.max, tp.a + tp.w * dt);
+          if (tp.a >= tp.max) tp.w = 0;
+        }
+      }
+      if (S.state === 'tip') { // 작업자: 발판을 타고 기울다가 떨어짐
+        if (!m.air) {
+          e = calcEnd(); wx = FX + (e.x - FX) * Math.cos(tp.a) + H * Math.sin(tp.a); wy = -(e.x - FX) * Math.sin(tp.a) + H * Math.cos(tp.a);
+          m.wx = wx; m.wy = wy; m.rz = tp.a * 0.9; armL.rotation.x = -Math.min(2.4, tp.a * 4);
+          if (tp.a >= 0.42) { m.air = true; m.vx = tp.w * H * Math.cos(tp.a) * 0.3 + 0.3; m.vy = -tp.w * H * Math.sin(tp.a) * 0.5; }
+        } else {
+          m.vy -= G * dt; m.wy += m.vy * dt; m.wx += m.vx * dt; m.rz = Math.min(Math.PI / 2, m.rz + 2.4 * dt);
+          if (m.wy <= 0.15) { m.wy = 0.15; m.rz = Math.PI / 2; m.vx = 0; still(); armL.rotation.x = armR.rotation.x = -2.6; setState('fell'); }
+        }
+      }
+    } else {
+      if (S.state === 'work') {
+        S.t += dt; armR.rotation.x = -2.0 - Math.abs(Math.sin(S.t * 6)) * 0.8;
+        if (S.t >= 1.2) { if (calcSpread().slips) { S.sp.w = 0.05; setState('spread'); } else if (S.t >= 2.0) { armR.rotation.x = -2.4; setState('held'); } }
+      }
+      if (S.state === 'spread' || S.state === 'down') { // 다리가 바깥으로 미끄러지며 주저앉음
+        if (S.sp.th > 0.26) { S.sp.w += 2.2 * dt; S.sp.th = Math.max(0.26, S.sp.th - S.sp.w * dt); }
+        yTop = pose();
+        m.wy = yTop; armL.rotation.x = armR.rotation.x = -Math.min(2.6, (S.ang * Math.PI / 180 - S.sp.th) * 4);
+        if (S.sp.th < 0.9) m.rz = Math.min(1.35, m.rz + 2.2 * dt);
+        if (S.state === 'spread' && S.sp.th <= 0.26 && m.rz >= 1.35) { still(); setState('down'); }
+      }
+    }
+  }
+  function place() {
+    var m = S.man;
+    if (S.mode === 'end') {
+      pivot.rotation.z = -S.tip.a;
+      man.rotation.set(0, Math.PI / 2, 0);
+      if (S.state === 'tip' || S.state === 'fell') { man.position.set(m.wx, m.wy, 0); body.rotation.set(m.rz, 0, 0); }
+      else { man.position.set(m.x, S.H, 0); body.rotation.set(0, 0, 0); }
+    } else {
+      pivot.rotation.z = 0;
+      man.rotation.set(0, Math.PI / 2, 0);
+      man.position.set(0, S.state === 'spread' || S.state === 'down' ? m.wy : S.H, 0);
+      body.rotation.set(0, 0, -m.rz);
+    }
+  }
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.1), n = Math.ceil(dt / 0.01), i;
+    for (i = 0; i < n; i++) step(dt / n);
+    place(); controls.update(); renderer.render(scene, camera);
+  }
+  function reset() {
+    S.state = 'idle'; S.t = 0;
+    S.man = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, rx: 0, rz: 0, air: false, wx: 0, wy: S.H }; S.tip = { a: 0, w: 0, max: 1 };
+    S.sp.th = S.ang * Math.PI / 180; S.sp.w = 0; if (pivot) pose();
+    still(); update();
+  }
+  function setMode(mo) { if (S.mode === mo) return; S.mode = mo; $('expIn').value = mo; build(); reset(); }
+  function bind() {
+    $('expIn').onchange = function () { S.mode = this.value === 'spread' ? 'spread' : 'end'; build(); reset(); };
+    $('posIn').onchange = function () { S.pos = POS[this.value] ? this.value : 'in'; reset(); };
+    $('brIn').onchange = function () { S.brace = this.value === '1'; build(); reset(); };
+    $('slIn').onchange = function () { S.pad = this.value === '1'; build(); reset(); };
+    $('angIn').onchange = function () { S.ang = parseFloat(this.value) || 75; build(); reset(); };
+    $('hIn').onchange = function () { S.H = parseFloat(this.value) || 1.8; build(); reset(); };
+    $('pwIn').onchange = function () { S.pw = parseFloat(this.value) || 40; build(); reset(); };
+    $('bWalk').onclick = function () { setMode('end'); reset(); setState('walk'); };
+    $('bWork').onclick = function () { setMode('spread'); reset(); setState('work'); };
+    $('bReset').onclick = function () {
+      $('posIn').value = 'in'; $('brIn').value = '1'; $('slIn').value = '1'; $('angIn').value = '75'; $('hIn').value = '1.8'; $('pwIn').value = '40';
+      S.pos = 'in'; S.brace = true; S.pad = true; S.ang = 75; S.H = 1.8; S.pw = 40; build(); reset();
+    };
+  }
+  window.GPHorse = { S: S, calcEnd: calcEnd, calcSpread: calcSpread, fallV: fallV, update: update, POS: POS };
+  bind(); init(); reset(); animate();
+})();
+</script>
+<script>
+/* 쇼츠 영상과 같은 조건으로 열기: 주소 끝 #이름 (예: …html#horseend). 영상 설명란 링크용 — 2026-11 */
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function set(id, v, ev) { var e = $(id); if (!e) return; e.value = String(v); e.dispatchEvent(new Event(ev || 'change')); }
+  function click(id) { var e = $(id); if (e) e.click(); }
+  function toast(t) {
+    var d = document.createElement('div');
+    d.setAttribute('role', 'status');
+    d.style.cssText = 'position:fixed;left:12px;right:12px;top:70px;margin:0 auto;width:max-content;max-width:min(560px,calc(100vw - 24px));z-index:9999;background:#1B1B1B;color:#fff;border:2px solid #F2B705;border-radius:12px;padding:12px 16px;font:600 14px/1.5 Pretendard,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer;word-break:keep-all';
+    d.innerHTML = '🎬 ' + t + ' <span style="color:#8a8f96;font-weight:500">(눌러서 닫기)</span>';
+    d.onclick = function () { d.remove(); };
+    document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 9000);
+  }
+  var P = {
+    horseend: { msg: '영상과 같은 조건: <b>높이 1.8m 말비계 · 발판 끝(끝에서 5cm)에 섬</b>. 「▶ 작업 위치로 걸어가기」를 눌러 보세요. (작업 위치를 「지주 안쪽」으로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('expIn', 'end'); set('posIn', 'end'); } },
+    horsebrace: { msg: '영상과 같은 조건: <b>높이 1.8m · 보조부재 없음 · 미끄럼 방지장치 없음(매끄러운 바닥)</b>. 「▶ 올라서서 작업하기」를 눌러 보세요. (보조부재를 「설치함」으로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('expIn', 'spread'); set('brIn', '0'); set('slIn', '0'); } }
+  };
+  function go() {
+    var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';
+    var p = P[h]; if (!p) return;
+    try { p.run(set, click); toast(p.msg); } catch (e) { console.error(e); }
+  }
+  if (document.readyState === 'complete') setTimeout(go, 300); else window.addEventListener('load', function () { setTimeout(go, 300); });
+  window.addEventListener('hashchange', go);
+  window.GPPresets = P;
+})();
+</script>
+<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+</body>
+</html>

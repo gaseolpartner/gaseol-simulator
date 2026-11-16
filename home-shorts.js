@@ -9,6 +9,10 @@
   // [영상 파일, 제목, 길이(초), 같은 조건으로 열 시뮬레이터 주소, 유튜브 쇼츠 주소, 유튜브 링크로 바꿀 날짜(한국시간 0시부터)]
   // 예약 공개 영상은 공개 다음 날부터 유튜브로 연결 (그 전에는 시뮬레이터로)
   var NEW = [
+    ['formmiss', '거푸집 폼타이 누락', '15.5', 'formwork-pressure-simulator.html#formmiss', '', ''],
+    ['horsebrace', '말비계 보조부재', '15.5', 'horse-scaffold-simulator.html#horsebrace', '', ''],
+    ['unlatched', '크레인 훅 해지장치', '15.5', 'rigging-simulator.html#unlatched', '', ''],
+    ['horseend', '말비계 끝에 올라서기', '15.5', 'horse-scaffold-simulator.html#horseend', '', ''],
     ['boltgap', '작업발판 틈과 작은 볼트', '15.5', 'plank-simulator.html#boltgap', '', ''],
     ['unhook', '갱폼 체결 전 훅 해제', '18', 'gangform-lift-simulator.html#unhook', '', ''],
     ['work', '비계 작업 하중과 기초', '17', 'wind-simulator.html#work', '', ''],

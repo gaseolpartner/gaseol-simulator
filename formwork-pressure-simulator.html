@@ -113,6 +113,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <div class="slider"><div class="top"><span>벽 높이</span><b id="hLbl">3.0 m</b></div><input type="range" id="hIn" min="2.4" max="6" step="0.3" value="3"></div>
       <div class="row"><label for="shIn">폼타이 수평간격 (mm)</label><select id="shIn"><option>450</option><option selected>600</option><option>900</option></select></div>
       <div class="row"><label for="svIn">폼타이 수직간격 (mm)</label><select id="svIn"><option>450</option><option selected>600</option><option>750</option><option>900</option></select></div>
+      <div class="row"><label for="missIn">폼타이 체결</label><select id="missIn"><option value="0" selected>모두 체결</option><option value="1">1개 빠짐 (아래 1단 가운데)</option></select></div>
       <div class="row"><label for="paIn">폼타이 허용인장력 (kN)</label><input type="number" id="paIn" min="1" max="200" step="0.1" value="20"></div>
       <p class="note">폼타이는 KS F 8023(거푸집 긴결재) 제품을 씁니다. 허용인장력은 제품·규격마다 달라 공개된 공통 값이 없어, 기본값 20kN은 예시로 두었습니다. 사용하는 폼타이의 제품 값(또는 구조검토서 값)으로 바꿔 넣으세요.</p>
     </div>
@@ -129,7 +130,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       · R &gt; 4.5m/h 또는 고유동 콘크리트: P = 24 × 높이 (액압)<br>
       · 최소 30kN/㎡, 최대 24 × 높이. 높이별 측압은 위에서부터 24kN/㎥로 늘다가 P에서 멈춥니다.<br>
       콘크리트 표준시방서·KDS의 측압식도 같은 형식입니다. 폼타이 1개 하중 = 측압 × 수평간격 × 수직간격.</p>
-      <p class="note">교육용 시뮬레이션입니다. 끊어진 폼타이의 힘이 양옆으로 넘어가는 방식은 쉽게 보여 주려고 단순하게 정했습니다. 실제 설계는 구조검토서를 따르세요.</p>
+      <p class="note">교육용 시뮬레이션입니다. 끊어진(또는 빠진) 폼타이의 힘이 같은 단 양옆 폼타이로 반씩 넘어가는 방식은 쉽게 보여 주려고 단순하게 정했습니다. 실제 설계는 구조검토서를 따르세요.</p>
     </div>
 
     <div class="sec links">
@@ -148,7 +149,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   var GAMMA = 24;         // kN/㎥
   var TIME_SCALE = 0.1;   // 화면 1초 = 0.1시간(6분)
   var LW = 4.8, TW = 0.2; // 벽 길이·두께 (m)
-  var S = { R: 2, T: 20, H: 3, conc: 'std', sh: 600, sv: 600, Pa: 20, hc: 0, time: 0, pouring: false, state: 'ok', ties: [], failT: 0, burst: 0 };
+  var S = { R: 2, T: 20, H: 3, conc: 'std', sh: 600, sv: 600, Pa: 20, miss: false, hc: 0, time: 0, pouring: false, state: 'ok', ties: [], failT: 0, burst: 0 };
 
   // ---------- 계산 (ACI 347, Cw=Cc=1) ----------
   function pmaxInfo(R, T, H) {
@@ -171,7 +172,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     for (var R = 0.1; R <= 10.001; R += 0.1) { if (pmaxInfo(R, S.T, S.H).p * tieArea() <= S.Pa) best = R; else break; }
     return best;
   }
-  function gone(t) { return t.failed; }
+  function gone(t) { return t.failed || t.missing; }   // missing: 처음부터 체결 안 한 폼타이 (2026-11-16)
+  function broken(t) { return t.failed; }
   function loads() {
     var A = tieArea();
     S.ties.forEach(function (t) { t.own = pAt(t.y) * A; t.P = gone(t) ? 0 : t.own; });
@@ -259,6 +261,14 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
         S.ties.push(t); S.rows[r].push(t);
       }
     }
+    if (S.miss && S.rows[0] && S.rows[0].length) { // 아래 1단 가운데 폼타이를 빼 둠 — 구멍에 빨간 고리 표시
+      var mt = S.rows[0][Math.floor((S.rows[0].length - 1) / 2)];
+      mt.missing = true; mt.mesh.visible = false; mt.nuts.forEach(function (n) { n.visible = false; });
+      var rm = mat(0xFF4D4F, { metalness: 0.1, emissive: 0x661214 }), ring = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.03, 8, 28), rm);
+      ring.position.set(mt.x, y0 + mt.y, TW / 2 + 0.2); root.add(ring);
+      var cone = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.25, 16), rm); cone.rotation.x = Math.PI; cone.position.set(mt.x, y0 + mt.y + 0.5, TW / 2 + 0.2); root.add(cone);
+      S.missTie = mt;
+    } else S.missTie = null;
     // 콘크리트
     conc = box(LW - 0.02, 1, TW - 0.01, MAT.conc, LW / 2, y0, 0); conc.visible = false; root.add(conc);
     spill = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), MAT.conc);
@@ -305,7 +315,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     $('rP').textContent = fmt(pi.p, 1) + ' kN/㎡';
     $('rPs').textContent = pi.how + ' · R=' + fmt(S.R, 1) + 'm/h, T=' + S.T + '℃, 높이 ' + fmt(S.H, 1) + 'm';
     $('rT').innerHTML = fmt(Tm, 1) + ' kN / ' + fmt(S.Pa, 1) + ' kN <span class="badge ' + (ok ? 'ok">OK' : 'ng">NG') + '</span>';
-    $('rTs').textContent = '측압 ' + fmt(pi.p, 1) + ' × ' + S.sh + ' × ' + S.sv + 'mm · 하중률 ' + fmt(Tm / S.Pa * 100, 0) + '%';
+    $('rTs').textContent = '측압 ' + fmt(pi.p, 1) + ' × ' + S.sh + ' × ' + S.sv + 'mm · 하중률 ' + fmt(Tm / S.Pa * 100, 0) + '%' + (S.miss ? ' · 빠진 폼타이 옆은 1.5배 ' + fmt(Tm * 1.5, 1) + 'kN' : '');
     var sr = safeR();
     $('rR').textContent = sr >= 10 ? '10 m/h 이상' : sr > 0 ? fmt(sr, 1) + ' m/h 이하' : '이 간격으로는 부족';
     $('rR').className = 'v ' + (S.R <= sr ? 'ok' : 'ng');
@@ -318,11 +328,12 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     $('hP').textContent = fmt(S.hc, 2) + ' m'; $('hQ').textContent = Math.floor(S.time * 60) + '분 경과 · ' + fmt(S.R, 1) + 'm/h';
     $('hPa').textContent = fmt(S.Pa, 1); $('hT').textContent = fmt(P, 1) + ' kN';
     var g = $('hG'); g.style.width = Math.min(100, r * 100) + '%'; g.style.background = r >= 1 ? '#FF6369' : r >= 0.8 ? '#F2B705' : '#4CC38A';
-    var nf = S.ties.filter(gone).length, txt, cls, sub;
+    var nf = S.ties.filter(broken).length, txt, cls, sub;
     if (S.state === 'burst') { txt = '거푸집 터짐'; cls = 'ng'; sub = '폼타이 ' + nf + '개가 끊어져 거푸집이 벌어지고 콘크리트가 새어 나왔습니다.'; }
     else if (nf) { txt = '폼타이 ' + nf + '개 끊어짐 · 위험'; cls = 'ng'; sub = '옆 폼타이가 더 큰 힘을 받고 있습니다. 즉시 타설 중지.'; }
     else if (r >= 1) { txt = '허용인장력 초과 (' + fmt(r * 100, 0) + '%)'; cls = 'ng'; sub = '곧 끊어집니다.'; }
     else if (r >= 0.8) { txt = '한계 근접 (' + fmt(r * 100, 0) + '%)'; cls = 'warn'; sub = '가장 힘든 폼타이 ' + fmt(P, 1) + 'kN'; }
+    else if (S.miss && r >= 0.8) { txt = '빠진 폼타이 옆 ' + fmt(r * 100, 0) + '%'; cls = r >= 1 ? 'ng' : 'warn'; sub = '빠진 폼타이 몫까지 양옆 폼타이가 받고 있습니다 (' + fmt(P, 1) + 'kN).'; }
     else if (S.hc >= S.H - 0.001) { txt = '타설 완료 (' + fmt(r * 100, 0) + '%)'; cls = 'ok'; sub = '거푸집이 버텼습니다.'; }
     else { txt = '버티는 중 (' + fmt(r * 100, 0) + '%)'; cls = 'ok'; sub = '가장 힘든 폼타이 ' + fmt(P, 1) + 'kN / ' + fmt(S.Pa, 1) + 'kN'; }
     $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub;
@@ -342,7 +353,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     var t = c[Math.floor(Math.random() * c.length)];
     t.failed = true; S.failT = now + 0.18;
     t.mesh.scale.set(1, 0.45, 1); t.nuts[0].position.z += 0.25; t.nuts[0].material.color.setHex(0xFF4D4F);
-    var nf = S.ties.filter(gone).length;
+    var nf = S.ties.filter(broken).length;
     if (nf >= 3) {
       S.state = 'burst'; S.pouring = false; $('bPour').textContent = '▶ 타설 시작';
       // 끊어진 폼타이 근처 바깥쪽 패널이 벌어짐
@@ -368,7 +379,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       S.panels.forEach(function (p) { if (p.a < p.target) { p.a = Math.min(p.target, p.a + dt * 1.2); p.g.rotation.x = p.a; p.g.position.z = TW / 2 + 0.007 + Math.sin(p.a) * 0.3; } });
       S.burst = Math.min(1, S.burst + dt * 0.5);
       spill.visible = true; spill.scale.set(0.4 + 1.6 * S.burst, 0.05 + 0.25 * S.burst, 0.3 + 1.2 * S.burst);
-      var fx = S.ties.filter(gone).reduce(function (s, t) { return s + t.x; }, 0) / Math.max(1, S.ties.filter(gone).length);
+      var fx = S.ties.filter(broken).reduce(function (s, t) { return s + t.x; }, 0) / Math.max(1, S.ties.filter(broken).length);
       spill.position.set(fx, 0.3, TW / 2 + 0.2 + 0.8 * S.burst);
       S.hc = Math.max(0, S.hc - dt * 0.15); moved = true;
     }
@@ -384,6 +395,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     $('hIn').oninput = function () { S.H = parseFloat(this.value); $('hLbl').textContent = S.H.toFixed(1) + ' m'; reb(); };
     $('shIn').onchange = function () { S.sh = parseInt(this.value, 10); reb(); };
     $('svIn').onchange = function () { S.sv = parseInt(this.value, 10); reb(); };
+    $('missIn').onchange = function () { S.miss = this.value === '1'; reb(); };
     $('paIn').oninput = function () { var v = parseFloat(this.value); if (v > 0) { S.Pa = v; update(); } };
     $('bPour').onclick = function () {
       if (S.state !== 'ok' || S.hc >= S.H) reb();
@@ -396,7 +408,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       reb(); S.pouring = true; $('bPour').textContent = '⏸ 멈추기';
     };
   }
-  window.GPForm = { S: S, pmaxInfo: pmaxInfo, safeR: safeR, update: update };
+  window.GPForm = { S: S, pmaxInfo: pmaxInfo, safeR: safeR, update: update, worstP: function () { loads(); var w = worst(); return w ? w.P : 0; }, broken: function () { return S.ties.filter(broken).length; } };
   bind(); init(); build(); animate();
 })();
 </script>
@@ -424,12 +436,14 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     cold: { msg: '영상과 같은 조건: <b>기온 10℃</b>, 시간당 2m, 폼타이 600×600. 「▶ 타설 시작」을 눌러 보세요. (온도를 20℃로 바꿔 비교해 보세요)',
       run: function (set, click) { set('cIn', 'std'); set('rIn', 2, 'input'); set('shIn', '600'); set('svIn', '600'); set('tIn', 10, 'input'); } },
     rate: { msg: '영상과 같은 조건: <b>기온 20℃ · 시간당 4m</b>, 벽 높이 3m, 폼타이 600×600. 「▶ 타설 시작」을 눌러 보세요. (타설 속도를 2m/h로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('cIn', 'std'); set('shIn', '600'); set('svIn', '600'); set('tIn', 20, 'input'); set('rIn', 4, 'input'); } }
+      run: function (set, click) { click('bReset'); set('cIn', 'std'); set('shIn', '600'); set('svIn', '600'); set('tIn', 20, 'input'); set('rIn', 4, 'input'); } },
+    formmiss: { msg: '영상과 같은 조건: <b>기온 20℃ · 시간당 2m · 폼타이 600×600 · 아래 1단 가운데 폼타이 1개 빠짐</b>. 「▶ 타설 시작」을 눌러 보세요. (폼타이 체결을 「모두 체결」로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('cIn', 'std'); set('shIn', '600'); set('svIn', '600'); set('tIn', 20, 'input'); set('rIn', 2, 'input'); set('missIn', '1'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';
     var p = P[h]; if (!p) return;
-    try { p.run(set, click); toast(p.msg); } catch (e) { console.error(e); }
+    try { if (h !== 'formmiss' && $('missIn') && $('missIn').value !== '0') set('missIn', '0'); p.run(set, click); toast(p.msg); } catch (e) { console.error(e); }
   }
   if (document.readyState === 'complete') setTimeout(go, 300); else window.addEventListener('load', function () { setTimeout(go, 300); });
   window.addEventListener('hashchange', go);
