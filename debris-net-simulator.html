@@ -111,7 +111,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
         <option value="20">20도</option><option value="25" selected>25도</option><option value="30">30도</option><option value="45">45도 (기준 밖 · 비교용)</option></select></div>
       <div class="row"><label for="objIn">떨어지는 물건 (가정)</label><select id="objIn">
         <option value="bolt">볼트 0.1kg</option><option value="clamp" selected>강관 클램프 1kg</option><option value="brick">벽돌 2kg</option></select></div>
-      <div class="slider"><div class="top"><span>벽에서 튕겨 나오는 속도 (가정)</span><b id="vLbl">1.2 m/s</b></div><input type="range" id="vIn" min="0.5" max="3" step="0.1" value="1.2"></div>
+      <div class="slider"><div class="top"><span>벽에서 튕겨 나오는 속도 (가정)</span><b id="vLbl">1.2 m/s</b></div><input type="range" id="vIn" min="0.2" max="3" step="0.1" value="1.2"></div>
+      <div class="row"><label for="wgIn">망과 비계 사이 틈</label><select id="wgIn">
+        <option value="0" selected>붙여 설치 (틈 없음)</option><option value="25">25cm (기준 한계)</option><option value="50">50cm (기준 밖)</option></select></div>
+      <div class="row"><label for="jtIn">옆 망과 이음</label><select id="jtIn">
+        <option value="lap" selected>15cm 이상 겹침</option><option value="open">겹치지 않음 (30cm 벌어짐)</option></select></div>
     </div>
 
     <div class="sec">
@@ -127,6 +131,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     <div class="sec">
       <h2>기준</h2>
       <p class="note">산업안전보건기준에 관한 규칙 제14조(낙하물에 의한 위험의 방지) 제3항 — 낙하물 방지망 또는 방호선반을 설치하는 경우: ① 높이 10미터 이내마다 설치하고, 내민 길이는 벽면으로부터 2미터 이상으로 할 것 ② 수평면과의 각도는 20도 이상 30도 이하를 유지할 것.</p>
+      <p class="note">KCS 21 70 15(낙하물재해 방지시설) 3.1 — (3) 낙하물 방지망과 비계 또는 구조체와의 간격은 250mm 이하, (5) 낙하물 방지망의 이음은 150mm 이상의 겹침을 두어 망과 망 사이에 틈이 없도록. (2026-11-19 추가: 「망과 비계 사이 틈」「옆 망과 이음」 — 물건이 그 틈 위로 떨어지면 망에 닿지 않고 빠진다고 본 교육용 단순화. 이음이 벌어진 경우 물건은 이음 바로 위로 떨어진다고 가정)</p>
       <p class="note">같은 조 제2항 — 물체가 떨어지거나 날아올 위험이 있으면 낙하물 방지망·수직보호망·방호선반 설치, 출입금지구역 설정, 보호구 착용 등 필요한 조치를 해야 합니다.</p>
       <p class="note">교육용 단순화: 건물 높이 30m, 물건 무게(볼트 0.1kg·클램프 1kg·벽돌 2kg), 튕겨 나오는 속도(0.5~3.0m/s), 아래 사람 위치(벽면에서 4.5m)는 모두 가정한 예시 값입니다. 물건은 맨 위에서 벽면 위치를 수평으로 떠난다고 보았고 공기저항·바람·회전은 무시했습니다(시간 = √(2×높이÷9.81), 날아간 거리 = 속도×시간, 땅에 닿는 속도 = √(2×9.81×30), 에너지 = 무게×9.81×30). 떨어지는 높이는 망 끝 높이까지(= 설치 간격)로 보았고, 망 안쪽이 끝보다 낮아 조금 더 떨어지는 것은 무시했습니다. 화면에서는 외벽에 붙은 비계의 바깥면을 벽면 위치로 보고 내민 길이를 쟀습니다. 망의 강도·처짐·그물코 크기는 다루지 않습니다.</p>
       <p class="note">교육용 시뮬레이션입니다. 실제 설치는 안전인증 제품과 작업계획서를 따르세요.</p>
@@ -147,19 +152,28 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   var $ = function (id) { return document.getElementById(id); };
   var G = 9.81, HB = 30, WALLX = -1.0, MANX = 4.5, PRE = 0.4, ZB = 5, ZN = 4, DOT = 0.07, NU = 8, NZ = 10;
   var OBJ = { bolt: { kg: 0.1, name: '볼트', r: 0.3 }, clamp: { kg: 1, name: '강관 클램프', r: 0.3 }, brick: { kg: 2, name: '벽돌', r: 0.24 } };
-  var S = { reach: 2, gap: 10, ang: 25, obj: 'clamp', v: 1.2, state: 'idle', t: 0, ts: 0, sag: 0, nDot: 0, p: { x: 0, y: HB, r: 0 } };
+  var S = { reach: 2, gap: 10, ang: 25, obj: 'clamp', v: 1.2, wg: 0, jt: 'lap', state: 'idle', t: 0, ts: 0, sag: 0, nDot: 0, p: { x: 0, y: HB, r: 0 } };
 
   function rad() { return S.ang * Math.PI / 180; }
   function kg() { return OBJ[S.obj].kg; }
   function tFall() { return Math.sqrt(2 * S.gap / G); }            // 망 높이까지 떨어지는 시간(초)
   function xFly() { return S.v * tFall(); }                        // 그동안 벽면에서 날아간 거리(m)
   function tipX() { return S.reach * Math.cos(rad()); }            // 망 끝의 수평 거리(m)
-  function caught() { return xFly() <= tipX() + 1e-9; }
+  function hole() { // 망에 닿지 않고 빠지는 이유: 'tip'(망 끝 밖) | 'wall'(망과 비계 사이 틈) | 'joint'(이음 틈) | ''
+    var x = xFly();
+    if (x > tipX() + 1e-9) return 'tip';
+    if (x < S.wg / 100 - 1e-9) return 'wall';
+    if (S.jt === 'open') return 'joint';
+    return '';
+  }
+  function caught() { return !hole(); }
+  var WHY = { tip: '망 끝을 벗어납니다', wall: '망과 비계 사이 틈으로 빠집니다', joint: '망 이음 틈으로 빠집니다' };
   function netY() { return HB - S.gap; }                           // 받는 망의 끝 높이(m)
   function tGround() { return Math.sqrt(2 * HB / G); }
   function xGround() { return S.v * tGround(); }
   function vGround() { return Math.sqrt(2 * G * HB); }
   function energy() { return kg() * G * HB; }
+  function wx0() { return S.wg / 100; }
   function surfY(x) { return netY() - (tipX() - x) * Math.tan(rad()); }   // 받는 망 윗면 높이
   function tCatch() { // 기울어진 망 윗면에 닿는 시각 (화면용)
     var b = S.v * Math.tan(rad());
@@ -217,7 +231,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       net: new THREE.MeshStandardMaterial({ color: 0x2FA36B, roughness: 0.9, metalness: 0, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false }),
       netW: new THREE.MeshBasicMaterial({ color: 0x9FE8C4, wireframe: true, transparent: true, opacity: 0.75 }),
       thing: mat(0xFF5A1F, { metalness: 0.1, roughness: 0.5, emissive: 0xC8380A }), halo: new THREE.MeshBasicMaterial({ color: 0xFF7A2A, transparent: true, opacity: 0.28, depthWrite: false }),
-      dot: new THREE.MeshBasicMaterial({ color: 0xFF8A3A }), guide: new THREE.MeshBasicMaterial({ color: 0xF2B705, transparent: true, opacity: 0.55 }), ring: new THREE.MeshBasicMaterial({ color: 0xFF6369, side: THREE.DoubleSide }),
+      dot: new THREE.MeshBasicMaterial({ color: 0xFF8A3A }), gapR: new THREE.MeshBasicMaterial({ color: 0xFF6369 }), guide: new THREE.MeshBasicMaterial({ color: 0xF2B705, transparent: true, opacity: 0.55 }), ring: new THREE.MeshBasicMaterial({ color: 0xFF6369, side: THREE.DoubleSide }),
       vest: mat(0xFF7A1A, { metalness: 0 }), pants: mat(0x2F3A4A, { metalness: 0 }), boot: mat(0x1A1A1A, { metalness: 0 }), skin: mat(0xE0B990, { metalness: 0 }),
       helm: mat(0xFFFFFF, { metalness: 0.1 }) };
     var man = person(M.helm); man.position.set(MANX, 0, -1.5); man.rotation.y = -0.5; scene.add(man);
@@ -249,9 +263,10 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       o = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.8, 10), M.thing); o.rotation.z = Math.PI / 2; o.position.y = 0.22; thing.add(o);
     }
   }
-  function netGeom(yTip) {
-    var a = rad(), R = S.reach, y0 = yTip - R * Math.sin(a), pos = [], idx = [], i, j;
-    for (i = 0; i <= NU; i++) for (j = 0; j <= NZ; j++) { var u = R * i / NU; pos.push(u * Math.cos(a), y0 + u * Math.sin(a), -ZN + 2 * ZN * j / NZ); }
+  function netGeom(yTip, z0, z1) {
+    var a = rad(), R = S.reach, y0 = yTip - R * Math.sin(a), u0 = S.wg / 100 / Math.cos(a), pos = [], idx = [], i, j;
+    if (z0 === undefined) { z0 = -ZN; z1 = ZN; }
+    for (i = 0; i <= NU; i++) for (j = 0; j <= NZ; j++) { var u = u0 + (R - u0) * i / NU; pos.push(u * Math.cos(a), y0 + u * Math.sin(a), z0 + (z1 - z0) * j / NZ); }
     for (i = 0; i < NU; i++) for (j = 0; j < NZ; j++) { var p = i * (NZ + 1) + j; idx.push(p, p + 1, p + NZ + 1, p + 1, p + NZ + 2, p + NZ + 1); }
     var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
     g.userData.base = pos.slice(); return g;
@@ -276,7 +291,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     }
     // 낙하물방지망: 설치 간격마다 (끝 높이 기준)
     for (y = HB - S.gap; y > 0.5; y -= S.gap) {
-      var g = netGeom(y), y0 = y - R * Math.sin(a), tx = R * Math.cos(a);
+      var g = netGeom(y), y0 = y - R * Math.sin(a), tx = R * Math.cos(a), g2 = null;
+      if (S.jt === 'open') { g.dispose(); g = netGeom(y, -ZN, -0.15); g2 = netGeom(y, 0.15, ZN); world.add(new THREE.Mesh(g2, M.net)); world.add(new THREE.Mesh(g2, M.netW)); }
       world.add(new THREE.Mesh(g, M.net)); world.add(new THREE.Mesh(g, M.netW));
       world.add(rod(V3(tx, y, -ZN), V3(tx, y, ZN), 0.08, M.tip));
       world.add(rod(V3(0, y0, -ZN), V3(0, y0, ZN), 0.03, M.pipe));
@@ -285,7 +301,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
         world.add(rod(V3(tx, y, zz), V3(0, y + 1.6, zz), 0.012, M.pipe));
       });
       nets.push({ g: g, y: y });
+      if (S.wg > 0) { var wx = S.wg / 100, wy = y0 + (wx / Math.cos(a)) * Math.sin(a); world.add(rod(V3(wx, wy, -ZN), V3(wx, wy, ZN), 0.03, M.pipe)); world.add(rod(V3(0.02, wy, 0), V3(wx - 0.02, wy, 0), 0.05, M.gapR)); }
+      if (S.jt === 'open') world.add(rod(V3(wx0(), y0 + wx0() * Math.tan(a) + 0.02, 0), V3(tx, y + 0.02, 0), 0.03, M.gapR));
     }
+    if (S.wg > 0) world.add(label('틈 ' + S.wg + 'cm', 3.4, netY() - 1.6, ZN, 1.25, '#FF6369'));
+    if (S.jt === 'open') world.add(label('이음 틈 30cm', 3.6, netY() - 1.6, ZN, 1.25, '#FF6369'));
     world.add(rod(V3(tipX(), 0.02, 0), V3(tipX(), netY(), 0), 0.035, M.guide));
     world.add(label('망 끝 ' + fmt(tipX(), 2) + 'm', tipX() + 3.4, netY() + 0.9, ZN, 1.25, '#F2B705'));
     world.add(label('30m', WALLX - 11.6, 30, ZB, 1.2)); world.add(label('20m', WALLX - 11.6, 20, ZB, 1.2)); world.add(label('10m', WALLX - 11.6, 10, ZB, 1.2));
@@ -323,10 +343,12 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     $('hTipT').textContent = '망 끝까지 거리 (내민 ' + fmt(S.reach, 1) + 'm)'; $('hTip').textContent = fmt(tp, 2) + ' m';
     $('rTk').textContent = '망까지 떨어지는 시간 (높이 ' + S.gap + 'm)'; $('rT').textContent = fmt(tFall(), 2) + '초';
     $('rX').innerHTML = fmt(x, 2) + 'm' + badge(c);
-    $('rXS').textContent = fmt(S.v, 1) + 'm/s × ' + fmt(tFall(), 2) + '초 → ' + (c ? '망 끝(' + fmt(tp, 2) + 'm) 안쪽에 떨어집니다' : '망 끝(' + fmt(tp, 2) + 'm)보다 ' + fmt(x - tp, 2) + 'm 더 날아갑니다');
+    var hw = hole();
+    $('rXS').textContent = fmt(S.v, 1) + 'm/s × ' + fmt(tFall(), 2) + '초 → ' + (c ? '망 끝(' + fmt(tp, 2) + 'm) 안쪽에 떨어집니다' : hw === 'tip' ? '망 끝(' + fmt(tp, 2) + 'm)보다 ' + fmt(x - tp, 2) + 'm 더 날아갑니다' : hw === 'wall' ? '망 안쪽 끝(' + fmt(S.wg / 100, 2) + 'm)보다 벽 쪽 — 망과 비계 사이 틈으로 빠집니다' : '망 안쪽에 떨어지지만 이음이 벌어진 곳 — 이음 틈으로 빠집니다');
     $('rTip').textContent = fmt(tp, 2) + 'm';
     $('rTipS').textContent = fmt(S.reach, 1) + 'm × cos ' + S.ang + '도';
-    $('rStd').innerHTML = '내민 길이 ' + fmt(S.reach, 1) + 'm (벽면에서 2m 이상)' + badge(S.reach >= 2) + '<br>설치 간격 ' + S.gap + 'm (높이 10m 이내마다)' + badge(S.gap <= 10) + '<br>망 각도 ' + S.ang + '도 (20도 이상 30도 이하)' + badge(S.ang >= 20 && S.ang <= 30);
+    $('rStd').innerHTML = '내민 길이 ' + fmt(S.reach, 1) + 'm (벽면에서 2m 이상)' + badge(S.reach >= 2) + '<br>설치 간격 ' + S.gap + 'm (높이 10m 이내마다)' + badge(S.gap <= 10) + '<br>망 각도 ' + S.ang + '도 (20도 이상 30도 이하)' + badge(S.ang >= 20 && S.ang <= 30)
+      + (S.wg > 0 ? '<br>망과 비계 사이 틈 ' + S.wg + 'cm (250mm 이하, KCS)' + badge(S.wg <= 25) : '') + (S.jt === 'open' ? '<br>옆 망과 이음 겹침 없음 (150mm 이상 겹침, KCS)' + badge(false) : '');
     $('rG').textContent = fmt(vGround(), 1) + 'm/s (시속 약 ' + fmt(vGround() * 3.6, 0) + 'km)';
     $('rGS').textContent = OBJ[S.obj].name + ' ' + kg() + 'kg: 에너지 ' + fmt(energy(), 0) + 'J (무게 × 9.81 × 30m) · 벽면에서 ' + fmt(xGround(), 2) + 'm 지점';
     refreshNow();
@@ -334,15 +356,15 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function refreshNow() {
     var txt, cls, sub = '', b = $('banner'), st = S.state, c = caught(), hr = $('hRes');
     if (st === 'caught') { txt = '망이 받았습니다'; cls = 'ok'; sub = '날아간 거리 ' + fmt(xFly(), 2) + 'm ≤ 망 끝 ' + fmt(tipX(), 2) + 'm'; }
-    else if (st === 'ground') { txt = '망을 벗어나 땅에 떨어짐'; cls = 'ng'; sub = '날아간 거리 ' + fmt(xFly(), 2) + 'm > 망 끝 ' + fmt(tipX(), 2) + 'm. 땅에 닿는 속도 ' + fmt(vGround(), 1) + 'm/s · ' + fmt(energy(), 0) + 'J'; }
-    else if (st === 'miss') { txt = '망을 벗어남'; cls = 'ng'; sub = '망 끝 바깥을 지나 계속 떨어집니다.'; }
+    else if (st === 'ground') { var hw = hole(); txt = hw === 'tip' ? '망을 벗어나 땅에 떨어짐' : hw === 'wall' ? '망과 비계 사이 틈으로 빠져 땅에 떨어짐' : '망 이음 틈으로 빠져 땅에 떨어짐'; cls = 'ng'; sub = (hw === 'tip' ? '날아간 거리 ' + fmt(xFly(), 2) + 'm > 망 끝 ' + fmt(tipX(), 2) + 'm' : hw === 'wall' ? '날아간 거리 ' + fmt(xFly(), 2) + 'm — 망 안쪽 끝 ' + fmt(S.wg / 100, 2) + 'm보다 벽 쪽' : '망과 망 사이가 30cm 벌어져 있었습니다') + '. 땅에 닿는 속도 ' + fmt(vGround(), 1) + 'm/s · ' + fmt(energy(), 0) + 'J'; }
+    else if (st === 'miss') { txt = hole() === 'tip' ? '망을 벗어남' : '망에 닿지 않고 빠짐'; cls = 'ng'; sub = hole() === 'tip' ? '망 끝 바깥을 지나 계속 떨어집니다.' : WHY[hole()] + ' — 계속 떨어집니다.'; }
     else if (st === 'run') { txt = '떨어지는 중'; cls = 'warn'; }
-    else { txt = '대기 중'; cls = 'ok'; sub = '①에서 「▶ 물건 떨어뜨리기」를 눌러 보세요. 지금 조건이면 ' + (c ? '망이 받습니다.' : '망을 벗어납니다.'); }
+    else { txt = '대기 중'; cls = 'ok'; sub = '①에서 「▶ 물건 떨어뜨리기」를 눌러 보세요. 지금 조건이면 ' + (c ? '망이 받습니다.' : WHY[hole()] + '.'); }
     $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub;
     if (st === 'caught') { hr.textContent = '✔ 망이 받았습니다'; hr.className = 't ok'; }
-    else if (st === 'ground' || st === 'miss') { hr.textContent = '⚠ 망을 벗어남'; hr.className = 't ng'; }
-    else { hr.textContent = c ? '망이 받습니다' : '망을 벗어납니다'; hr.className = 't ' + (c ? 'ok' : 'ng'); }
-    if (st === 'ground') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 망을 벗어나 땅으로 — ' + fmt(vGround(), 1) + 'm/s (시속 ' + fmt(vGround() * 3.6, 0) + 'km)'; }
+    else if (st === 'ground' || st === 'miss') { hr.textContent = hole() === 'tip' ? '⚠ 망을 벗어남' : hole() === 'wall' ? '⚠ 비계 쪽 틈으로 빠짐' : '⚠ 이음 틈으로 빠짐'; hr.className = 't ng'; }
+    else { hr.textContent = c ? '망이 받습니다' : hole() === 'tip' ? '망을 벗어납니다' : '틈으로 빠집니다'; hr.className = 't ' + (c ? 'ok' : 'ng'); }
+    if (st === 'ground') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ ' + (hole() === 'tip' ? '망을 벗어나' : hole() === 'wall' ? '망과 비계 사이 틈으로' : '망 이음 틈으로') + ' 땅으로 — ' + fmt(vGround(), 1) + 'm/s (시속 ' + fmt(vGround() * 3.6, 0) + 'km)'; }
     else if (st === 'caught') { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ 망이 받았습니다 — ' + fmt(xFly(), 2) + 'm ≤ 망 끝 ' + fmt(tipX(), 2) + 'm'; }
     else b.style.display = 'none';
   }
@@ -398,13 +420,15 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     $('angIn').onchange = function () { S.ang = parseFloat(this.value); build(); reset(); };
     $('objIn').onchange = function () { S.obj = this.value; makeThing(); reset(); };
     $('vIn').oninput = function () { S.v = parseFloat(this.value); reset(); };
+    $('wgIn').onchange = function () { S.wg = parseFloat(this.value); build(); reset(); };
+    $('jtIn').onchange = function () { S.jt = this.value; build(); reset(); };
     $('bDrop').onclick = drop;
     $('bReset').onclick = function () {
-      $('reachIn').value = '2.0'; $('gapIn').value = '10'; $('angIn').value = '25'; $('objIn').value = 'clamp'; $('vIn').value = 1.2;
-      S.reach = 2; S.gap = 10; S.ang = 25; S.obj = 'clamp'; S.v = 1.2; makeThing(); build(); reset();
+      $('reachIn').value = '2.0'; $('gapIn').value = '10'; $('angIn').value = '25'; $('objIn').value = 'clamp'; $('vIn').value = 1.2; $('wgIn').value = '0'; $('jtIn').value = 'lap';
+      S.reach = 2; S.gap = 10; S.ang = 25; S.obj = 'clamp'; S.v = 1.2; S.wg = 0; S.jt = 'lap'; makeThing(); build(); reset();
     };
   }
-  window.GPNet = { S: S, tFall: tFall, xFly: xFly, tipX: tipX, caught: caught, netY: netY, tGround: tGround, xGround: xGround, vGround: vGround, energy: energy, kg: kg, update: update };
+  window.GPNet = { S: S, hole: hole, tFall: tFall, xFly: xFly, tipX: tipX, caught: caught, netY: netY, tGround: tGround, xGround: xGround, vGround: vGround, energy: energy, kg: kg, update: update };
   bind(); init(); update(); animate();
 })();
 </script>
@@ -428,7 +452,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     netgap: { msg: '영상과 같은 조건: <b>내민 길이 2.0m · 설치 간격 20m마다 · 클램프 1kg · 튕겨 나오는 속도 1.2m/s(가정)</b>. 「▶ 물건 떨어뜨리기」를 눌러 보세요. (설치 간격을 10m마다로 바꿔 비교해 보세요)',
       run: function (set, click) { click('bReset'); set('gapIn', '20'); } },
     netangle: { msg: '영상과 같은 조건: <b>설치 간격 10m · 내민 길이 2.0m · 망 각도 45도(기준 밖) · 클램프 1kg · 튕겨 나오는 속도 1.2m/s(가정)</b>. 「▶ 물건 떨어뜨리기」를 눌러 보세요. (각도를 25도로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('angIn', '45'); } }
+      run: function (set, click) { click('bReset'); set('angIn', '45'); } },
+    netwall: { msg: '영상과 같은 조건: <b>설치 간격 10m · 내민 길이 2.0m · 망과 비계 사이 틈 50cm(기준 밖) · 클램프 1kg · 벽을 따라 툭 떨어짐(튕겨 나오는 속도 0.3m/s 가정)</b>. 「▶ 물건 떨어뜨리기」를 눌러 보세요. (틈을 25cm로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('vIn', 0.3, 'input'); set('wgIn', '50'); } },
+    netjoint: { msg: '영상과 같은 조건: <b>설치 간격 10m · 내민 길이 2.0m · 옆 망과 이음이 겹치지 않고 30cm 벌어짐 · 클램프 1kg · 튕겨 나오는 속도 1.2m/s(가정)</b>. 「▶ 물건 떨어뜨리기」를 눌러 보세요. (이음을 「15cm 이상 겹침」으로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('jtIn', 'open'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';

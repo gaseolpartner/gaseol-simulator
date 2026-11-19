@@ -102,7 +102,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <h2>체험 선택</h2>
       <div class="row wide"><select id="expIn" aria-label="체험 선택">
         <option value="fix" selected>① 발판 고정 — 끝을 밟으면 뒤집힐까?</option>
-        <option value="gap">② 발판 틈 — 공구가 빠질까?</option></select></div>
+        <option value="gap">② 발판 틈 — 공구가 빠질까?</option>
+        <option value="wid">③ 발판 폭 — 자재를 들고 지나가면?</option></select></div>
     </div>
 
     <div class="sec">
@@ -110,6 +111,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <div class="btns">
         <button class="btn" id="bWalk" type="button">▶ 발판 끝으로 걸어가기</button>
         <button class="btn" id="bDropTool" type="button" hidden>▶ 공구 떨어뜨리기</button>
+        <button class="btn" id="bCarry" type="button" hidden>▶ 자재 들고 지나가기</button>
         <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
       </div>
       <p class="note" id="tryNote">작업자가 장선(발판을 받치는 가로대) 밖으로 내민 발판 끝까지 걸어갑니다.</p>
@@ -125,6 +127,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
         <div class="row"><label for="pwIn">발판 1장 무게 (가정)</label><select id="pwIn">
           <option value="8">8kg (가벼운 발판)</option><option value="15" selected>15kg</option><option value="25">25kg (무거운 발판)</option></select></div>
         <p class="note">작업자 무게는 75kg(가정), 장선 간격은 1.5m(가정)로 고정했습니다.</p>
+      </div>
+      <div id="cWid" hidden>
+        <div class="row"><label for="widIn">발판 폭</label><select id="widIn">
+          <option value="20">20cm (좁은 발판 1장)</option><option value="30">30cm</option><option value="40" selected>40cm (기준)</option></select></div>
+        <p class="note">자재를 들어 발밑이 안 보이면 발 디딤이 걸음마다 좌우로 벗어납니다(최대 15cm, 가정). 안전난간을 잠시 뗀 구간이라고 가정했습니다.</p>
       </div>
       <div id="cGap" hidden>
         <div class="row"><label for="gapIn">발판 사이 틈</label><select id="gapIn">
@@ -143,6 +150,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
         <div class="res"><div class="k">발판 끝을 밟을 때 (끝에서 10cm 안쪽, 작업자 75kg 가정)</div><div class="v" id="rMom">-</div><div class="s" id="rMomS"></div></div>
         <div class="res"><div class="k">이 높이에서 떨어지면</div><div class="v" id="rV">-</div><div class="s">공기저항을 무시한 값</div></div>
       </div>
+      <div id="rWidBox" hidden>
+        <div class="res"><div class="k">발판 폭 (40cm 이상)</div><div class="v" id="rWid">-</div></div>
+        <div class="res"><div class="k">발 디딤이 벗어나는 폭 (가정) / 발판 가운데에서 끝까지</div><div class="v" id="rStep">-</div><div class="s" id="rStepS"></div></div>
+        <div class="res"><div class="k">이 높이에서 떨어지면</div><div class="v" id="rV2">-</div><div class="s">공기저항을 무시한 값</div></div>
+      </div>
       <div id="rGapBox" hidden>
         <div class="res"><div class="k">발판 폭 (40cm 이상)</div><div class="v" id="rW">-</div></div>
         <div class="res"><div class="k">발판 사이 틈 (3cm 이하)</div><div class="v" id="rGap">-</div></div>
@@ -156,6 +168,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <h2>기준</h2>
       <p class="note">기준: 산업안전보건기준에 관한 규칙 제56조(작업발판의 구조) — 비계의 높이가 2m 이상인 작업장소의 작업발판은 ① 발판재료는 작업할 때의 하중을 견딜 수 있도록 견고한 것으로 할 것(제1호) ② 작업발판의 폭은 40cm 이상으로 하고, 발판재료 간의 틈은 3cm 이하로 할 것(제2호) ③ 작업발판재료는 뒤집히거나 떨어지지 않도록 둘 이상의 지지물에 연결하거나 고정시킬 것(제6호).</p>
       <p class="note">교육용 단순화: 작업자 75kg, 장선 간격 1.5m, 발판 무게(8·15·25kg), 물건의 크기·무게는 모두 가정한 예시 값입니다. 발판 길이 = 장선 간격 + 양쪽 내민 길이. 뒤집힘은 바깥 장선을 받침점으로 한 시소처럼 보고, 작업자가 발판 끝에서 10cm 안쪽에 섰을 때의 힘만 비교했습니다 — 뒤집으려는 힘 = 75 × 9.81 × (내민 길이 − 0.1m), 버티는 힘 = 발판 무게 × 9.81 × 0.75m(발판 가운데까지 거리). 실제로는 끝까지 가기 전에 뒤집히거나 발판이 미끄러져 빠질 수 있습니다. 고정한 발판은 고정 철물이 버틴다고 가정했습니다. 물건은 크기가 틈보다 크면 걸리고, 틈과 같거나 작으면 빠진다고 보았습니다. 떨어지는 속도·에너지는 발판 높이를 기준으로 공기저항을 무시한 값(속도 = √(2×9.81×높이), 에너지 = 무게×9.81×높이)입니다. 발판이 잘 보이도록 안전난간·가새 등은 그리지 않았고, 떨어지는 물건은 눈에 띄게 실제보다 크게 그렸습니다(「틈 확대」 창은 실제 크기).</p>
+      <p class="note">③ 발판 폭(2026-11-19 추가) — 교육용 단순화: 자재를 들고 걸으면 발 디딤이 걸음마다 발판 가운데에서 좌우로 3·6·9·12·15cm씩 벗어난다고 가정했습니다. 발 가운데가 발판 끝(폭의 절반)을 넘으면 헛디뎌 떨어진다고 보았습니다. 숫자는 모두 가정 값이고, 안전난간이 없는 구간을 가정했습니다(제56조 제4호 — 추락 위험이 있는 장소에는 안전난간 설치).</p>
       <p class="note">교육용 시뮬레이션입니다. 실제 설치는 안전인증 제품과 작업계획서를 따르고, 작업발판 끝·개구부에는 안전난간을 설치하세요.</p>
     </div>
 
@@ -171,9 +184,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
-  var G = 9.81, SPAN = 1.5, MAN_KG = 75, STEP_IN = 0.10, PW = 0.4, PT = 0.04, GAP_MAX = 3, FX = SPAN / 2, COLZ = 0.6, TX = 0.27, HAND = 0.88, SHOW = 2.6;
+  var G = 9.81, SPAN = 1.5, MAN_KG = 75, STEP_IN = 0.10, PW = 0.4, PW0 = 0.4, PT = 0.04, GAP_MAX = 3, FX = SPAN / 2, COLZ = 0.6, TX = 0.27, HAND = 0.88, SHOW = 2.6;
   var TOOLS = { clamp: { name: '강관 클램프', part: '폭', cm: 6, kg: 1, hh: 0.03 }, hammer: { name: '망치', part: '머리 폭', cm: 3.5, kg: 0.8, hh: 0.0175 }, bolt: { name: '볼트', part: '지름', cm: 2, kg: 0.1, hh: 0.01 } };
-  var S = { mode: 'fix', H: 4, fix: true, ov: 20, pw: 15, gap: 3, tool: 'clamp', state: 'idle', t: 0, vHit: 0,
+  var S = { mode: 'fix', H: 4, wid: 40, fix: true, ov: 20, pw: 15, gap: 3, tool: 'clamp', state: 'idle', t: 0, vHit: 0,
     man: { x: -0.3, y: 0, vx: 0, vy: 0, rx: 0, wr: 0, air: false }, pk: { th: 0, om: 0, ex: 0, ey: 0, vy: 0, ph: 0 }, tl: { y: HAND, vy: 0, r: 0, passed: false } };
 
   // ---------- 계산 (교육용 단순화) ----------
@@ -183,6 +196,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     var over = MAN_KG * (S.ov - STEP_IN * 100) > S.pw * (SPAN / 2) * 100;   // 같은 식을 정수로 비교
     return { L: L, xs: xs, Mo: Mo, Mr: Mr, over: over, flips: !S.fix && over };
   }
+  var OFF = [0.03, -0.06, 0.09, -0.12, 0.15], X0W = -0.85, STEPL = 0.35;   /* ③ 발판 폭: 걸음마다 발 디딤이 벗어나는 폭(m, 가정) */
+  function widCalc() { var half = S.wid / 200, k = -1, i; for (i = 0; i < OFF.length; i++) if (Math.abs(OFF[i]) > half + 1e-9) { k = i; break; }
+    return { half: half, maxOff: 0.15, slipStep: k, slipOff: k >= 0 ? Math.abs(OFF[k]) : 0, falls: k >= 0 }; }
   function tool() { return TOOLS[S.tool]; }
   function toolFalls() { return tool().cm <= S.gap; }   // 크기가 틈과 같거나 작으면 빠짐
   function dropV() { return Math.sqrt(2 * G * S.H); }
@@ -191,7 +207,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function ovNow() { return (S.mode === 'gap' ? 20 : S.ov) / 100; }
 
   // ---------- 3D ----------
-  var scene, camera, cam2, renderer, controls, clock, bay, pkA, pkB, toolG, man, body, legL, legR, armL, armR, lower, M = {};
+  var scene, camera, cam2, renderer, controls, clock, bay, pkA, pkB, toolG, carry, man, body, legL, legR, armL, armR, lower, M = {};
   var UP = new THREE.Vector3(0, 1, 0), _d = new THREE.Vector3();
   function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
   function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6, metalness: 0.2 }, o || {})); }
@@ -236,14 +252,15 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       vest: mat(0xFF7A1A, { metalness: 0 }), pants: mat(0x2F3A4A, { metalness: 0 }), boot: mat(0x1A1A1A, { metalness: 0 }), skin: mat(0xE0B990, { metalness: 0 }),
       helm: mat(0xF2B705, { metalness: 0.1 }), helmW: mat(0xFFFFFF, { metalness: 0.1 }) };
     var p = person(M.helm); man = p.g; body = p.b; legL = p.lL; legR = p.lR; armL = p.aL; armR = p.aR; scene.add(man);
+    carry = box(0.5, 0.42, 0.34, M.wood, 0, 1.42, 0.36); carry.visible = false; body.add(carry);
     var q = person(M.helmW); lower = q.g; lower.position.set(0.5, 0, 1.6); lower.rotation.y = Math.PI * 0.75; scene.add(lower);
     toolG = new THREE.Group(); scene.add(toolG);
     clock = new THREE.Clock();
     build(); resize(); window.addEventListener('resize', resize);
     if (window.ResizeObserver) new ResizeObserver(resize).observe(view);
   }
-  function plankGroup(L, ov, fixed) { // 원점 = 바깥(+x) 끝의 윗면 가운데, 몸체는 -x 쪽으로
-    var g = new THREE.Group();
+  function plankGroup(L, ov, fixed, pw) { // 원점 = 바깥(+x) 끝의 윗면 가운데, 몸체는 -x 쪽으로
+    var g = new THREE.Group(), PW = pw || PW0;
     g.add(box(L, PT, PW, M.plank, -L / 2, -PT / 2, 0));
     g.add(box(0.03, PT + 0.004, PW + 0.004, M.plankE, -0.015, -PT / 2, 0));
     g.add(box(0.03, PT + 0.004, PW + 0.004, M.plankE, -L + 0.015, -PT / 2, 0));
@@ -281,10 +298,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       for (k = 1; k * 1.8 < H - 0.6; k++) bay.add(rod(V3(-FX, k * 1.8 - 0.045, z), V3(FX, k * 1.8 - 0.045, z), 0.0215, M.bar));
     });
     var fixed = S.mode === 'gap' || S.fix;
-    pkA = plankGroup(L, ov, fixed); pkB = plankGroup(L, ov, fixed);
+    var wid = S.mode === 'wid';
+    pkA = plankGroup(L, ov, fixed, wid ? S.wid / 100 : PW0); pkB = plankGroup(L, ov, fixed);
     bay.add(pkA); bay.add(pkB);
-    pkB.position.set(FX + ov, H, -zc);
-    lower.visible = S.mode === 'gap'; toolG.visible = S.mode === 'gap';
+    pkB.position.set(FX + ov, H, -zc); pkB.visible = !wid;
+    lower.visible = S.mode === 'gap'; toolG.visible = S.mode === 'gap'; carry.visible = wid;
     buildTool(); frame();
   }
   function resize() {
@@ -298,7 +316,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     var needV = (H + 2.7) * (tall ? 1.9 : 1.2 + 200 / vh), needW = gap ? 4.6 : 6.0;   // 세로로 긴 화면(쇼츠 녹화)은 위아래 띠만큼 더 물러남
     var d = Math.max(needV / 0.828, needW / (0.828 * a));
     var ty = (H + (tall ? 1.9 : 1.6)) / 2;
-    if (gap) { controls.target.set(0.2, ty, -0.1); camera.position.set(0.2 + d * 0.9, ty + d * 0.3, -0.1 + d * 0.3); }
+    if (S.mode === 'wid') { controls.target.set(0.3, ty - 0.4, 0); camera.position.set(0.3 + d * 0.3, ty - 0.4 + d * 0.62, d * 0.78); }
+    else if (gap) { controls.target.set(0.2, ty, -0.1); camera.position.set(0.2 + d * 0.9, ty + d * 0.3, -0.1 + d * 0.3); }
     else { controls.target.set(1.15, ty, 0.2); camera.position.set(1.15 + d * 0.24, ty + d * 0.3, 0.2 + d * 0.92); }
     controls.update();
     cam2.position.set(TX + 0.95, H + 0.72, 0.0); cam2.lookAt(TX - 0.05, H + 0.05, 0);
@@ -311,9 +330,22 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function update() {
     var c = calc(), t = tool(), gap = S.mode === 'gap', gi = $('hG'), r;
     $('hH').textContent = fmt(S.H, 0); $('hLbl').textContent = fmt(S.H, 0) + ' m';
-    $('cFix').hidden = $('rFixBox').hidden = $('bWalk').hidden = gap; $('cGap').hidden = $('rGapBox').hidden = $('bDropTool').hidden = $('zoom').hidden = !gap;
+    var wd = S.mode === 'wid';
+    $('cFix').hidden = $('rFixBox').hidden = $('bWalk').hidden = S.mode !== 'fix'; $('cGap').hidden = $('rGapBox').hidden = $('bDropTool').hidden = $('zoom').hidden = !gap;
+    $('cWid').hidden = $('rWidBox').hidden = $('bCarry').hidden = !wd;
     $('tryNote').textContent = gap ? '발판 위 작업자가 손에 든 물건을 발판 틈 위에서 놓칩니다. 아래 바닥에는 지나가는 사람이 있습니다.' : '작업자가 장선(발판을 받치는 가로대) 밖으로 내민 발판 끝까지 걸어갑니다.';
-    if (!gap) {
+    if (wd) {
+      var w = widCalc();
+      $('tryNote').textContent = '작업자가 자재를 들고 발판 위를 걸어갑니다. 발밑이 안 보여 걸음마다 발 디딤이 좌우로 벗어납니다(가정).';
+      $('hA').textContent = '폭 ' + S.wid + 'cm'; $('hA2').textContent = '기준 40cm 이상 · 자재 들고 이동';
+      $('hBt').textContent = '발 디딤 벗어남 / 발판 끝까지'; $('hB').textContent = (S.state === 'idle' || S.st < 1 ? '최대 15' : fmt(Math.abs(OFF[Math.min(S.st, OFF.length) - 1]) * 100, 0)) + ' / ' + fmt(w.half * 100, 0) + ' cm';
+      $('hGw').hidden = false; $('hB2').hidden = true;
+      r = 0.15 / w.half; gi.style.width = Math.min(100, r * 50) + '%'; gi.style.background = w.falls ? '#FF6369' : (r > 0.9 ? '#F2B705' : '#4CC38A');
+      $('rWid').innerHTML = S.wid + 'cm' + badge(S.wid >= 40);
+      $('rStep').innerHTML = '최대 15cm / ' + fmt(w.half * 100, 0) + 'cm' + (w.falls ? ' <span class="badge ng">헛디딤</span>' : badge(true));
+      $('rStepS').textContent = w.falls ? (w.slipStep + 1) + '번째 걸음에서 ' + fmt(w.slipOff * 100, 0) + 'cm 벗어나 발판 끝(' + fmt(w.half * 100, 0) + 'cm)을 넘습니다 → 헛디뎌 떨어집니다.' : '15cm 벗어나도 발판 끝(' + fmt(w.half * 100, 0) + 'cm) 안쪽을 밟습니다.';
+      $('rV2').textContent = fmt(dropV(), 1) + ' m/s (시속 약 ' + fmt(dropV() * 3.6, 0) + 'km)';
+    } else if (!gap) {
       $('hA').textContent = S.fix ? '양쪽 고정' : '고정 안 함';
       $('hA2').textContent = '장선 밖으로 ' + S.ov + 'cm · 발판 ' + S.pw + 'kg';
       $('hBt').textContent = '뒤집으려는 힘 / 버티는 힘'; $('hB').textContent = fmt(c.Mo, 0) + ' / ' + fmt(c.Mr, 0) + ' N·m';
@@ -343,7 +375,10 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   }
   function refreshNow() {
     var txt, cls, sub = '', b = $('banner'), st = S.state, t = tool(), c = calc();
-    if (st === 'flip' || st === 'fell') { txt = '발판이 뒤집혀 추락'; cls = 'ng'; sub = '고정 안 한 발판 끝을 밟자 바깥 장선을 받침점으로 뒤집혔습니다. 떨어지는 속도 ' + fmt(dropV(), 1) + 'm/s (높이 ' + fmt(S.H, 0) + 'm)'; }
+    if (S.mode === 'wid' && (st === 'slip' || st === 'fell')) { var w = widCalc(); txt = '헛디뎌 추락'; cls = 'ng'; sub = '발 디딤이 ' + fmt(w.slipOff * 100, 0) + 'cm 벗어나 폭 ' + S.wid + 'cm 발판(가운데에서 끝까지 ' + fmt(w.half * 100, 0) + 'cm) 밖을 밟았습니다. 떨어지는 속도 ' + fmt(dropV(), 1) + 'm/s (높이 ' + fmt(S.H, 0) + 'm)'; }
+    else if (st === 'crossed') { txt = '안전하게 건넜습니다'; cls = 'ok'; sub = '발 디딤이 최대 15cm 벗어나도 폭 ' + S.wid + 'cm 발판(가운데에서 끝까지 ' + fmt(S.wid / 2, 0) + 'cm) 안입니다.'; }
+    else if (st === 'carry') { txt = '진행 중'; cls = 'warn'; }
+    else if (st === 'flip' || st === 'fell') { txt = '발판이 뒤집혀 추락'; cls = 'ng'; sub = '고정 안 한 발판 끝을 밟자 바깥 장선을 받침점으로 뒤집혔습니다. 떨어지는 속도 ' + fmt(dropV(), 1) + 'm/s (높이 ' + fmt(S.H, 0) + 'm)'; }
     else if (st === 'held') { txt = S.fix ? '발판이 버텼습니다' : '이번에는 버텼습니다'; cls = S.fix ? 'ok' : 'warn'; sub = S.fix ? '양쪽 장선에 고정한 발판은 끝을 밟아도 뒤집히지 않습니다.' : '뒤집으려는 힘(' + fmt(c.Mo, 0) + ')이 버티는 힘(' + fmt(c.Mr, 0) + ' N·m)보다 작았을 뿐입니다. 고정 안 한 발판은 기준에 어긋납니다.'; }
     else if (st === 'caught') { txt = '발판에 걸렸습니다'; cls = 'ok'; sub = t.name + '(' + num(t.cm) + 'cm)가 틈(' + S.gap + 'cm)보다 커서 발판 위에 멈췄습니다.' + (S.gap > GAP_MAX ? ' 하지만 틈이 기준(3cm)보다 넓어 더 작은 물건은 빠집니다.' : ''); }
     else if (st === 'drop' && !S.tl.passed) { txt = '진행 중'; cls = 'warn'; }
@@ -351,7 +386,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     else if (st === 'walk') { txt = '진행 중'; cls = 'warn'; }
     else { txt = '대기 중'; cls = 'ok'; sub = '①에서 버튼을 눌러 보세요.'; }
     $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub;
-    if (st === 'fell') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 발판이 뒤집혀 추락 — 높이 ' + fmt(S.H, 0) + 'm · ' + fmt(dropV(), 1) + 'm/s'; }
+    if (st === 'fell' && S.mode === 'wid') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 좁은 발판에서 헛디뎌 추락 — 높이 ' + fmt(S.H, 0) + 'm · ' + fmt(dropV(), 1) + 'm/s'; }
+    else if (st === 'crossed') { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ 폭 ' + S.wid + 'cm 발판 — 안전하게 건넘'; }
+    else if (st === 'fell') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 발판이 뒤집혀 추락 — 높이 ' + fmt(S.H, 0) + 'm · ' + fmt(dropV(), 1) + 'm/s'; }
     else if (st === 'dropped') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 공구 낙하 — ' + fmt(dropV(), 1) + 'm/s · ' + fmt(dropE(), 1) + 'J'; }
     else if (st === 'held' && !S.fix) { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 이번에는 버텼지만 — 고정 안 한 발판은 위험'; }
     else if (st === 'held' || st === 'caught') { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ ' + txt; }
@@ -363,8 +400,22 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function walk(t, amp) { var s = Math.sin(t * 8) * amp; legL.rotation.x = s; legR.rotation.x = -s; armL.rotation.x = -s * 0.8; armR.rotation.x = s * 0.8; }
   function still() { legL.rotation.x = legR.rotation.x = armL.rotation.x = armR.rotation.x = 0; }
   function step(dt) {
-    var m = S.man, p = S.pk, tl = S.tl, H = S.H, c, ov, F, I, al, hh;
-    if (S.mode === 'fix') {
+    var m = S.man, p = S.pk, tl = S.tl, H = S.H, c, ov, F, I, al, hh, k, w;
+    if (S.mode === 'wid') {
+      if (S.state === 'carry') {
+        S.t += dt; m.x += 0.9 * dt; walk(S.t, 0.4); armL.rotation.x = armR.rotation.x = -1.25;
+        k = Math.floor((m.x - X0W) / STEPL); w = widCalc();
+        if (k > S.st && k <= OFF.length) { S.st = k; update(); }
+        var tgt = S.st >= 1 ? OFF[S.st - 1] : 0; m.z += (tgt - m.z) * Math.min(1, dt * 8);
+        if (S.st >= 1 && S.st - 1 === w.slipStep && Math.abs(m.z) >= w.half) { m.air = true; m.vy = 0; m.vz = Math.sign(tgt) * 0.7; setState('slip'); }
+        else if (S.st >= OFF.length) { still(); armL.rotation.x = armR.rotation.x = -1.25; setState('crossed'); }
+      } else if (S.state === 'slip') {
+        m.rz = Math.min(Math.PI / 2, m.rz + (m.rz * 4 + 1.6) * dt);
+        m.vy -= G * dt; m.y += m.vy * dt; m.z += m.vz * dt;
+        legL.rotation.x = 0.4; legR.rotation.x = -0.3; armL.rotation.x = armR.rotation.x = -2.4;
+        if (H + m.y <= 0.15) { m.y = -H + 0.15; m.rz = Math.PI / 2; S.vHit = dropV(); still(); armL.rotation.x = armR.rotation.x = -2.6; setState('fell'); }
+      }
+    } else if (S.mode === 'fix') {
       if (S.state === 'walk') {
         S.t += dt; c = calc(); m.x += 1.2 * dt; walk(S.t, 0.45);
         if (m.x >= FX + c.xs) { m.x = FX + c.xs; still(); if (c.flips) { p.ph = 1; setState('flip'); } else setState('held'); }
@@ -407,12 +458,15 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   }
   function place() {
     var m = S.man, p = S.pk, H = S.H, zc = gapNow() / 2 + PW / 2;
-    if (S.mode === 'fix') {
-      man.rotation.y = Math.PI / 2; man.position.set(m.x, H + m.y, zc); body.rotation.x = m.rx;
+    if (S.mode === 'wid') {
+      man.rotation.y = Math.PI / 2; man.position.set(m.x, H + m.y, m.z); body.rotation.x = 0; body.rotation.z = m.rz;
+      pkA.position.set(FX + 0.2, H, 0); pkA.rotation.z = 0;
+    } else if (S.mode === 'fix') {
+      man.rotation.y = Math.PI / 2; man.position.set(m.x, H + m.y, zc); body.rotation.x = m.rx; body.rotation.z = 0;
       if (p.ph === 0) pkA.position.set(FX + S.ov / 100, H, zc); else pkA.position.set(p.ex, H + p.ey, zc);
       pkA.rotation.z = -p.th;
     } else {
-      man.rotation.y = 0; man.position.set(0, H, -zc - 0.05); body.rotation.x = 0;
+      man.rotation.y = 0; man.position.set(0, H, -zc - 0.05); body.rotation.x = 0; body.rotation.z = 0;
       armR.rotation.x = -0.52; armL.rotation.x = 0; legL.rotation.x = legR.rotation.x = 0;
       pkA.position.set(FX + ovNow(), H, zc); pkA.rotation.z = 0;
       toolG.position.set(TX, H + S.tl.y, 0); toolG.rotation.set(0, 0, S.tl.r);
@@ -439,13 +493,15 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     place(); controls.update(); render();
   }
   function reset() {
-    S.state = 'idle'; S.t = 0; S.vHit = 0;
-    S.man = { x: -0.3, y: 0, vx: 0, vy: 0, rx: 0, wr: 0, air: false }; S.pk = { th: 0, om: 0, ex: 0, ey: 0, vy: 0, ph: 0 }; S.tl = { y: HAND, vy: 0, r: 0, passed: false };
+    S.state = 'idle'; S.t = 0; S.vHit = 0; S.st = 0;
+    S.man = { x: S.mode === 'wid' ? X0W : -0.3, y: 0, z: 0, vx: 0, vy: 0, vz: 0, rx: 0, rz: 0, wr: 0, air: false }; S.pk = { th: 0, om: 0, ex: 0, ey: 0, vy: 0, ph: 0 }; S.tl = { y: HAND, vy: 0, r: 0, passed: false };
     still(); update();
   }
   function setMode(mo) { if (S.mode === mo) return; S.mode = mo; $('expIn').value = mo; build(); reset(); }
   function bind() {
-    $('expIn').onchange = function () { S.mode = this.value === 'gap' ? 'gap' : 'fix'; build(); reset(); };
+    $('expIn').onchange = function () { S.mode = this.value === 'gap' || this.value === 'wid' ? this.value : 'fix'; build(); reset(); };
+    $('widIn').onchange = function () { S.wid = parseFloat(this.value); build(); reset(); };
+    $('bCarry').onclick = function () { setMode('wid'); reset(); setState('carry'); };
     $('fixIn').onchange = function () { S.fix = this.value === '1'; build(); reset(); };
     $('ovIn').onchange = function () { S.ov = parseFloat(this.value); build(); reset(); };
     $('pwIn').onchange = function () { S.pw = parseFloat(this.value); build(); reset(); };
@@ -455,11 +511,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     $('bWalk').onclick = function () { setMode('fix'); reset(); setState('walk'); };
     $('bDropTool').onclick = function () { setMode('gap'); reset(); setState('drop'); };
     $('bReset').onclick = function () {
-      $('fixIn').value = '1'; $('ovIn').value = '20'; $('pwIn').value = '15'; $('gapIn').value = '3'; $('toolIn').value = 'clamp'; $('hIn').value = 4;
-      S.fix = true; S.ov = 20; S.pw = 15; S.gap = 3; S.tool = 'clamp'; S.H = 4; build(); reset();
+      $('fixIn').value = '1'; $('ovIn').value = '20'; $('pwIn').value = '15'; $('gapIn').value = '3'; $('toolIn').value = 'clamp'; $('hIn').value = 4; $('widIn').value = '40';
+      S.wid = 40; S.fix = true; S.ov = 20; S.pw = 15; S.gap = 3; S.tool = 'clamp'; S.H = 4; build(); reset();
     };
   }
-  window.GPPlank = { S: S, calc: calc, tool: tool, toolFalls: toolFalls, dropV: dropV, dropE: dropE, update: update, TOOLS: TOOLS };
+  window.GPPlank = { S: S, widCalc: widCalc, calc: calc, tool: tool, toolFalls: toolFalls, dropV: dropV, dropE: dropE, update: update, TOOLS: TOOLS };
   bind(); init(); update(); animate();
 })();
 </script>
@@ -483,7 +539,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     plankgap: { msg: '영상과 같은 조건: <b>높이 4m · 발판 틈 10cm · 강관 클램프(폭 6cm)</b>. 「▶ 공구 떨어뜨리기」를 눌러 보세요. (틈을 3cm로 바꿔 비교해 보세요)',
       run: function (set, click) { click('bReset'); set('expIn', 'gap'); set('toolIn', 'clamp'); set('gapIn', '10'); } },
     boltgap: { msg: '영상과 같은 조건: <b>높이 10m · 발판 틈 3cm(기준 안) · 볼트(지름 2cm)</b>. 「▶ 공구 떨어뜨리기」를 눌러 보세요. (물건을 망치로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('expIn', 'gap'); set('gapIn', '3'); set('hIn', 10, 'input'); set('toolIn', 'bolt'); } }
+      run: function (set, click) { click('bReset'); set('expIn', 'gap'); set('gapIn', '3'); set('hIn', 10, 'input'); set('toolIn', 'bolt'); } },
+    plankwidth: { msg: '영상과 같은 조건: <b>높이 4m · 발판 폭 20cm · 자재를 들고 지나감(발 디딤 최대 15cm 벗어남, 가정)</b>. 「▶ 자재 들고 지나가기」를 눌러 보세요. (발판 폭을 40cm로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('expIn', 'wid'); set('widIn', '20'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';

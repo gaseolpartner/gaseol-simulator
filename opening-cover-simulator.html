@@ -108,13 +108,13 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     <div class="sec">
       <h2>② 조건</h2>
       <div class="row"><label for="covIn">덮개 상태</label><select id="covIn">
-        <option value="fixed" selected>고정한 덮개 + 「개구부」 표시</option><option value="loose">고정 안 한 덮개 (그냥 올려놓음)</option><option value="none">덮개 없음</option></select></div>
+        <option value="fixed" selected>고정한 덮개 + 「개구부」 표시</option><option value="loose">고정 안 한 덮개 (그냥 올려놓음)</option><option value="none">덮개 없음</option><option value="thin">얇은 판을 덮어만 둠 (합판 4mm · 각재 없음)</option></select></div>
       <div class="row"><label for="lapIn">덮개가 구멍 가장자리에 걸친 길이 (가정)</label><select id="lapIn">
         <option value="10" selected>10cm</option><option value="5">5cm</option><option value="2">2cm</option></select></div>
       <div class="row"><label for="pushIn">발에 차여 밀리는 거리 (가정)</label><select id="pushIn">
         <option value="5">5cm</option><option value="10" selected>10cm</option><option value="15">15cm</option></select></div>
       <div class="slider"><div class="top"><span>아래층 바닥까지 높이</span><b id="hLbl">3 m</b></div><input type="range" id="hIn" min="3" max="10" step="1" value="3"></div>
-      <p class="note">개구부 크기 80×80cm는 예시입니다. 「밀리는 거리」는 고정 안 한 덮개에만 적용됩니다. 덮개 없음은 작업자가 자재를 들고 가느라 앞을 못 본 경우입니다.</p>
+      <p class="note">개구부 크기 80×80cm는 예시입니다. 「밀리는 거리」는 고정 안 한 덮개에만 적용됩니다. 덮개 없음·얇은 판은 작업자가 자재를 들고 가느라 앞을 못 본 경우입니다.</p>
     </div>
 
     <div class="sec">
@@ -130,6 +130,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <p class="note">산업안전보건기준에 관한 규칙 제43조(개구부 등의 방호 조치) 제1항 — 작업발판 및 통로의 끝이나 개구부로서 근로자가 추락할 위험이 있는 장소에는 안전난간, 울타리, 수직형 추락방망 또는 덮개 등의 방호 조치를 충분한 강도를 가진 구조로 튼튼하게 설치해야 하며, 덮개를 설치하는 경우에는 뒤집히거나 떨어지지 않도록 설치해야 합니다. 이 경우 어두운 장소에서도 알아볼 수 있도록 개구부임을 표시해야 합니다.</p>
       <p class="note">제2항 — 난간 등을 설치하는 것이 매우 곤란하거나 작업의 필요상 임시로 난간 등을 해체해야 하는 경우에는 추락방호망을 설치하고, 추락방호망을 설치하기 곤란한 경우에는 근로자에게 안전대를 착용하도록 하는 등 추락 위험을 방지하기 위한 조치를 해야 합니다.</p>
       <p class="note">교육용 단순화: 조문에는 치수 숫자가 없습니다. 개구부 크기(80×80cm), 걸친 길이(10·5·2cm), 발에 밀리는 거리(5·10·15cm)는 모두 가정한 예시 값입니다. 고정 안 한 덮개는 발에 차이면 「밀리는 거리」만큼 걷는 방향으로 미끄러지고, 밀린 거리가 걸친 길이와 같거나 더 크면 덮개 한쪽이 구멍 안으로 빠져 뒤집힌다고 가정했습니다(걷는 방향의 걸침만 보았습니다). 고정한 덮개는 밟아도 움직이지 않는다고 보았고, 덮개의 강도(사람·자재 무게를 견디는지)는 다루지 않습니다. 떨어지는 속도는 공기저항을 무시한 값(속도 = √(2×9.81×높이))입니다.</p>
+      <p class="note">KCS 21 70 10(추락재해 방지시설) 3.3 개구부 수평보호덮개 — (1) 12mm 합판과 45mm × 45mm 각재 등으로 설치, (3) 근로자·장비 등의 2배 이상의 무게를 견딜 수 있도록, (11) 자재 등을 개구부에 덮어 놓거나 자재 등으로 개구부가 가려지지 않도록. 「얇은 판을 덮어만 둠」(2026-11-19 추가)은 교육용 단순화: 작업자 75kg + 들고 있는 자재 25kg = 100kg(가정), 판이 견디는 무게 = 4 × 휨 파괴강도 × 단면계수 ÷ 경간(80cm 가운데 하중)으로 보았고 휨 파괴강도 30MPa·발이 누르는 폭 30cm는 가정 값입니다(4mm 합판 약 12kg, 12mm 합판 + 45×45mm 각재 2개 약 570kg). 견디는 무게보다 무거우면 판이 가운데에서 부러진다고 보았습니다.</p>
       <p class="note">교육용 시뮬레이션입니다. 실제 덮개의 재료·두께·고정 방법은 현장 작업계획과 관리감독자의 지시를 따르세요.</p>
     </div>
 
@@ -151,8 +152,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     man: { x: X0, y: 0, vy: 0, rx: 0 }, cv: { mode: 'rest', x: 0, y: 0, th: 0, w: 0, vy: 0 } };
 
   function willSlide() { return S.cov === 'loose'; }
+  var LOAD = 100, NEED = 200, FB = 30, BW = 300, SPANMM = 800;   /* 얇은 판: 작업자+자재 100kg(가정), KCS 2배 = 200kg, 휨 파괴강도 30MPa·누르는 폭 30cm(가정) */
+  function capKg(t, joist) { var Z = BW * t * t / 6 + (joist ? 2 * 45 * 45 * 45 / 6 : 0); return 4 * FB * Z / SPANMM / G; }
+  function strength() { return { thin: capKg(4, false), std: capKg(12, true), load: LOAD, need: NEED }; }
   function outcome() { // 'safe' | 'shifted' | 'fall'
-    if (S.cov === 'none') return 'fall';
+    if (S.cov === 'none' || S.cov === 'thin') return 'fall';
     if (S.cov === 'fixed') return 'safe';
     return S.push >= S.lap - 1e-9 ? 'fall' : 'shifted';
   }
@@ -160,7 +164,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function dropV() { return Math.sqrt(2 * G * S.H); }
 
   // ---------- 3D ----------
-  var scene, camera, renderer, controls, clock, bldg, coverG, man, body, legL, legR, armL, armR, carry, M = {}, signTex;
+  var scene, camera, renderer, controls, clock, bldg, coverG, thinL = null, thinR = null, man, body, legL, legR, armL, armR, carry, M = {}, signTex;
   function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6, metalness: 0.2 }, o || {})); }
   function box(w, h, d, m, x, y, z) { var o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); return o; }
   function person(helm) {
@@ -245,7 +249,14 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     for (k = 1; k < Math.floor(H / 3); k++) bldg.add(box(W + 0.02, 0.06, 0.02, M.slab, 0, k * 3, ZB + 0.21));
     /* 덮개 */
     coverG = new THREE.Group(); bldg.add(coverG);
-    if (S.cov !== 'none') {
+    thinL = thinR = null;
+    if (S.cov === 'thin') { /* 얇은 판 두 쪽: 구멍 가장자리를 축으로 가운데가 꺾여 내려감 */
+      var hl = HALF + S.lap, tt = 0.012;
+      thinL = new THREE.Group(); thinL.position.set(-HALF, -CT / 2 + tt / 2, 0); coverG.add(thinL);
+      thinL.add(box(hl, tt, hl * 2, M.ply, -S.lap + hl / 2, 0, 0));
+      thinR = new THREE.Group(); thinR.position.set(HALF, -CT / 2 + tt / 2, 0); coverG.add(thinR);
+      thinR.add(box(hl, tt, hl * 2, M.ply, S.lap - hl / 2, 0, 0));
+    } else if (S.cov !== 'none') {
       var cw = (HALF + S.lap) * 2, fx = S.cov === 'fixed';
       var side = fx ? M.plyY : M.ply;
       coverG.add(new THREE.Mesh(new THREE.BoxGeometry(cw, CT, cw), fx ? [side, side, M.sign, side, side, side] : side));
@@ -277,12 +288,14 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function update() {
     var v = dropV(), oc = outcome();
     $('hH').textContent = fmt(S.H, 0); $('hLbl').textContent = fmt(S.H, 0) + ' m';
-    $('hC').textContent = S.cov === 'fixed' ? '고정한 덮개' : S.cov === 'loose' ? '고정 안 한 덮개' : '덮개 없음';
-    $('hC2').textContent = S.cov === 'fixed' ? '「개구부」 표시 있음' : S.cov === 'loose' ? '그냥 올려놓음 · 표시 없음' : '구멍이 그대로 열려 있음';
+    var st = strength();
+    $('hC').textContent = S.cov === 'fixed' ? '고정한 덮개' : S.cov === 'loose' ? '고정 안 한 덮개' : S.cov === 'thin' ? '얇은 판 (4mm)' : '덮개 없음';
+    $('hC2').textContent = S.cov === 'fixed' ? '「개구부」 표시 있음' : S.cov === 'loose' ? '그냥 올려놓음 · 표시 없음' : S.cov === 'thin' ? '자재로 덮어 둠 · 표시 없음' : '구멍이 그대로 열려 있음';
     $('hV').textContent = '떨어지면 ' + fmt(v, 1) + 'm/s (시속 약 ' + fmt(v * 3.6, 0) + 'km)';
-    $('rCov').innerHTML = (S.cov === 'fixed' ? '고정함 · 표시 있음' : S.cov === 'loose' ? '고정 안 함 · 표시 없음' : '덮개 없음') + badge(S.cov === 'fixed');
-    $('rCovS').textContent = S.cov === 'fixed' ? '네 귀퉁이를 고정해 밟아도 움직이지 않습니다.' : S.cov === 'loose' ? '발에 차이면 밀려서 어긋나거나 구멍으로 빠질 수 있습니다.' : '덮개·안전난간 등 막아 주는 것이 없습니다.';
-    if (S.cov === 'none') { $('rLap').innerHTML = '덮개 없음' + badge(false); $('rLapS').textContent = '자재를 들고 가 앞을 못 보면 그대로 구멍에 빠집니다.'; }
+    $('rCov').innerHTML = (S.cov === 'fixed' ? '고정함 · 표시 있음' : S.cov === 'loose' ? '고정 안 함 · 표시 없음' : S.cov === 'thin' ? '얇은 판을 덮어만 둠 · 표시 없음' : '덮개 없음') + badge(S.cov === 'fixed');
+    $('rCovS').textContent = S.cov === 'fixed' ? '네 귀퉁이를 고정해 밟아도 움직이지 않습니다.' : S.cov === 'loose' ? '발에 차이면 밀려서 어긋나거나 구멍으로 빠질 수 있습니다.' : S.cov === 'thin' ? '덮개가 아니라 자재(얇은 합판)로 가려 둔 것입니다. 구멍이 있는 줄 모르고 밟게 됩니다.' : '덮개·안전난간 등 막아 주는 것이 없습니다.';
+    if (S.cov === 'thin') { $('rLap').innerHTML = '견디는 무게 약 ' + fmt(st.thin, 0) + 'kg · 올라선 무게 ' + st.load + 'kg' + badge(false, '부러짐'); $('rLapS').textContent = '기준은 근로자·장비 무게의 2배(' + st.need + 'kg) 이상 견딜 것 — 12mm 합판 + 45×45mm 각재 덮개는 약 ' + fmt(Math.floor(st.std / 5) * 5, 0) + 'kg(교육용 계산)'; }
+    else if (S.cov === 'none') { $('rLap').innerHTML = '덮개 없음' + badge(false); $('rLapS').textContent = '자재를 들고 가 앞을 못 보면 그대로 구멍에 빠집니다.'; }
     else if (S.cov === 'fixed') { $('rLap').innerHTML = '걸친 길이 ' + cm(S.lap) + ' · 밀리지 않음' + badge(true); $('rLapS').textContent = '고정한 덮개는 발에 차여도 밀리지 않습니다.'; }
     else {
       $('rLap').innerHTML = '걸친 길이 ' + cm(S.lap) + ' · 밀리는 거리 ' + cm(S.push) + (oc === 'fall' ? badge(false, '빠짐') : ' <span class="badge warn">어긋남</span>');
@@ -295,9 +308,10 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function refreshNow() {
     var txt, cls, sub = '', b = $('banner'), st = S.state, v = dropV(), gi = $('hG'), r;
     if (S.cov === 'none') { $('hL').textContent = '덮개 없음'; r = 2; }
+    else if (S.cov === 'thin') { $('hL').textContent = '견딤 ' + fmt(strength().thin, 0) + 'kg / ' + strength().load + 'kg'; r = 2; }
     else { $('hL').textContent = cm(S.slid) + ' / ' + cm(S.lap); r = S.slid / S.lap; }
     gi.style.width = Math.min(100, r * 100) + '%'; gi.style.background = r >= 1 - 1e-9 ? '#FF6369' : r > 0 ? '#F2B705' : '#4CC38A';
-    if (st === 'fall' || st === 'fell') { txt = '작업자 추락'; cls = 'ng'; sub = S.cov === 'none' ? '덮개가 없는 개구부로 떨어졌습니다. 닿는 속도 ' + fmt(v, 1) + 'm/s' : '발에 ' + cm(S.slid) + ' 밀린 덮개(걸친 길이 ' + cm(S.lap) + ')가 구멍으로 빠지며 함께 떨어졌습니다. 닿는 속도 ' + fmt(v, 1) + 'm/s'; }
+    if (st === 'fall' || st === 'fell') { txt = '작업자 추락'; cls = 'ng'; sub = S.cov === 'none' ? '덮개가 없는 개구부로 떨어졌습니다. 닿는 속도 ' + fmt(v, 1) + 'm/s' : S.cov === 'thin' ? '얇은 판(견딤 약 ' + fmt(strength().thin, 0) + 'kg)이 ' + strength().load + 'kg에 부러져 함께 떨어졌습니다. 닿는 속도 ' + fmt(v, 1) + 'm/s' : '발에 ' + cm(S.slid) + ' 밀린 덮개(걸친 길이 ' + cm(S.lap) + ')가 구멍으로 빠지며 함께 떨어졌습니다. 닿는 속도 ' + fmt(v, 1) + 'm/s'; }
     else if (st === 'shifted') { txt = '위험 (덮개 어긋남)'; cls = 'warn'; sub = '덮개가 ' + cm(S.slid) + ' 밀렸습니다. 남은 걸침 ' + cm(remain()) + ' — 바로 제자리에 놓고 고정하세요.'; }
     else if (st === 'safe') { txt = '안전하게 건넘'; cls = 'ok'; sub = '고정한 덮개는 밟아도 그대로입니다.'; }
     else if (st === 'run') { txt = '진행 중'; cls = 'warn'; }
@@ -311,8 +325,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function setState(s) { S.state = s; refreshNow(); }
 
   // ---------- 움직임 ----------
-  function walk(t, amp) { var s = Math.sin(t * 9) * amp; legL.rotation.x = s; legR.rotation.x = -s; if (S.cov !== 'none') { armL.rotation.x = -s * 0.8; armR.rotation.x = s * 0.8; } }
-  function still() { legL.rotation.x = legR.rotation.x = 0; armL.rotation.x = armR.rotation.x = S.cov === 'none' ? -1.25 : 0; }
+  function carrying() { return S.cov === 'none' || S.cov === 'thin'; }
+  function walk(t, amp) { var s = Math.sin(t * 9) * amp; legL.rotation.x = s; legR.rotation.x = -s; if (!carrying()) { armL.rotation.x = -s * 0.8; armR.rotation.x = s * 0.8; } }
+  function still() { legL.rotation.x = legR.rotation.x = 0; armL.rotation.x = armR.rotation.x = carrying() ? -1.25 : 0; }
   function step(dt) {
     var m = S.man, c = S.cv, H = S.H, xk, px, rx0;
     if (S.state === 'run') {
@@ -325,9 +340,11 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       }
       m.x += SPD * dt; walk(S.t, 0.5);
       if (S.cov === 'none' && m.x >= -HALF + 0.14) { startFall(); return; }
+      if (S.cov === 'thin' && m.x >= -0.12) { S.brk = 0.001; startFall(); return; }
       if (S.cov === 'loose' && outcome() === 'fall' && m.x >= -HALF + 0.2) { c.mode = 'tilt'; c.th = 0; c.w = 0; startFall(); return; }
       if (m.x >= X1) { m.x = X1; still(); setState(S.cov === 'fixed' ? 'safe' : 'shifted'); }
     } else if (S.state === 'fall') {
+      if (S.brk > 0) S.brk = Math.min(1.45, S.brk + (S.brk * 9 + 2.5) * dt);
       m.vy -= G * dt; m.y += m.vy * dt; if (m.x < -0.1) m.x = Math.min(-0.1, m.x + 0.5 * dt);
       m.rx = Math.max(-0.22, m.rx - 0.5 * dt);
       if (H + m.y <= 0) { m.y = -H; S.vHit = Math.sqrt(2 * G * H); S.lay = 0; setState('fell'); }
@@ -350,7 +367,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   function startFall() { var m = S.man; m.vy = 0; legL.rotation.x = 0.25; legR.rotation.x = -0.15; armL.rotation.x = armR.rotation.x = -2.6; setState('fall'); }
   function pose() {
     var m = S.man, c = S.cv;
-    man.position.set(m.x, S.H + m.y, 0); body.rotation.x = m.rx; carry.visible = S.cov === 'none';
+    man.position.set(m.x, S.H + m.y, 0); body.rotation.x = m.rx; carry.visible = carrying();
+    if (thinL) { thinL.rotation.z = -S.brk; thinR.rotation.z = S.brk; }
     if (c.mode === 'rest') { coverG.position.set(S.slid, S.H + CT / 2, 0); coverG.rotation.z = 0; }
     else { coverG.position.set(c.x, c.y, 0); coverG.rotation.z = c.th; }
   }
@@ -361,7 +379,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     pose(); controls.update(); renderer.render(scene, camera);
   }
   function reset() {
-    S.state = 'idle'; S.t = 0; S.slid = 0; S.lay = 0; S.vHit = 0;
+    S.state = 'idle'; S.t = 0; S.slid = 0; S.lay = 0; S.vHit = 0; S.brk = 0;
     S.man = { x: X0, y: 0, vy: 0, rx: 0 }; S.cv = { mode: 'rest', x: 0, y: 0, th: 0, w: 0, vy: 0 };
     still(); update();
   }
@@ -377,7 +395,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       S.cov = 'fixed'; S.lap = 0.10; S.push = 0.10; S.H = 3; build(); reset();
     };
   }
-  window.GPCover = { S: S, outcome: outcome, remain: remain, dropV: dropV, update: update };
+  window.GPCover = { S: S, strength: strength, outcome: outcome, remain: remain, dropV: dropV, update: update };
   bind(); init(); update(); animate();
 })();
 </script>
@@ -399,7 +417,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     coverfix: { msg: '영상과 같은 조건: <b>아래층까지 3m · 고정 안 한 덮개 · 걸친 길이 5cm · 밀리는 거리 10cm(가정)</b>. 「▶ 작업자 지나가기」를 눌러 보세요. (덮개 상태를 「고정한 덮개」로 바꿔 비교해 보세요)',
       run: function (set, click) { click('bReset'); set('covIn', 'loose'); set('lapIn', '5'); set('pushIn', '10'); } },
     nocover: { msg: '영상과 같은 조건: <b>아래층까지 3m · 덮개 없음 · 자재를 들고 지나감</b>. 「▶ 작업자 지나가기」를 눌러 보세요. (덮개 상태를 「고정한 덮개」로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('covIn', 'none'); } }
+      run: function (set, click) { click('bReset'); set('covIn', 'none'); } },
+    coverthin: { msg: '영상과 같은 조건: <b>아래층까지 3m · 덮개 대신 얇은 판(합판 4mm·각재 없음)을 덮어만 둠 · 작업자+자재 100kg(가정)</b>. 「▶ 작업자 지나가기」를 눌러 보세요. (덮개 상태를 「고정한 덮개」로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('covIn', 'thin'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';
