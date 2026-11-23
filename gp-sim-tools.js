@@ -204,6 +204,55 @@
     cardEl = el('div', { class: 'gps-card', role: 'status' });
     document.body.appendChild(cardEl);
   }
+  /* ---------- 휴대폰 배치 (11-24) ----------
+   * 설치 시뮬레이터 6종은 PC용 배치라 휴대폰에서 설정 창이 3D를 거의 다 가리고
+   * 보기 버튼(정·측·위·3D)이 '다음 단계' 버튼 위에 겹쳤음.
+   * 폭 700px 이하에서만: 3D를 위(화면 56%), 설정·단계 버튼을 그 아래로 내리고(스크롤),
+   * 보기 버튼은 3D 오른쪽 위에 가로로, 마우스 조작 안내는 손가락 안내로 바꿈. PC 화면은 그대로. */
+  function mobile() {
+    var mq = window.matchMedia('(max-width:700px)'), cc = document.getElementById('canvas-container'), ctl = document.getElementById('controls');
+    if (!cc || !ctl) return;
+    var home = { parent: ctl.parentNode, next: ctl.nextSibling }, barEl = document.querySelector('.gps-bar'), hint;
+    document.head.appendChild(el('style', null,
+      '@media(max-width:700px){' +
+      'body.gps-m{overflow-x:hidden!important;overflow-y:auto!important;height:auto!important}' +
+      'body.gps-m #container{min-height:0!important;padding-bottom:0!important}' +
+      'body.gps-m #canvas-container{height:56vh!important;min-height:300px;position:relative!important}' +
+      'body.gps-m #controls{position:static!important;top:auto!important;left:auto!important;width:auto!important;max-width:none!important;max-height:none!important;overflow:visible!important;margin:0!important;border-radius:0!important;box-sizing:border-box;padding:16px 16px 28px!important;transform:none!important}' +
+      'body.gps-m #controls h2{font-size:19px!important;margin:0 0 10px!important}' +
+      'body.gps-m #info,body.gps-m #view-controls,body.gps-m .legend{display:none!important}' +
+      'body.gps-m #dimensions{top:54px!important;left:8px!important;right:auto!important;padding:6px 9px!important;font-size:11.5px!important;line-height:1.45!important;max-width:46vw}' +
+      'body.gps-m #dimensions h3,body.gps-m #dimensions h4{font-size:12px!important;margin:0 0 2px!important}' +
+      'body.gps-m .gps-bar{position:absolute!important;top:8px!important;right:8px!important;left:auto!important;bottom:auto!important;transform:none!important;flex-direction:row!important;padding:3px!important;gap:1px!important}' +
+      'body.gps-m .gps-bar .gps-sep{width:1px!important;height:20px!important;margin:0 2px!important}' +
+      'body.gps-m .gps-bar button{min-width:34px!important;padding:7px 6px!important;text-align:center}' +
+      'body.gps-m .gps-card{position:absolute!important;bottom:10px!important}' +
+      '.gps-hint{display:none}body.gps-m .gps-hint{display:block;position:absolute;left:8px;bottom:8px;z-index:20;background:rgba(17,17,17,.78);color:#ddd;font:600 11.5px/1.4 Pretendard,"Malgun Gothic",sans-serif;padding:5px 8px;border-radius:8px;pointer-events:none}' +
+      'body.gps-m .gps-down{display:block!important;position:absolute!important;left:auto!important;right:8px!important;bottom:8px!important;width:auto!important;min-width:0!important;margin:0!important;transform:none!important;z-index:20;background:#F2B705!important;color:#1B1B1B!important;font:800 13px/1 Pretendard,"Malgun Gothic",sans-serif!important;padding:10px 14px!important;border-radius:999px!important;border:0!important;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3)}.gps-down{display:none}' +
+      '}'));
+    hint = el('div', { class: 'gps-hint' }, '한 손가락: 돌리기 · 두 손가락: 확대·이동');
+    var down = el('button', { type: 'button', class: 'gps-down' }, '설정·단계 ▼');
+    down.onclick = function () { ctl.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    function apply() {
+      var on = mq.matches;
+      document.body.classList.toggle('gps-m', on);
+      if (on) {
+        if (ctl.parentNode === cc || cc.contains(ctl)) cc.parentNode.insertBefore(ctl, cc.nextSibling);
+        if (barEl && barEl.parentNode !== cc) cc.appendChild(barEl);
+        if (cardEl && cardEl.parentNode !== cc) cc.appendChild(cardEl);
+        if (!hint.parentNode) cc.appendChild(hint);
+        if (!down.parentNode) cc.appendChild(down);
+      } else {
+        if (home.parent && ctl.parentNode !== home.parent) home.parent.insertBefore(ctl, home.next && home.next.parentNode === home.parent ? home.next : null);
+        if (barEl && barEl.parentNode !== document.body) document.body.appendChild(barEl);
+        if (cardEl && cardEl.parentNode !== document.body) document.body.appendChild(cardEl);
+      }
+      // 3D 크기를 새 칸에 맞춤 (각 시뮬레이터의 resize 처리 재사용)
+      setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 30);
+    }
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply); else if (mq.addListener) mq.addListener(apply);
+  }
   function hookPick() {
     var d = null;
     renderer.domElement.addEventListener('pointerdown', function (e) { d = { x: e.clientX, y: e.clientY, t: Date.now() }; }, { passive: true });
@@ -218,7 +267,7 @@
   function start() {
     T = window.THREE; scene = G('scene'); camera = G('camera'); renderer = G('renderer'); controls = G('controls');
     if (!T || !scene || !camera || !renderer || !renderer.domElement) return false;
-    css(); bar(); hookPick(); ready = true; return true;
+    css(); bar(); hookPick(); mobile(); ready = true; return true;
   }
 
   window.GPSim = {

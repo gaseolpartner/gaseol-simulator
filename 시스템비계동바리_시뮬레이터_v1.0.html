@@ -399,7 +399,7 @@ button:disabled{background:#444 !important;color:#888 !important}
             <button onclick="toggleExport()">보고서 추출</button>
             <div id="step-info">
                 <div id="step-title">준비 단계</div>
-                <div id="step-description">시작하려면 '다음 단계' 버튼을 클릭하세요.</div>
+                <div id="step-description">시작하려면 '다음 단계' 버튼을 누르세요.</div>
             </div>
             <div class="detail-info" id="detail-info">
                 <h4>설치 규격</h4>
@@ -1525,7 +1525,7 @@ button:disabled{background:#444 !important;color:#888 !important}
             } else {
                 clearParts();
                 document.getElementById('step-title').textContent = "준비 단계";
-                document.getElementById('step-description').textContent = `${currentSystem === 'scaffold' ? '시스템 비계' : '시스템 동바리'} 설치 순서를 확인합니다. '다음 단계' 버튼을 클릭하여 시작하세요.`;
+                document.getElementById('step-description').textContent = `${currentSystem === 'scaffold' ? '시스템 비계' : '시스템 동바리'} 설치 순서를 확인합니다. '다음 단계' 버튼을 눌러 시작하세요.`;
             }
             
             const progress = (currentStep / steps.length) * 100;
