@@ -446,7 +446,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     horseend: { msg: '영상과 같은 조건: <b>높이 1.8m 말비계 · 발판 끝(끝에서 5cm)에 섬</b>. 「▶ 작업 위치로 걸어가기」를 눌러 보세요. (작업 위치를 「지주 안쪽」으로 바꿔 비교해 보세요)',
       run: function (set, click) { click('bReset'); set('expIn', 'end'); set('posIn', 'end'); } },
     horsebrace: { msg: '영상과 같은 조건: <b>높이 1.8m · 보조부재 없음 · 미끄럼 방지장치 없음(매끄러운 바닥)</b>. 「▶ 올라서서 작업하기」를 눌러 보세요. (보조부재를 「설치함」으로 바꿔 비교해 보세요)',
-      run: function (set, click) { click('bReset'); set('expIn', 'spread'); set('brIn', '0'); set('slIn', '0'); } }
+      run: function (set, click) { click('bReset'); set('expIn', 'spread'); set('brIn', '0'); set('slIn', '0'); } },
+    horseangle: { msg: '영상과 같은 조건: <b>높이 1.8m · 미끄럼 방지 고무 받침 있음 · 보조부재 없음 · 다리 기울기 60도</b>. 「▶ 올라서서 작업하기」를 눌러 보세요. (기울기를 75도로, 또는 보조부재를 「설치함」으로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('expIn', 'spread'); set('brIn', '0'); set('slIn', '1'); set('angIn', '60'); } }
   };
   function go() {
     var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';

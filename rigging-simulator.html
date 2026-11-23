@@ -52,6 +52,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
 .gauge i{display:block;height:100%;width:0;background:#4CC38A;transition:width .15s,background .15s}
 #banner{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #FF6369;color:#FFFFFF;border-radius:12px;padding:12px 18px;font-weight:800;font-size:16px;display:none;text-align:center;max-width:92%;pointer-events:none}
 #banner.warn{border-color:#F2B705}
+#banner.okb{border-color:#4CC38A}
 #hint{position:absolute;right:14px;bottom:14px;font-size:12px;color:#999999;background:rgba(0,0,0,.5);padding:6px 10px;border-radius:8px;pointer-events:none}
 @media(max-width:800px){
   #app{flex-direction:column}
@@ -102,6 +103,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
         <button class="btn" id="bLift" type="button">▶ 들어올리기</button>
         <button class="btn line" id="bOpen" type="button">각도 점점 벌리기</button>
         <button class="btn line" id="bSwing" type="button">옆으로 옮기다 멈추기</button>
+        <button class="btn line" id="bPull" type="button">옆에 작업자 두고 들어올리기</button>
         <button class="btn line" id="bEx" type="button">위험 예시 보기</button>
         <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
       </div>
@@ -116,6 +118,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
         <option value="44">φ10 · 파단 44kN</option><option value="63" selected>φ12 · 파단 63kN</option><option value="86">φ14 · 파단 86kN</option><option value="113">φ16 · 파단 113kN</option>
         <option value="143">φ18 · 파단 143kN</option><option value="176">φ20 · 파단 176kN</option><option value="213">φ22 · 파단 213kN</option><option value="253">φ24 · 파단 253kN</option><option value="custom">직접 입력</option></select></div>
       <div class="row"><label for="latchIn">훅 해지장치</label><select id="latchIn"><option value="1" selected>사용 (훅 입구를 막음)</option><option value="0">없음 (떼어 냄)</option></select></div>
+      <div class="row"><label for="pullIn">들어 올릴 때 훅 위치</label><select id="pullIn"><option value="0" selected>자재 바로 위 (수직 인양)</option><option value="1.5">옆으로 1.5m (비스듬히 끌어 올림)</option></select></div>
       <div class="row" id="customRow" hidden><label for="mbfIn">파단하중 (kN)</label><input type="number" id="mbfIn" min="1" max="2000" step="1" value="63"></div>
       <p class="note">파단하중은 6×24 섬유심 와이어로프(인장강도 1570급) 제품 표의 예시값입니다. 사용하는 와이어의 성적서 값으로 바꿔 넣으세요.</p>
     </div>
@@ -126,8 +129,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       <div class="res"><div class="k">와이어 1줄 장력 / 사용하중 (파단하중 ÷ 안전계수 5)</div><div class="v" id="rT">-</div><div class="s" id="rTs"></div></div>
       <div class="res"><div class="k">각도 기준 (수평각 30° 이상 = 끼인각 120° 이하)</div><div class="v" id="rA">-</div><div class="s" id="rAs"></div></div>
       <div class="res"><div class="k">훅 해지장치 (와이어가 훅에서 벗겨지는 것을 막는 장치)</div><div class="v" id="rL">-</div><div class="s" id="rLs"></div></div>
+      <div class="res"><div class="k">들어 올리는 방향 (하물을 끌어당기지 않기)</div><div class="v" id="rP">-</div><div class="s" id="rPs"></div></div>
       <div class="res"><div class="k">지금 상태</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
-      <p class="note">1줄 장력 = 무게 ÷ (하중을 받는 줄 수 × cos(끼인각/2)).<br>화물을 직접 지지하는 달기 와이어로프의 안전계수는 5 이상(산업안전보건기준에 관한 규칙 제163조).<br>수평각 30° 미만(끼인각 120° 초과)으로 쓰지 않도록 하는 것은 KOSHA 줄걸이 작업 지침의 기준입니다.<br>크레인으로 짐을 운반할 때는 해지장치를 사용해야 합니다(산업안전보건기준에 관한 규칙 제137조, 이동식 크레인은 제149조). 「옆으로 옮기다 멈추기」는 훅을 2m 옮기다 갑자기 멈춰 자재가 출렁이게 하고, 해지장치가 없으면 출렁임이 가장 클 때 줄이 순간 느슨해져 훅에서 벗겨진다고 본 교육용 단순화입니다(흔들림 크기는 가정). 떨어지는 속도는 공기저항을 무시한 값입니다.<br>4줄 걸이는 무게중심이 치우치거나 줄 길이가 다르면 2줄에 거의 모든 하중이 걸릴 수 있어, 2줄로 계산하는 것을 기본으로 했습니다.</p>
+      <p class="note">1줄 장력 = 무게 ÷ (하중을 받는 줄 수 × cos(끼인각/2)).<br>화물을 직접 지지하는 달기 와이어로프의 안전계수는 5 이상(산업안전보건기준에 관한 규칙 제163조).<br>수평각 30° 미만(끼인각 120° 초과)으로 쓰지 않도록 하는 것은 KOSHA 줄걸이 작업 지침의 기준입니다.<br>크레인으로 짐을 운반할 때는 해지장치를 사용해야 합니다(산업안전보건기준에 관한 규칙 제137조, 이동식 크레인은 제149조). 「옆으로 옮기다 멈추기」는 훅을 2m 옮기다 갑자기 멈춰 자재가 출렁이게 하고, 해지장치가 없으면 출렁임이 가장 클 때 줄이 순간 느슨해져 훅에서 벗겨진다고 본 교육용 단순화입니다(흔들림 크기는 가정). 떨어지는 속도는 공기저항을 무시한 값입니다.<br>크레인으로 들어 올릴 때는 하물을 바닥에서 끌어당기거나 밀어내지 않아야 합니다(산업안전보건기준에 관한 규칙 제146조 제1항 제1호). 「옆에 작업자 두고 들어올리기」는 훅이 자재 바로 위에 있지 않으면 바닥을 떠나는 순간 훅 아래로 쏠리며 흔들린다는 것을 보여 줍니다 — 훅을 매단 점으로 하는 진자(반지름 = 훅~자재 아래, 약 3.1m)로 보고 가장 빠른 속도 = √(2 × 9.81 × 반지름 × (1 − cos 처음 각도)), 마찰·공기저항은 무시한 교육용 단순화입니다. 작업자 위치(자재 끝에서 1.8m)는 가정입니다.<br>4줄 걸이는 무게중심이 치우치거나 줄 길이가 다르면 2줄에 거의 모든 하중이 걸릴 수 있어, 2줄로 계산하는 것을 기본으로 했습니다.</p>
       <p class="note">교육용 시뮬레이션입니다. 실제 인양 작업은 작업계획서와 장비·줄걸이 용구의 사용하중을 따르세요.</p>
     </div>
 
@@ -144,7 +148,9 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var SF = 5;
-  var S = { ang: 60, W: 2, legs: 2, n4: 2, mbf: 63, lift: 0, lifting: false, opening: false, state: 'ok', fall: { v: 0, a: 0, w: 0 }, broken: -1, latch: true, hx: 0, phi: 0, sw: null, unhook: false, fallH: 0 };
+  var S = { ang: 60, W: 2, legs: 2, n4: 2, mbf: 63, lift: 0, lifting: false, opening: false, state: 'ok', fall: { v: 0, a: 0, w: 0 }, broken: -1, latch: true, hx: 0, phi: 0, sw: null, unhook: false, fallH: 0, pull: 0, pk: null, hit: null };
+  var WX = 1.8;   // 작업자: 자재 끝에서 1.8m 옆 (가정, 2026-11-23)
+  function pullGeo() { var D = hangD(), th = Math.asin(Math.min(0.95, S.pull / D)); return { D: D, th: th, vmax: Math.sqrt(2 * 9.81 * D * (1 - Math.cos(th))) }; }
   function factor(a) { return 1 / Math.cos(a / 2 * Math.PI / 180); }
   function nEff() { return S.legs === 2 ? 2 : S.n4; }
   function tension(a) { return S.W * 9.81 / (nEff() * Math.cos((a === undefined ? S.ang : a) / 2 * Math.PI / 180)); }
@@ -154,7 +160,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   }
 
   // ---------- 3D ----------
-  var scene, camera, renderer, controls, clock, load, hook, latchM, slings = [], cable, LOAD = { x: 1.5, y: 0.5, z: 0.6 };
+  var scene, camera, renderer, controls, clock, load, hook, latchM, man, slings = [], cable, LOAD = { x: 1.5, y: 0.5, z: 0.6 };
   var UP = new THREE.Vector3(0, 1, 0), _d = new THREE.Vector3();
   function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
   function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.55, metalness: 0.4 }, o || {})); }
@@ -192,6 +198,14 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     hk.position.y = -0.33; hk.rotation.z = Math.PI * 0.8; hook.add(hk);
     latchM = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.05, 0.08), mat(0xFF7A1A, { metalness: 0.1, emissive: 0x7A2E00 })); latchM.position.set(0, -0.26, 0.02); hook.add(latchM);   // 해지장치
     scene.add(hook);
+    // 옆에서 기다리는 작업자 (「옆에 작업자 두고 들어올리기」에서만 보임)
+    man = new THREE.Group();
+    var vest = mat(0xFF7A1A, { metalness: 0.05 }), pants = mat(0x2F3640, { metalness: 0.05 }), skin = mat(0xE0B089, { metalness: 0 }), helm = mat(0xF2B705, { metalness: 0.1 });
+    [-0.1, 0.1].forEach(function (z) { var l = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.82, 0.16), pants); l.position.set(0, 0.41, z); man.add(l); });
+    var tor = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.62, 0.44), vest); tor.position.y = 1.13; man.add(tor);
+    var hd = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), skin); hd.position.y = 1.58; man.add(hd);
+    var hm = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), helm); hm.position.y = 1.62; man.add(hm);
+    man.visible = false; scene.add(man);
     cable = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1, 8), mat(0x333333)); scene.add(cable);
     for (i = 0; i < 4; i++) { var sm = mat(0xC9CED6, { metalness: 0.7 }); var s = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1, 8), sm); s.userData.m = sm; scene.add(s); slings.push(s); }
     clock = new THREE.Clock();
@@ -213,6 +227,12 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     var d = Math.max(needV / 0.828, needW / (0.828 * a));
     controls.target.set(1.6, 3.1, 0); camera.position.set(1.6 + d * 0.25, 3.1 + d * 0.2, d * 0.95); controls.update();
   }
+  function framePull() { // 「옆에 작업자 두고 들어올리기」: 자재·훅·작업자가 다 보이게
+    var a = camera.aspect, tall = a < 0.8, vh = $('view').clientHeight || 600;
+    var needV = 4.6 * (tall ? 1.9 : 1.2 + 200 / vh), needW = 8.6;
+    var d = Math.max(needV / 0.828, needW / (0.828 * a));
+    controls.target.set(2.3, 1.8, 0); camera.position.set(2.3 + d * 0.15, 1.8 + d * 0.22, d * 0.95); controls.update();
+  }
   function attach() {
     var top = 0.5, a = [];
     if (S.legs === 2) { a = [V3(-LOAD.x + 0.3, top, 0), V3(LOAD.x - 0.3, top, 0)]; }
@@ -224,7 +244,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     var pts = attach(), r = pts[0].clone().setY(0).length();
     var hgt = r / Math.tan(S.ang / 2 * Math.PI / 180);
     latchM.visible = S.latch;
-    if (S.state !== 'fall') { var D = hangD(); load.position.set(S.hx + D * Math.sin(S.phi), S.lift + D * (1 - Math.cos(S.phi)), 0); if (S.sw) load.rotation.z = S.phi; }
+    if (S.state !== 'fall') { var D = hangD(); load.position.set(S.hx + D * Math.sin(S.phi), S.lift + D * (1 - Math.cos(S.phi)), 0); if (S.sw || (S.pk && S.pk.ph === 'swing')) load.rotation.z = S.phi; }
     load.updateMatrixWorld();
     var hookPos = V3(S.hx, S.lift + 0.5 + hgt + 0.55, 0);
     if (S.state !== 'fall') { hook.position.copy(hookPos); }
@@ -272,10 +292,18 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     else if (S.ang > 120) { txt = '각도 기준 초과'; cls = 'warn'; sub = '장력은 사용하중 안이지만 끼인각 120°를 넘었습니다.'; }
     else if (!S.latch) { txt = '해지장치 없음'; cls = 'warn'; sub = '안전계수 ' + fmt(S.mbf / T, 1) + '이지만, 흔들리면 와이어가 훅에서 벗겨질 수 있습니다.'; }
     else { txt = S.sw ? '옮기는 중' : S.lift > 0.05 ? '안전하게 인양 중' : '대기 중'; cls = 'ok'; sub = '안전계수 ' + fmt(S.mbf / T, 1) + ' (5 이상)'; }
+    var pg = pullGeo();
+    $('rP').innerHTML = S.pull > 0 ? '옆으로 ' + fmt(S.pull, 1) + 'm <span class="badge ng">NG</span>' : '바로 위 <span class="badge ok">OK</span>';
+    $('rPs').textContent = S.pull > 0 ? '바닥을 떠나는 순간 처음 각도 ' + fmt(pg.th * 180 / Math.PI, 0) + '°로 훅 아래로 쏠려, 가장 빠를 때 초속 ' + fmt(pg.vmax, 1) + 'm (제146조 제1항 제1호 위반)' : '훅을 자재 무게중심 바로 위에 두고 똑바로 들어 올립니다.';
+    if (S.hit) { txt = '흔들린 자재에 작업자 부딪힘'; cls = 'ng'; sub = fmt(S.W, 1) + '톤 자재가 초속 ' + fmt(S.hit.v, 1) + 'm(시속 약 ' + fmt(S.hit.v * 3.6, 0) + 'km)로 옆 작업자를 쳤습니다.'; }
+    else if (S.pk && S.pull > 0) { txt = '자재가 훅 아래로 쏠리며 흔들림'; cls = 'ng'; sub = '비스듬히 끌어 올려 바닥을 떠나는 순간 흔들립니다.'; }
     $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub;
     var b = $('banner');
     if (S.state === 'fall' && S.unhook) { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 와이어가 훅에서 벗겨짐 — 해지장치 없음'; }
     else if (S.state === 'fall') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 와이어 파단 — 끼인각 ' + fmt(S.ang, 0) + '°, 1줄 ' + fmt(T, 1) + 'kN'; }
+    else if (S.hit) { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 흔들린 자재에 작업자 부딪힘 — 초속 ' + fmt(S.hit.v, 1) + 'm'; }
+    else if (S.pk && S.pull > 0 && S.pk.ph === 'swing') { b.className = 'warn'; b.style.display = 'block'; b.textContent = '⚠ 비스듬히 끌어 올려 자재가 흔들림'; }
+    else if (S.pk && S.pull === 0 && S.lift > 0.6) { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ 훅이 자재 바로 위 — 똑바로 들립니다'; }
     else if (S.sw && S.sw.ph === 'stop' && S.latch && S.sw.t > 1.2) { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ 해지장치가 와이어를 잡았습니다'; }
     else if (T > wll && S.lift > 0.05) { b.className = 'warn'; b.style.display = 'block'; b.textContent = '⚠ 안전계수 부족 — 와이어 1줄 ' + fmt(T, 1) + 'kN (사용하중 ' + fmt(wll, 1) + 'kN)'; }
     else b.style.display = 'none';
@@ -286,7 +314,20 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
     if (S.state === 'ok') {
       if (S.lifting) { S.lift = Math.min(3, S.lift + dt * 0.8); if (S.lift >= 3) { S.lifting = false; $('bLift').textContent = '▼ 내려놓기'; } }
       if (S.opening && S.lift > 0.05) { S.ang = Math.min(160, S.ang + dt * 12); $('aIn').value = S.ang; update(); if (S.ang >= 160) { S.opening = false; $('bOpen').textContent = '각도 점점 벌리기'; } }
-      if (S.sw) { // 옆으로 옮기다 멈춤 → 출렁임 (2026-11-16)
+      if (S.pk && S.pull > 0) { // 비스듬히 끌어 올림 → 바닥을 떠나며 훅 아래로 쏠림 (2026-11-23, 제146조 제1항 제1호)
+        var pg = pullGeo(); S.pk.t += dt;
+        if (S.pk.ph === 'drag') { if (S.pk.t >= 1.0) { S.pk.ph = 'swing'; S.pk.t = 0; } }
+        else {
+          var om = Math.sqrt(9.81 / pg.D), ts = S.pk.t;
+          S.phi = -pg.th * Math.cos(om * ts) * Math.exp(-0.12 * ts);
+          S.lift = S.pk.l0 + Math.min(0.2, ts * 0.4);
+          var edge = S.hx + pg.D * Math.sin(S.phi) + LOAD.x;
+          if (!S.hit && edge >= man.position.x - 0.16) { S.hit = { v: Math.sqrt(Math.max(0, 2 * 9.81 * pg.D * (Math.cos(S.phi) - Math.cos(pg.th)))), t: 0 }; }
+        }
+        if (S.hit) { S.hit.t += dt; var k = Math.min(1, S.hit.t / 0.9); man.rotation.z = -1.45 * k * (2 - k); man.position.x = S.pk.mx + 1.3 * k * (2 - k); man.position.y = 0.12 * Math.sin(Math.PI * k); }
+        refreshNow();
+      } else if (S.pk) { S.lift = Math.min(1.2, S.lift + dt * 0.8); if (S.lift > 0.6) refreshNow(); }
+      else if (S.sw) { // 옆으로 옮기다 멈춤 → 출렁임 (2026-11-16)
         S.sw.t += dt;
         if (S.sw.ph === 'move') { S.hx = Math.min(S.sw.to, S.hx + 1.25 * dt); S.phi = -0.08 * Math.min(1, S.sw.t * 3); if (S.hx >= S.sw.to) { S.sw.ph = 'stop'; S.sw.t = 0; } }
         else {
@@ -298,7 +339,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
           } else if (S.sw.t > 7) { S.sw = null; S.phi = 0; }
         }
         refreshNow();
-      } else load.rotation.z = S.lift > 0.05 ? Math.sin(t * 1.3) * 0.01 : 0;
+      } else if (!S.pk) load.rotation.z = S.lift > 0.05 ? Math.sin(t * 1.3) * 0.01 : 0;
       if (S.lift > 0.05 && tension() >= S.mbf) {
         S.state = 'fall'; S.broken = Math.floor(Math.random() * (S.legs === 2 ? 2 : 4)); S.lifting = false; S.opening = false;
         S.fall = { v: 0, w: (S.broken % 2 === 0 ? 1 : -1) * 0.8 };
@@ -317,7 +358,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
   }
   function reset() {
     S.state = 'ok'; S.broken = -1; S.lift = 0; S.lifting = false; S.opening = false;
-    S.hx = 0; S.phi = 0; S.sw = null; S.unhook = false; S.fallH = 0;
+    S.hx = 0; S.phi = 0; S.sw = null; S.unhook = false; S.fallH = 0; S.pk = null; S.hit = null;
+    man.visible = false; man.rotation.set(0, 0, 0); man.position.set(LOAD.x + WX, 0, 0);
     load.position.set(0, 0, 0); load.rotation.set(0, 0, 0);
     $('bLift').textContent = '▶ 들어올리기'; $('bOpen').textContent = '각도 점점 벌리기'; update();
   }
@@ -341,8 +383,15 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       if (S.lift < 0.05) { S.lifting = true; $('bLift').textContent = '⏸ 인양 중'; }
       S.opening = !S.opening; this.textContent = S.opening ? '⏸ 멈추기' : '각도 점점 벌리기';
     };
-    $('bReset').onclick = function () { S.ang = 60; $('aIn').value = 60; S.latch = true; $('latchIn').value = '1'; reset(); };
+    $('bReset').onclick = function () { S.ang = 60; $('aIn').value = 60; S.latch = true; $('latchIn').value = '1'; S.pull = 0; $('pullIn').value = '0'; reset(); };
     $('latchIn').onchange = function () { S.latch = this.value === '1'; reset(); };
+    $('pullIn').onchange = function () { S.pull = parseFloat(this.value) || 0; reset(); };
+    $('bPull').onclick = function () { // 자재 끝 1.8m 옆에 작업자가 서 있는 채로 들어올리기 — 훅 위치는 「들어 올릴 때 훅 위치」
+      reset(); var pg = pullGeo();
+      man.visible = true; S.hx = S.pull; S.phi = -pg.th; S.lift = -pg.D * (1 - Math.cos(pg.th));
+      S.pk = { ph: 'drag', t: 0, l0: S.lift, mx: man.position.x }; $('bLift').textContent = '⏸ 인양 중';
+      framePull(); update();
+    };
     $('bSwing').onclick = function () { // 3m 들어 올린 상태에서 옆으로 2m 옮기다 갑자기 멈춤
       if (S.state !== 'ok' || S.sw) reset();
       S.lift = 3; S.lifting = false; S.opening = false; $('bLift').textContent = '▼ 내려놓기'; $('bOpen').textContent = '각도 점점 벌리기';
@@ -359,7 +408,7 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       S.opening = true; $('bOpen').textContent = '⏸ 멈추기';
     };
   }
-  window.GPRig = { S: S, tension: tension, factor: factor, update: update, hangD: hangD, frameSwing: frameSwing };
+  window.GPRig = { S: S, tension: tension, factor: factor, update: update, hangD: hangD, frameSwing: frameSwing, framePull: framePull, pullGeo: pullGeo, showMan: function () { man.visible = true; man.position.set(LOAD.x + WX, 0, 0); man.rotation.set(0, 0, 0); } };
   bind(); init(); update(); animate();
 })();
 </script>
@@ -382,6 +431,8 @@ html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pret
       run: function (set, click) { click('bEx'); } },
     unlatched: { msg: '영상과 같은 조건: <b>2톤 · φ12 와이어 2줄 · 끼인각 60° · 훅 해지장치 없음</b>. 「옆으로 옮기다 멈추기」를 눌러 보세요. (훅 해지장치를 「사용」으로 바꿔 비교해 보세요)',
       run: function (set, click) { click('bReset'); set('wIn', 2, 'input'); set('dIn', '63'); set('nIn', '2'); set('aIn', 60, 'input'); set('latchIn', '0'); } },
+    sidepull: { msg: '영상과 같은 조건: <b>2톤 · φ12 와이어 2줄 · 끼인각 60° · 훅이 옆으로 1.5m (비스듬히 끌어 올림)</b>. 「옆에 작업자 두고 들어올리기」를 눌러 보세요. (훅 위치를 「자재 바로 위」로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('wIn', 2, 'input'); set('dIn', '63'); set('nIn', '2'); set('aIn', 60, 'input'); set('pullIn', '1.5'); } },
     fourleg: { msg: '영상과 같은 조건: <b>8톤 · φ10 와이어 4줄, 2줄이 받는다고 계산</b>. 「▶ 들어올리기」를 눌러 보세요. (계산을 「4줄이 고르게」로 바꿔 비교해 보세요)',
       run: function (set, click) { click('bReset'); set('wIn', 8, 'input'); set('dIn', '44'); set('nIn', '4'); set('n4In', '2'); set('aIn', 60, 'input'); } }
   };
