@@ -9,6 +9,10 @@
   // [영상 파일, 제목, 길이(초), 같은 조건으로 열 시뮬레이터 주소, 유튜브 쇼츠 주소, 유튜브 링크로 바꿀 날짜(한국시간 0시부터)]
   // 예약 공개 영상은 공개 다음 날부터 유튜브로 연결 (그 전에는 시뮬레이터로)
   var NEW = [
+    ['rampslip', '가설통로 미끄럼막이', '18.5', 'ramp-simulator.html#rampslip', '', ''],
+    ['coverplain', '표시 없는 개구부 덮개', '18.5', 'opening-cover-simulator.html#coverplain', '', ''],
+    ['laddertip', '이동식 사다리 아웃트리거', '19', 'ladder-simulator.html#laddertip', '', ''],
+    ['netshelf', '출입구 위 방호 선반', '18', 'debris-net-simulator.html#netshelf', '', ''],
     ['watch', '거푸집 타설 감시자', '18', 'formwork-pressure-simulator.html#watch', '', ''],
     ['rain', '비 온 다음 날 비계', '19', 'wind-simulator.html#rain', '', ''],
     ['sidepull', '자재 비스듬히 끌어 올리기', '16', 'rigging-simulator.html#sidepull', '', ''],

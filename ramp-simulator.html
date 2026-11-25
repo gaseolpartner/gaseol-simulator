@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가설통로 경사로 시뮬레이터 | 가설파트너</title>
+<meta name="description" content="가설통로(경사로)에 미끄럼막이가 없으면 젖은 발판에서 어떻게 미끄러지는지 3D로 보는 안전교육 시뮬레이터. 산업안전보건기준에 관한 규칙 제23조(가설통로의 구조), KCS 21 60 15 경사로.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="gp-sim-quality.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#1B1B1B;color:#EEEEEE;font-family:Pretendard,'Malgun Gothic',sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+#app{position:fixed;left:0;right:0;bottom:0;top:40px;display:flex}
+#view{position:relative;flex:1;min-width:0;background:#15171A;overflow:hidden}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+#panel{width:370px;flex:none;overflow-y:auto;background:#222222;border-left:1px solid #3A3A3A;padding:18px 18px 32px}
+#panel h1{font-size:20px;margin:0 0 6px;color:#FFFFFF;font-weight:800}
+#panel .lead{margin:0 0 16px;color:#BBBBBB;font-size:13.5px;line-height:1.6}
+.sec{border-top:1px solid #3A3A3A;padding-top:14px;margin-top:14px}
+.sec h2{font-size:14px;margin:0 0 10px;color:#F2B705;font-weight:800;letter-spacing:-.2px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.row label{font-size:13.5px;color:#DDDDDD;flex:1}
+.row select,.row input[type=number]{width:170px;background:#1B1B1B;color:#FFFFFF;border:1px solid #444444;border-radius:8px;padding:7px 8px;font:inherit;font-size:13.5px}
+.row.wide select{width:100%}
+.slider{margin:6px 0 10px}
+.slider .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:#DDDDDD}
+.slider .top b{color:#FFFFFF;font-size:16px}
+.slider input[type=range]{width:100%;accent-color:#F2B705;margin:6px 0 0}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#F2B705;color:#1B1B1B;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.btn:hover{background:#D9A300}
+.btn.line{background:transparent;color:#FFFFFF;border:1px solid #555555}
+.btn.line:hover{border-color:#F2B705;color:#F2B705}
+.note{font-size:12.5px;color:#999999;line-height:1.6;margin:6px 0 0}
+.res{background:#1B1B1B;border:1px solid #3A3A3A;border-radius:12px;padding:12px 14px;margin:8px 0}
+.res .k{font-size:12.5px;color:#AAAAAA}
+.res .v{font-size:18px;font-weight:800;color:#FFFFFF;margin-top:2px}
+.res .s{font-size:12.5px;color:#BBBBBB;margin-top:3px;line-height:1.5}
+.ok{color:#4CC38A !important}.warn{color:#F2B705 !important}.ng{color:#FF6369 !important}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.badge.ok{background:rgba(76,195,138,.15)}.badge.ng{background:rgba(255,99,105,.15)}.badge.warn{background:rgba(242,183,5,.15)}
+.links a{display:block;color:#F2B705;text-decoration:none;font-size:13.5px;margin:6px 0}
+.links a:hover{text-decoration:underline}
+#hud{position:absolute;left:14px;top:12px;right:14px;pointer-events:none;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.hcard{background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;min-width:220px}
+.hcard .t{font-size:12px;color:#BBBBBB}
+.hcard .n{font-size:22px;font-weight:800;color:#FFFFFF}
+.gauge{height:10px;border-radius:6px;background:#333333;overflow:hidden;margin-top:6px}
+.gauge i{display:block;height:100%;width:0;background:#4CC38A;transition:width .15s,background .15s}
+#zoom{position:absolute;right:14px;top:44%;width:min(34%,170px);aspect-ratio:1/1;border:2px solid #F2B705;border-radius:10px;pointer-events:none}
+#zoom span{position:absolute;left:0;top:0;background:#F2B705;color:#1B1B1B;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:7px 0 8px 0}
+#banner{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #FF6369;color:#FFFFFF;border-radius:12px;padding:12px 18px;font-weight:800;font-size:16px;display:none;text-align:center;max-width:92%;pointer-events:none}
+#banner.okb{border-color:#4CC38A}
+#hint{position:absolute;right:14px;bottom:14px;font-size:12px;color:#999999;background:rgba(0,0,0,.5);padding:6px 10px;border-radius:8px;pointer-events:none}
+@media(max-width:800px){
+  #app{flex-direction:column}
+  #view{flex:none;height:50%}
+  #panel{width:auto;flex:1;border-left:0;border-top:1px solid #3A3A3A;padding:14px 16px 28px}
+  .hcard{min-width:0;padding:8px 10px}.hcard .n{font-size:18px}
+  .hcard{flex:1}.hcard .t{font-size:11px}
+  #hint{display:none}
+  #banner{font-size:14px;bottom:10px}
+  .row select{width:150px}
+}
+</style>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가설파트너">
+<meta property="og:title" content="가설통로 경사로 시뮬레이터 | 가설파트너">
+<meta property="og:description" content="가설통로(경사로)에 미끄럼막이가 없으면 젖은 발판에서 어떻게 미끄러지는지 3D로 보는 안전교육 시뮬레이터. 산업안전보건기준에 관한 규칙 제23조(가설통로의 구조), KCS 21 60 15 경사로.">
+<meta property="og:url" content="https://gaseolpartner.github.io/gaseol-simulator/ramp-simulator.html">
+<meta property="og:image" content="https://gaseolpartner.github.io/gaseol-simulator/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="gp-common.css">
+
+</head>
+<body>
+<div class="gp-topbar gp-topbar-3d"><div class="gp-topbar-inner"><div class="gp-tb-left"><a class="gp-logo gp-logo-mini" href="index.html" aria-label="가설파트너"><span class="gp-li"></span><span class="gp-lt"><b>가설파트너</b><small>GASEOL PARTNER</small></span></a><a class="gp-back" href="index.html">← 시뮬레이터 목록</a><span class="gp-tb-title gp-hide-m">가설통로 경사로 시뮬레이터</span></div><div class="gp-tb-left"><a class="gp-hide-m" href="https://gaseolpartner.com"><span class="dot"></span>가설파트너 홈페이지 ↗</a><span class="gp-copy gp-hide-m">ⓒ Gaseolpartner.</span></div></div></div>
+
+<div id="app">
+  <div id="view">
+    <div id="hud">
+      <div class="hcard"><div class="t">가설통로 경사로 (<span id="hH">24</span>도)</div><div class="n" id="hA">미끄럼막이 있음</div><div class="t" id="hA2">젖은 발판</div></div>
+      <div class="hcard"><div class="t">미끄러지려는 정도 / 버티는 마찰 (가정)</div><div class="n" id="hB">0.45 / 막이</div><div class="gauge"><i id="hG"></i></div></div>
+    </div>
+    <div id="banner"></div>
+    <div id="hint">마우스 끌기: 돌리기 · 휠: 확대</div>
+  </div>
+  <aside id="panel">
+    <h1>가설통로 경사로 시뮬레이터</h1>
+    <p class="lead">가설통로(경사로)는 경사 30도 이하로 하고, 15도를 넘으면 미끄러지지 않는 구조(미끄럼막이 등)로 해야 합니다. 비 온 뒤 젖은 발판에 미끄럼막이가 없으면 어떻게 되는지 직접 확인해 보세요.</p>
+
+    <div class="sec">
+      <h2>① 해 보기</h2>
+      <div class="btns">
+        <button class="btn" id="bDown" type="button">▶ 자재 들고 내려가기</button>
+        <button class="btn line" id="bReset" type="button">↺ 처음으로</button>
+      </div>
+      <p class="note">작업자가 자재를 들고 경사로 위에서 아래로 걸어 내려갑니다.</p>
+    </div>
+
+    <div class="sec">
+      <h2>② 조건</h2>
+      <div class="row"><label for="angIn">경사각</label><select id="angIn">
+        <option value="14">14도</option><option value="19">19도</option><option value="24" selected>24도</option><option value="30">30도 (기준 한계)</option></select></div>
+      <div class="row"><label for="clIn">미끄럼막이</label><select id="clIn">
+        <option value="1" selected>있음 (표 3.3-1 간격)</option><option value="0">없음 (발판만)</option></select></div>
+      <div class="row"><label for="wetIn">발판 상태 (가정)</label><select id="wetIn">
+        <option value="wet" selected>젖은 발판 (비 온 뒤)</option><option value="dry">마른 발판</option></select></div>
+      <p class="note">경사로 길이 5m, 폭 0.9m, 양옆 안전난간. 신발과 발판 사이 마찰계수는 마른 발판 0.5, 젖은 발판 0.3으로 가정했습니다.</p>
+    </div>
+
+    <div class="sec">
+      <h2>③ 결과</h2>
+      <div class="res"><div class="k">기준 확인</div><div class="s" id="rChk"></div></div>
+      <div class="res"><div class="k">미끄러지려는 정도 (tan 경사각)</div><div class="v" id="rT">-</div><div class="s" id="rTS"></div></div>
+      <div class="res"><div class="k">버티는 마찰 (마찰계수, 가정)</div><div class="v" id="rMu">-</div><div class="s" id="rMuS"></div></div>
+      <div class="res"><div class="k">지금 상태</div><div class="v" id="rNow">-</div><div class="s" id="rNowS"></div></div>
+    </div>
+
+    <div class="sec">
+      <h2>기준</h2>
+      <p class="note">산업안전보건기준에 관한 규칙 제23조(가설통로의 구조) — 가설통로를 설치하는 경우 1. 견고한 구조로 할 것 2. 경사는 30도 이하로 할 것(계단을 설치하거나 높이 2미터 미만의 가설통로로서 튼튼한 손잡이를 설치한 경우는 예외) 3. 경사가 15도를 초과하는 경우에는 미끄러지지 아니하는 구조로 할 것 4. 추락할 위험이 있는 장소에는 안전난간을 설치할 것.</p>
+      <p class="note">KCS 21 60 15(작업발판 및 통로) 3.3 경사로 — (2) 경사로 폭은 0.9m 이상, (7) 경사각은 30° 이하이어야 하며 미끄럼막이를 일정한 간격으로 설치(목재 미끄럼막이 간격 표 3.3-1: 30° 300mm, 29° 330mm, 27° 350mm, 24° 370mm, 22° 400mm, 19° 430mm, 17° 450mm, 14° 470mm), (8) 경사각이 15° 미만이고 발판에 미끄럼 방지장치가 있는 경우에는 미끄럼막이를 설치하지 않을 수 있음, (13) 추락방지를 위한 안전난간 설치.</p>
+      <p class="note">교육용 단순화: 경사로 길이 5m, 마찰계수(마른 발판 0.5·젖은 발판 0.3)는 가정한 예시 값입니다. 내려갈 때 발이 미끄러지는지는 경사면에서 물체가 미끄러지는 조건(tan 경사각 &gt; 마찰계수)으로 단순하게 보았고, 미끄럼막이가 있으면 발뒤꿈치가 막이에 걸려 미끄러지지 않는다고 보았습니다. 실제로는 걸음걸이·신발·짐 무게·흙이나 기름 묻음에 따라 더 쉽게 미끄러질 수 있습니다. 넘어진 뒤 미끄러져 내려가는 모습은 그림으로 보여 주는 것이며 속도·부상 정도는 계산하지 않았습니다.</p>
+      <p class="note">교육용 시뮬레이션입니다. 실제 설치는 안전인증 제품과 작업계획서를 따르세요.</p>
+    </div>
+
+    <div class="sec links">
+      <h2>더 알아보기</h2>
+      <a href="quiz.html">✅ 체험 확인 퀴즈 5문항 · 확인서 받기 →</a>
+      <a href="plank-simulator.html">작업발판 시뮬레이터 →</a>
+      <a href="ladder-simulator.html">이동식 사다리 시뮬레이터 →</a>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var G = 9.81, LR = 5, WR = 0.9, PT = 0.05, MU = { dry: 0.5, wet: 0.3 }, SLIP_AT = 0.42, SPD = 1.2;
+  var CLEAT = { 30: 300, 29: 330, 27: 350, 24: 370, 22: 400, 19: 430, 17: 450, 14: 470 };   // KCS 21 60 15 표 3.3-1 (mm)
+  var S = { ang: 24, cl: true, wet: 'wet', state: 'idle', t: 0, m: null };
+
+  // ---------- 계산 (교육용 단순화) ----------
+  function rad() { return S.ang * Math.PI / 180; }
+  function calc() {
+    var t = Math.tan(rad()), mu = MU[S.wet];
+    return { t: t, mu: mu, slips: !S.cl && t > mu, sp: CLEAT[S.ang] || 0 };
+  }
+  function rise() { return LR * Math.sin(rad()); }
+  function run() { return LR * Math.cos(rad()); }
+
+  // ---------- 3D ----------
+  var scene, camera, renderer, controls, clock, world, man, body, legL, legR, armL, armR, carry, M = {};
+  var UP = new THREE.Vector3(0, 1, 0), _d = new THREE.Vector3();
+  function V3(x, y, z) { return new THREE.Vector3(x, y, z); }
+  function mat(c, o) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6, metalness: 0.2 }, o || {})); }
+  function rod(a, b, r, m) {
+    _d.subVectors(b, a); var L = _d.length() || 1e-4;
+    var o = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 10), m);
+    o.position.copy(a).addScaledVector(_d, 0.5); o.scale.set(1, L, 1); o.quaternion.setFromUnitVectors(UP, _d.clone().multiplyScalar(1 / L)); return o;
+  }
+  function box(w, h, d, m, x, y, z) { var o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); return o; }
+  function person() {
+    var g = new THREE.Group(), b = new THREE.Group(); g.add(b);
+    var lL = new THREE.Group(), lR = new THREE.Group(), aL = new THREE.Group(), aR = new THREE.Group();
+    lL.position.set(-0.11, 0.86, 0); lR.position.set(0.11, 0.86, 0);
+    lL.add(box(0.15, 0.84, 0.17, M.pants, 0, -0.42, 0)); lR.add(box(0.15, 0.84, 0.17, M.pants, 0, -0.42, 0));
+    lL.add(box(0.15, 0.08, 0.28, M.boot, 0, -0.82, 0.05)); lR.add(box(0.15, 0.08, 0.28, M.boot, 0, -0.82, 0.05));
+    b.add(lL); b.add(lR);
+    b.add(box(0.42, 0.58, 0.24, M.vest, 0, 1.15, 0));
+    aL.position.set(-0.27, 1.40, 0); aR.position.set(0.27, 1.40, 0);
+    aL.add(box(0.11, 0.6, 0.12, M.vest, 0, -0.3, 0)); aR.add(box(0.11, 0.6, 0.12, M.vest, 0, -0.3, 0));
+    b.add(aL); b.add(aR);
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.115, 16, 12), M.skin); head.position.set(0, 1.56, 0); b.add(head);
+    var hm = new THREE.Mesh(new THREE.SphereGeometry(0.135, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M.helm); hm.position.set(0, 1.6, 0); b.add(hm);
+    return { g: g, b: b, lL: lL, lR: lR, aL: aL, aR: aR };
+  }
+  function init() {
+    var view = $('view');
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setClearColor(0x15171A); view.insertBefore(renderer.domElement, view.firstChild);
+    scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x15171A, 30, 90);
+    camera = new THREE.PerspectiveCamera(45, 1, 0.05, 200);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 2; controls.maxDistance = 40;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x30343a, 0.85));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.75); dl.position.set(6, 14, 10); scene.add(dl);
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0x2A2D31, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    var gh = new THREE.GridHelper(30, 30, 0x3A3E44, 0x30343A); gh.position.y = 0.005; scene.add(gh);
+    M = { plank: mat(0xB98A4E, { metalness: 0, roughness: 0.85 }), wet: mat(0x6E5232, { metalness: 0.1, roughness: 0.25 }), cleat: mat(0xF2B705, { metalness: 0.1 }),
+      pipe: mat(0xB9C0C8, { metalness: 0.5, roughness: 0.4 }), rail: mat(0xF2B705, { metalness: 0.3 }), deck: mat(0x5A6068, { metalness: 0.3 }), crate: mat(0x9AA3AD, { metalness: 0.5 }),
+      vest: mat(0xFF7A1A, { metalness: 0 }), pants: mat(0x2F3A4A, { metalness: 0 }), boot: mat(0x1A1A1A, { metalness: 0 }), skin: mat(0xE0B990, { metalness: 0 }), helm: mat(0xF2B705, { metalness: 0.1 }) };
+    var p = person(); man = p.g; body = p.b; legL = p.lL; legR = p.lR; armL = p.aL; armR = p.aR; scene.add(man);
+    carry = new THREE.Group(); [-0.06, 0.06].forEach(function (dz) { var c = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.6, 10), M.crate); c.rotation.x = Math.PI / 2; c.position.set(dz, 1.1, 0.32); carry.add(c); }); body.add(carry);
+    clock = new THREE.Clock();
+    build(); resize(); window.addEventListener('resize', resize);
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(view);
+  }
+  // 경사로: 위 끝 (0, h) → 아래 끝 (run, 0), x 방향으로 내려감
+  function surf(u) { var a = rad(); return { x: u * Math.cos(a), y: rise() - u * Math.sin(a) }; }   // u = 위 끝에서 경사로를 따라 잰 거리
+  function build() {
+    if (world) { scene.remove(world); world.traverse(function (o) { if (o.geometry) o.geometry.dispose(); }); }
+    world = new THREE.Group(); scene.add(world);
+    var a = rad(), h = rise(), r = run(), c = calc(), u, z;
+    var rp = box(LR, PT, WR, S.wet === 'wet' ? M.wet : M.plank, r / 2, h / 2 - PT / 2, 0); rp.rotation.z = -a; world.add(rp);
+    for (u = 1.0; u < LR - 0.2; u += 1.0) { var jt = box(0.012, 0.004, WR - 0.04, M.deck, surf(u).x, surf(u).y + 0.003, 0); jt.rotation.z = -a; world.add(jt); }   // 발판 이음
+    if (S.cl) { var sp = c.sp / 1000; for (u = sp / 2; u < LR - 0.05; u += sp) { var cl = box(0.03, 0.015, WR - 0.06, M.cleat, 0, 0, 0); var q = surf(u); cl.position.set(q.x + Math.sin(a) * 0.0075, q.y + Math.cos(a) * 0.0075, 0); cl.rotation.z = -a; world.add(cl); } }
+    // 위 작업대
+    world.add(box(2.0, 0.08, 1.6, M.deck, -1.0, h - 0.04, 0));
+    [-1.9, -0.1].forEach(function (x) { [-0.7, 0.7].forEach(function (zz) { world.add(rod(V3(x, 0, zz), V3(x, h + 1.0, zz), 0.03, M.pipe)); }); });
+    // 받침 기둥 (3m 이내마다)과 안전난간
+    [-1, 1].forEach(function (s) {
+      z = s * (WR / 2 + 0.03);
+      for (u = 0; u <= LR + 0.01; u += LR / 2) { var q = surf(u); world.add(rod(V3(q.x, 0, z), V3(q.x, q.y + 0.9, z), 0.025, M.pipe)); }
+      var q0 = surf(0), q1 = surf(LR);
+      world.add(rod(V3(q0.x, q0.y + 0.9, z), V3(q1.x, q1.y + 0.9, z), 0.025, M.rail));
+      world.add(rod(V3(q0.x, q0.y + 0.45, z), V3(q1.x, q1.y + 0.45, z), 0.02, M.rail));
+    });
+    frame();
+  }
+  function resize() {
+    var v = $('view'), w = v.clientWidth, h = v.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); frame();
+  }
+  function frame() {
+    if (!camera) return;
+    var a = camera.aspect, tall = a < 0.8, vh = $('view').clientHeight || 600;
+    var needV = (rise() + 2.4) * (tall ? 1.9 : 1.2 + 200 / vh), needW = run() + (tall ? 1.6 : 3.2);   // 세로 화면은 경사로에 더 가깝게
+    var d = Math.max(needV / 0.828, needW / (0.828 * a)), ty = (rise() + (tall ? 1.8 : 1.6)) / 2, tx = run() / 2 - 0.3;
+    controls.target.set(tx, ty, 0); camera.position.set(tx + d * 0.18, ty + d * 0.3, d * 0.94); controls.update();
+  }
+
+  // ---------- 화면 ----------
+  function fmt(n, d) { return n.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function badge(ok) { return ' <span class="badge ' + (ok ? 'ok">OK' : 'ng">NG') + '</span>'; }
+  function update() {
+    var c = calc(), gi = $('hG'), r = S.cl ? 0.3 : c.t / c.mu;
+    $('hH').textContent = S.ang; $('hA').textContent = S.cl ? '미끄럼막이 있음' : '미끄럼막이 없음'; $('hA2').textContent = (S.wet === 'wet' ? '젖은 발판' : '마른 발판') + ' · 길이 5m · 높이 ' + fmt(rise(), 1) + 'm';
+    $('hB').textContent = fmt(c.t, 2) + ' / ' + (S.cl ? '막이' : fmt(c.mu, 1));
+    gi.style.width = Math.min(100, r * 50) + '%'; gi.style.background = c.slips ? '#FF6369' : (r > 0.7 ? '#F2B705' : '#4CC38A');
+    $('rChk').innerHTML = ['제23조 2호 경사 ' + S.ang + '도 (30도 이하)' + badge(S.ang <= 30),
+      '제23조 3호 15도 초과면 미끄러지지 않는 구조: ' + (S.ang <= 15 ? '15도 이하' : S.cl ? '미끄럼막이 있음' : '없음') + badge(S.ang <= 15 || S.cl),
+      'KCS 미끄럼막이 간격 ' + (S.cl ? (c.sp + 'mm (표 3.3-1, ' + S.ang + '°)') : '없음') + (S.ang < 15 ? ' — 15° 미만이고 미끄럼 방지장치가 있으면 생략 가능' : '') + badge(S.cl || S.ang < 15),
+      '제23조 4호 안전난간: 설치' + badge(true)].join('<br>');
+    $('rT').textContent = 'tan ' + S.ang + '° = ' + fmt(c.t, 2); $('rT').className = 'v ' + (c.slips ? 'ng' : '');
+    $('rTS').textContent = '경사가 급할수록 커집니다. 이 값이 마찰계수보다 크면 내려갈 때 발이 미끄러집니다(교육용 단순화).';
+    $('rMu').textContent = S.cl ? '미끄럼막이가 발뒤꿈치를 잡아 줌' : fmt(c.mu, 1) + ' (' + (S.wet === 'wet' ? '젖은 발판' : '마른 발판') + ')'; $('rMu').className = 'v ' + (c.slips ? 'ng' : 'ok');
+    $('rMuS').textContent = S.cl ? '간격 ' + c.sp + 'mm(표 3.3-1)로 설치한 미끄럼막이 — 미끄러지지 않는다고 보았습니다.' : fmt(c.t, 2) + (c.slips ? ' > ' : ' ≤ ') + fmt(c.mu, 1) + ' → ' + (c.slips ? '발이 미끄러집니다.' : '이 조건에서는 버팁니다.');
+    refreshNow();
+  }
+  function refreshNow() {
+    var txt, cls, sub = '', b = $('banner'), st = S.state, c = calc();
+    if (st === 'slip' || st === 'fell') { txt = '미끄러져 넘어짐'; cls = 'ng'; sub = 'tan ' + S.ang + '° = ' + fmt(c.t, 2) + ' > 마찰계수 ' + fmt(c.mu, 1) + '(가정) — 미끄럼막이가 없어 발이 미끄러졌습니다.'; }
+    else if (st === 'done') { txt = '안전하게 내려옴'; cls = 'ok'; sub = S.cl ? '미끄럼막이가 발을 잡아 줬습니다.' : 'tan ' + S.ang + '° = ' + fmt(c.t, 2) + ' ≤ ' + fmt(c.mu, 1) + (S.ang > 15 ? ' — 이번에는 버텼지만 15도를 넘으면 미끄러지지 않는 구조가 필요합니다.' : ''); if (!S.cl && S.ang > 15) cls = 'warn'; }
+    else if (st === 'walk') { txt = '진행 중'; cls = 'warn'; }
+    else { txt = '대기 중'; cls = 'ok'; sub = '①에서 「▶ 자재 들고 내려가기」를 눌러 보세요. 지금 조건이면 ' + (c.slips ? '미끄러집니다.' : '버팁니다.'); }
+    $('rNow').textContent = txt; $('rNow').className = 'v ' + cls; $('rNowS').textContent = sub;
+    if (st === 'fell') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 미끄러져 넘어짐 — 경사 ' + S.ang + '도 · 미끄럼막이 없음'; }
+    else if (st === 'done' && cls === 'warn') { b.className = ''; b.style.display = 'block'; b.textContent = '⚠ 이번에는 버텼지만 — 미끄럼막이 없음'; }
+    else if (st === 'done') { b.className = 'okb'; b.style.display = 'block'; b.textContent = '✔ 안전하게 내려옴 — ' + (S.cl ? '미끄럼막이가 잡아 줌' : fmt(c.t, 2) + ' ≤ ' + fmt(c.mu, 1)); }
+    else b.style.display = 'none';
+  }
+  function setState(s) { S.state = s; refreshNow(); }
+
+  // ---------- 움직임 ----------
+  function walk(t, amp) { var s = Math.sin(t * 8) * amp; legL.rotation.x = s; legR.rotation.x = -s; }
+  function still() { legL.rotation.x = legR.rotation.x = 0; armL.rotation.x = armR.rotation.x = -1.2; }
+  function step(dt) {
+    var m = S.m, c;
+    if (S.state === 'walk') {
+      S.t += dt; c = calc(); m.u += SPD * dt; walk(S.t, 0.4);
+      if (c.slips && m.u >= LR * SLIP_AT) { m.ph = 0; setState('slip'); }
+      else if (m.u >= LR + 0.6) { still(); setState('done'); }
+    } else if (S.state === 'slip' || S.state === 'fell') {
+      m.ph += dt; c = calc();
+      // 발이 앞으로 미끄러지고 몸이 뒤로 넘어짐 (0~0.5초), 그 뒤 경사로를 따라 미끄러져 내려감
+      var k = Math.min(1, m.ph / 0.5);
+      legL.rotation.x = legR.rotation.x = -1.2 * k; armL.rotation.x = armR.rotation.x = -1.2 - 1.2 * k; m.fall = k;
+      if (m.ph > 0.35 && m.u < LR + 0.4) { m.v += G * (Math.sin(rad()) - c.mu * Math.cos(rad())) * dt * 1.0 + 0.3 * dt; m.v = Math.max(0.4, m.v); m.u += m.v * dt; }
+      if (S.state === 'slip' && m.u >= LR + 0.4) { m.u = LR + 0.4; setState('fell'); }
+    }
+  }
+  function place() {
+    var m = S.m, a = rad(), u = m.u, q, onR = u >= 0 && u <= LR;
+    if (u < 0) q = { x: u, y: rise() }; else if (u > LR) q = { x: run() + (u - LR), y: 0 }; else q = surf(u);
+    var tilt = onR ? a : 0;
+    man.position.set(q.x, q.y, 0); man.rotation.set(0, Math.PI / 2, 0);
+    // 걸을 때는 똑바로, 넘어지면 몸이 뒤로 눕고 경사면을 따라 기울어짐
+    body.rotation.set(-(Math.PI / 2 - 0.15) * (m.fall || 0), 0, 0); body.position.y = 0.12 * (m.fall || 0);
+    if (m.fall) { man.rotation.set(0, Math.PI / 2, 0); man.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -tilt * (m.fall || 0)); }
+    carry.visible = !(m.fall > 0.6);
+  }
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.1), n = Math.ceil(dt / 0.01), i;
+    for (i = 0; i < n; i++) step(dt / n);
+    place(); controls.update(); renderer.render(scene, camera);
+  }
+  function reset() { S.state = 'idle'; S.t = 0; S.m = { u: -0.9, v: 0, ph: 0, fall: 0 }; still(); place(); update(); }
+  function bind() {
+    $('angIn').onchange = function () { S.ang = parseFloat(this.value) || 24; build(); reset(); };
+    $('clIn').onchange = function () { S.cl = this.value === '1'; build(); reset(); };
+    $('wetIn').onchange = function () { S.wet = this.value === 'dry' ? 'dry' : 'wet'; build(); reset(); };
+    $('bDown').onclick = function () { reset(); setState('walk'); };
+    $('bReset').onclick = function () {
+      $('angIn').value = '24'; $('clIn').value = '1'; $('wetIn').value = 'wet';
+      S.ang = 24; S.cl = true; S.wet = 'wet'; build(); reset();
+    };
+  }
+  window.GPRamp = { S: S, calc: calc, rise: rise, update: update };
+  bind(); init(); reset(); animate();
+})();
+</script>
+<script>
+/* 쇼츠 영상과 같은 조건으로 열기: 주소 끝 #이름 (예: …html#rampslip). 영상 설명란 링크용 — 2026-11 */
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function set(id, v, ev) { var e = $(id); if (!e) return; e.value = String(v); e.dispatchEvent(new Event(ev || 'change')); }
+  function click(id) { var e = $(id); if (e) e.click(); }
+  function toast(t) {
+    var d = document.createElement('div');
+    d.setAttribute('role', 'status');
+    d.style.cssText = 'position:fixed;left:12px;right:12px;top:70px;margin:0 auto;width:max-content;max-width:min(560px,calc(100vw - 24px));z-index:9999;background:#1B1B1B;color:#fff;border:2px solid #F2B705;border-radius:12px;padding:12px 16px;font:600 14px/1.5 Pretendard,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer;word-break:keep-all';
+    d.innerHTML = '🎬 ' + t + ' <span style="color:#8a8f96;font-weight:500">(눌러서 닫기)</span>';
+    d.onclick = function () { d.remove(); };
+    document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 9000);
+  }
+  var P = {
+    rampslip: { msg: '영상과 같은 조건: <b>경사로 24도 · 미끄럼막이 없음 · 비 온 뒤 젖은 발판(마찰계수 0.3 가정)</b>. 「▶ 자재 들고 내려가기」를 눌러 보세요. (미끄럼막이를 「있음」으로 바꿔 비교해 보세요)',
+      run: function (set, click) { click('bReset'); set('clIn', '0'); } }
+  };
+  function go() {
+    var h = decodeURIComponent((window.GP_HASH0 || location.hash || '').replace('#', '')); window.GP_HASH0 = '';
+    var p = P[h]; if (!p) return;
+    try { p.run(set, click); toast(p.msg); } catch (e) { console.error(e); }
+  }
+  if (document.readyState === 'complete') setTimeout(go, 300); else window.addEventListener('load', function () { setTimeout(go, 300); });
+  window.addEventListener('hashchange', go);
+  window.GPPresets = P;
+})();
+</script>
+<script>(function(){var y=new Date().getFullYear();document.querySelectorAll('.gp-year').forEach(function(e){e.textContent=y});})();</script>
+</body>
+</html>
